@@ -10,7 +10,7 @@ android {
     compileSdkVersion(31)
 
     defaultConfig {
-        applicationId = "com.inventory.prd"
+        applicationId = "com.ok.inv"
         minSdkVersion(26)
         targetSdkVersion(31)
             versionCode = 156
@@ -148,7 +148,7 @@ tasks.register("deployDebug") {
     doLast {
         exec {
             workingDir = project.rootDir
-            commandLine("cmd", "/c", "C:/Users/%USERNAME%/AppData/Local/Android/Sdk/platform-tools/adb.exe", "shell", "am", "start", "-n", "com.inventory.prd/com.example.inventoryapp.ui.main.SplashActivity")
+            commandLine("cmd", "/c", "C:/Users/%USERNAME%/AppData/Local/Android/Sdk/platform-tools/adb.exe", "shell", "am", "start", "-n", "com.ok.inv/com.example.inventoryapp.ui.main.SplashActivity")
         }
     }
 }
@@ -165,7 +165,7 @@ tasks.register("runOnDevice") {
     doLast {
         exec {
             workingDir = project.rootDir
-            commandLine("cmd", "/c", "C:/Users/%USERNAME%/AppData/Local/Android/Sdk/platform-tools/adb.exe", "shell", "am", "start", "-n", "com.inventory.prd/com.example.inventoryapp.ui.main.SplashActivity")
+            commandLine("cmd", "/c", "C:/Users/%USERNAME%/AppData/Local/Android/Sdk/platform-tools/adb.exe", "shell", "am", "start", "-n", "com.ok.inv/com.example.inventoryapp.ui.main.SplashActivity")
         }
     }
 }
@@ -177,7 +177,7 @@ tasks.register("deployRelease") {
     doLast {
         exec {
             workingDir = project.rootDir
-            commandLine("cmd", "/c", "C:/Users/%USERNAME%/AppData/Local/Android/Sdk/platform-tools/adb.exe", "shell", "am", "start", "-n", "com.inventory.prd/com.example.inventoryapp.ui.main.SplashActivity")
+            commandLine("cmd", "/c", "C:/Users/%USERNAME%/AppData/Local/Android/Sdk/platform-tools/adb.exe", "shell", "am", "start", "-n", "com.ok.inv/com.example.inventoryapp.ui.main.SplashActivity")
         }
     }
 }

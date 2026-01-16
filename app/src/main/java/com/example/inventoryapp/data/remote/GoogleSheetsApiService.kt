@@ -25,18 +25,20 @@ class GoogleSheetsApiService {
     private val gson = Gson()
     
     companion object {
+        // Feature flag: disable Google Sheets integration temporarily
+        const val ENABLED: Boolean = false
         // Google Apps Script deployment URL (updated with correct endpoint)
         private const val BASE_URL = "https://script.google.com/macros/s/AKfycby6hGZzZoaqmGQATQYybAgLawO9VhVAnXomAE30FuXBRHXWkJoTeKFBdWf6kN5lSuHM/exec"
         
         // Sheet names to sync - must match exact names from Google Sheets
         // These correspond to KONFIGURACJA in GoogleSheetsRepository
-        val SHEET_NAMES = listOf(
+        val SHEET_NAMES = if (ENABLED) listOf(
             "Skanery",
             "Drukarki",
             "Stacje do drukarek",
             "Stacje Dokujące",
             "Skanery tc27"
-        )
+        ) else emptyList()
     }
     
     /**
@@ -45,6 +47,10 @@ class GoogleSheetsApiService {
      * @return List of items from the sheet
      */
     suspend fun fetchSheet(sheetName: String): List<GoogleSheetItem> = withContext(Dispatchers.IO) {
+        if (!ENABLED) {
+            println("[GoogleSheets] Disabled: returning empty list for $sheetName")
+            return@withContext emptyList()
+        }
         try {
             val url = "$BASE_URL?arkusz=${sheetName}"
             println("[GoogleSheets] Fetching from URL: $url")
@@ -100,6 +106,10 @@ class GoogleSheetsApiService {
         status: String? = null,
         miejsce: String? = null
     ): ApiResponse = withContext(Dispatchers.IO) {
+        if (!ENABLED) {
+            println("[API] UPDATE Disabled: Sheets integration disabled")
+            return@withContext ApiResponse(status = "BLAD", message = "Sheets disabled")
+        }
         try {
             val requestData = ApiRequest(
                 akcja = "update",
@@ -145,6 +155,10 @@ class GoogleSheetsApiService {
         sheetName: String,
         item: GoogleSheetItem
     ): ApiResponse = withContext(Dispatchers.IO) {
+        if (!ENABLED) {
+            println("[API] INSERT Disabled: Sheets integration disabled")
+            return@withContext ApiResponse(status = "BLAD", message = "Sheets disabled")
+        }
         try {
             val insertData = InsertData(
                 serialNumber = item.serialNumber,
