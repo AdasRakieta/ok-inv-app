@@ -24,11 +24,14 @@ import com.example.inventoryapp.data.local.entities.*
         ImportBackupEntity::class,
         PrinterEntity::class,
         InventoryCountSessionEntity::class,
-        InventoryCountItemEntity::class
-        ,
-        DeviceMovementEntity::class
+        InventoryCountItemEntity::class,
+        DeviceMovementEntity::class,
+        // New internal equipment domain
+        EmployeeEntity::class,
+        EquipmentEntity::class,
+        EquipmentAssignmentEntity::class
     ],
-    version = 23,
+    version = 24,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -44,6 +47,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun printerDao(): PrinterDao
     abstract fun inventoryCountDao(): InventoryCountDao
     abstract fun deviceMovementDao(): DeviceMovementDao
+    // New DAOs
+    abstract fun employeeDao(): EmployeeDao
+    abstract fun equipmentDao(): EquipmentDao
+    abstract fun equipmentAssignmentDao(): EquipmentAssignmentDao
 
     companion object {
         @Volatile
