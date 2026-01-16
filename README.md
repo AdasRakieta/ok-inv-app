@@ -1,6 +1,6 @@
-# Inventory App
+# OK Inwentaryzacja Sprzętu
 
-Native Android inventory management application built with Kotlin. This app helps manage products, packages, and serial numbers using barcode/QR code scanning.
+Native Android application for internal equipment inventory for company employees. Bootstrapped from the original `inventory-app`.
 
 ## Features
 
@@ -12,10 +12,10 @@ Native Android inventory management application built with Kotlin. This app help
 - **Multiple Barcode Formats**: Support for QR, EAN-13, EAN-8, Code 128, and more
 
 ### 🚧 In Progress (See PROJECT_PLAN.md)
-- Product and package management
-- Shipping label generation
+- Equipment and assignment management
+- Employee registry and relations
+- Shipping/return workflows
 - Data export/import
-- Multi-device synchronization
 
 ## Tech Stack
 
@@ -36,13 +36,19 @@ Native Android inventory management application built with Kotlin. This app help
 - Android SDK API 26–30 installed
 - JDK 8 or JDK 11 installed (Gradle runs on a JDK, not a JRE)
 
-### Build
+### Build & Run
+```powershell
+# Windows (PowerShell)
+Push-Location "C:\Users\pz_przybysz\Documents\git\ok-inv-app"
+.\gradlew.bat assembleDebug
+.\gradlew.bat quickDeploy
+Pop-Location
+```
+
 ```bash
 # macOS/Linux
 ./gradlew assembleDebug
-
-# Windows (PowerShell)
-./gradlew.bat assembleDebug
+./gradlew quickDeploy
 ```
 
 ### Run Tests
@@ -107,3 +113,11 @@ inventory-app/
 ## License
 
 Internal use only.
+
+---
+
+## App Identifiers & Integrations
+
+- Application ID: `com.ok.inv`
+- App name: `OK Inwentaryzacja Sprzętu`
+- Google Sheets integration is temporarily disabled via a feature flag in [GoogleSheetsApiService.kt](app/src/main/java/com/example/inventoryapp/data/remote/GoogleSheetsApiService.kt). To re-enable later, set `ENABLED = true` and ensure related UI buttons are visible.
