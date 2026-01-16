@@ -3,6 +3,7 @@ package com.example.inventoryapp.data.repository
 import com.example.inventoryapp.data.local.dao.CategoryDao
 import com.example.inventoryapp.data.local.entities.CategoryEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class CategoryRepository(private val categoryDao: CategoryDao) {
     
@@ -31,16 +32,32 @@ class CategoryRepository(private val categoryDao: CategoryDao) {
     
     // Initialize default categories if needed
     suspend fun initializeDefaultCategories() {
-        val existingCategories = categoryDao.getCategoryByName("Electronics")
-        if (existingCategories == null) {
-            val defaults = listOf(
-                CategoryEntity(name = "Electronics", description = "Electronic devices", color = "#3B82F6", icon = "💻"),
-                CategoryEntity(name = "Furniture", description = "Office furniture", color = "#8B5CF6", icon = "🪑"),
-                CategoryEntity(name = "Tools", description = "Tools and equipment", color = "#F59E0B", icon = "🔧"),
-                CategoryEntity(name = "Supplies", description = "Office supplies", color = "#10B981", icon = "📦"),
-                CategoryEntity(name = "Other", description = "Miscellaneous items", color = "#6B7280", icon = "📋")
-            )
-            insertCategories(defaults)
+        val desired = listOf(
+            CategoryEntity(name = "Laptop", description = "Laptopy", color = "#3B82F6", icon = "L"),
+            CategoryEntity(name = "Telefon", description = "Telefony", color = "#10B981", icon = "T"),
+            CategoryEntity(name = "Tablet", description = "Tablety", color = "#8B5CF6", icon = "Ta"),
+            CategoryEntity(name = "Monitor", description = "Monitory", color = "#F59E0B", icon = "M"),
+            CategoryEntity(name = "Mysz", description = "Myszy komputerowe", color = "#6366F1", icon = "My"),
+            CategoryEntity(name = "Klawiatura", description = "Klawiatury", color = "#EC4899", icon = "K"),
+            CategoryEntity(name = "Stacja dokująca", description = "Stacje dokujące", color = "#0EA5E9", icon = "SD"),
+            CategoryEntity(name = "Narzędzia", description = "Narzędzia i akcesoria", color = "#A16207", icon = "N"),
+            CategoryEntity(name = "Other", description = "Pozostałe", color = "#6B7280", icon = "O")
+        )
+
+        val existing = categoryDao.getAllCategories().first()
+        val desiredNames = desired.map { it.name }.toSet()
+
+        // Delete categories that are not desired anymore (product FK is set-null on delete)
+        existing.filter { it.name !in desiredNames }.forEach { obsolete ->
+            categoryDao.deleteCategoryById(obsolete.id)
+        }
+
+        // Insert missing desired categories
+        desired.forEach { category ->
+            val match = categoryDao.getCategoryByName(category.name)
+            if (match == null) {
+                categoryDao.insertCategory(category)
+            }
         }
     }
 }

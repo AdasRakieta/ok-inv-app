@@ -15,9 +15,10 @@
 
         <!-- Form Header -->
         <TextView
+            android:id="@+id/titleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Add New Product"
+            android:text="Dodaj nowy produkt"
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -28,7 +29,7 @@
             android:id="@+id/productNameLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Product Name"
+            android:hint="Nazwa produktu"
             app:boxBackgroundColor="@color/surface"
             app:boxStrokeColor="@color/primary"
             app:hintTextColor="@color/text_secondary"
@@ -43,13 +44,13 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Category Selection -->
+        <!-- Kategoria -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/categoryLayout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Category"
+            android:hint="Kategoria"
             app:boxBackgroundColor="@color/surface"
             app:boxStrokeColor="@color/primary"
             app:hintTextColor="@color/text_secondary"
@@ -64,11 +65,11 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Serial Number Section -->
+        <!-- Numer seryjny -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Serial Number"
+            android:text="Numer seryjny"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -80,7 +81,7 @@
             android:id="@+id/serialNumberLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Serial Number"
+            android:hint="Numer seryjny"
             app:boxBackgroundColor="@color/surface"
             app:boxStrokeColor="@color/primary"
             app:hintTextColor="@color/text_secondary"
@@ -96,24 +97,72 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Or Scan Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/scanSerialButton"
-            style="@style/Widget.App.Button.Outlined"
+        <!-- Producent -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/manufacturerLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📷  Scan Serial Number"
-            android:textAllCaps="false"
-            app:icon="@android:drawable/ic_menu_camera"
-            app:iconTint="@color/text_primary"
-            android:layout_marginBottom="24dp" />
+            android:hint="Producent"
+            app:boxBackgroundColor="@color/surface"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
+            android:layout_marginBottom="16dp">
 
-        <!-- Description Field -->
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/manufacturerInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:inputType="text" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Model -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/modelLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Model"
+            app:boxBackgroundColor="@color/surface"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/modelInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:inputType="text" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Lokacja -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/locationLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Lokacja"
+            app:boxBackgroundColor="@color/surface"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/locationInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:inputType="text" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Opis -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/descriptionLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Description (Optional)"
+            android:hint="Opis (opcjonalnie)"
             app:boxBackgroundColor="@color/surface"
             app:boxStrokeColor="@color/primary"
             app:hintTextColor="@color/text_secondary"
@@ -143,7 +192,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Cancel"
+                android:text="Anuluj"
                 android:textAllCaps="false"
                 android:layout_marginEnd="8dp" />
 
@@ -153,7 +202,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Save Product"
+                android:text="Zapisz produkt"
                 android:textAllCaps="false"
                 android:layout_marginStart="8dp" />
 

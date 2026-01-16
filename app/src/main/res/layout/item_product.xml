@@ -80,42 +80,7 @@
 
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="8dp">
 
-                <ImageButton
-                    android:id="@+id/editButton"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="6dp"
-                    android:tint="#6B7280"
-                    android:src="@android:drawable/ic_menu_edit"
-                    android:contentDescription="Edit" />
-
-                <ImageButton
-                    android:id="@+id/deleteButton"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="6dp"
-                    android:tint="#EF4444"
-                    android:src="@android:drawable/ic_menu_delete"
-                    android:contentDescription="Delete" />
-
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/selectionCheckBox"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:visibility="gone"
-                    android:checked="false"
-                    android:buttonTint="#6366F1" />
-
-            </LinearLayout>
 
         </LinearLayout>
 

@@ -21,7 +21,41 @@
     <fragment
         android:id="@+id/productsListFragment"
         android:name="com.example.inventoryapp.ui.products.ProductsListFragment"
-        android:label="Produkty" />
+        android:label="Produkty">
+        
+        <action
+            android:id="@+id/action_products_to_details"
+            app:destination="@id/productDetailsFragment" />
+        
+        <action
+            android:id="@+id/action_products_to_add"
+            app:destination="@id/addProductFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/productDetailsFragment"
+        android:name="com.example.inventoryapp.ui.products.ProductDetailsFragment"
+        android:label="Szczegóły produktu">
+        
+        <argument
+            android:name="productId"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_productDetails_to_add"
+            app:destination="@id/addProductFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/addProductFragment"
+        android:name="com.example.inventoryapp.ui.products.AddProductFragment"
+        android:label="Dodaj produkt">
+
+        <argument
+            android:name="productId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
 
     <fragment
         android:id="@+id/bulkAddFragment"

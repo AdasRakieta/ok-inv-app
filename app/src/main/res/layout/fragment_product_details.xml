@@ -43,7 +43,7 @@
                     android:id="@+id/productNameText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Product Name"
+                    android:text="Nazwa produktu"
                     android:textSize="24sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -54,7 +54,7 @@
                     android:id="@+id/productCategoryText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Category"
+                    android:text="Kategoria"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary"
                     android:gravity="center"
@@ -69,7 +69,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Details"
+            android:text="Szczegóły"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -100,7 +100,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Manufacturer"
+                        android:text="Producent"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary" />
 
@@ -148,7 +148,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Description"
+                        android:text="Opis"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary" />
 
@@ -171,7 +171,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Location"
+                        android:text="Lokacja"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary" />
 
@@ -193,7 +193,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Serial Number"
+            android:text="Numer seryjny"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -269,7 +269,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="No serial number assigned"
+                            android:text="Brak przypisanego numeru"
                         android:textSize="14sp"
                         android:textColor="@color/text_tertiary"
                         android:layout_marginBottom="12dp" />
@@ -284,22 +284,11 @@
                     android:layout_marginTop="8dp">
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/scanSerialButton"
-                        style="@style/Widget.App.Button.Outlined"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Scan"
-                        android:textAllCaps="false"
-                        android:layout_marginEnd="8dp" />
-
-                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/editSerialButton"
                         style="@style/Widget.App.Button.Outlined"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Edit"
+                        android:text="Edytuj numer"
                         android:textAllCaps="false" />
 
                 </LinearLayout>
@@ -313,7 +302,7 @@
             android:id="@+id/quantitySectionLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Quantity"
+            android:text="Ilość"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -384,14 +373,14 @@
 
                 </LinearLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Tap +/- to adjust quantity"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
-                    android:gravity="center"
-                    android:layout_marginTop="8dp" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Kliknij +/- aby zmienić ilość"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp" />
 
             </LinearLayout>
 
@@ -401,7 +390,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Information"
+            android:text="Informacje"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -434,7 +423,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Created:"
+                        android:text="Utworzono:"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary" />
 
@@ -458,7 +447,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Last Updated:"
+                        android:text="Zaktualizowano:"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary" />
 
@@ -483,7 +472,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Movement History:"
+                        android:text="Historia ruchów:"
                         android:textSize="14sp"
                         android:textColor="@color/text_secondary" />
 
@@ -506,7 +495,7 @@
             android:id="@+id/movementsLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Movement History"
+            android:text="Historia ruchów"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -541,7 +530,7 @@
                     android:id="@+id/movementsEmptyText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="No movements recorded"
+                    android:text="Brak ruchów"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary"
                     android:gravity="center"
@@ -557,7 +546,7 @@
             style="@style/Widget.App.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Edit Product"
+            android:text="Edytuj produkt"
             android:textAllCaps="false"
             android:layout_marginBottom="8dp" />
 
@@ -566,7 +555,7 @@
             style="@style/Widget.App.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Delete Product"
+            android:text="Usuń produkt"
             android:textColor="@color/error"
             android:strokeColor="@color/error"
             android:textAllCaps="false" />
