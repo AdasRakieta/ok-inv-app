@@ -8,7 +8,24 @@
         android:id="@+id/homeFragment"
         android:name="com.example.inventoryapp.ui.main.HomeFragment"
         android:label="@string/nav_home">
-        <!-- TODO: Add equipment, employees, assignments navigation actions -->
+        
+        <action
+            android:id="@+id/action_home_to_products"
+            app:destination="@id/productsListFragment" />
+        
+        <action
+            android:id="@+id/action_home_to_bulk_add"
+            app:destination="@id/bulkAddFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/productsListFragment"
+        android:name="com.example.inventoryapp.ui.products.ProductsListFragment"
+        android:label="Produkty" />
+
+    <fragment
+        android:id="@+id/bulkAddFragment"
+        android:name="com.example.inventoryapp.ui.bulkadd.BulkAddFragment"
+        android:label="Masowe Dodawanie" />
 
 </navigation>

@@ -38,7 +38,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 26,
+    version = 27,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -138,11 +138,10 @@ abstract class AppDatabase : RoomDatabase() {
                         createdAt INTEGER NOT NULL,
                         updatedAt INTEGER NOT NULL,
                         notes TEXT,
-                        FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL,
-                        UNIQUE(serialNumber)
+                        FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL
                     )
                 """)
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_products_serialNumber ON products(serialNumber)")
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_products_serialNumber ON products(serialNumber)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_products_categoryId ON products(categoryId)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_products_warehouseLocationId ON products(warehouseLocationId)")
                 
@@ -307,6 +306,16 @@ abstract class AppDatabase : RoomDatabase() {
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_inventory_count_items_countId_productId ON inventory_count_items(countId, productId)")
             }
         }
+        
+        // Migration 26 -> 27: Fix index_products_serialNumber to be UNIQUE
+        private val MIGRATION_26_27 = object : Migration(26, 27) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Drop existing non-unique index
+                database.execSQL("DROP INDEX IF EXISTS index_products_serialNumber")
+                // Create unique index
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_products_serialNumber ON products(serialNumber)")
+            }
+        }
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -315,7 +324,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "inventory_database"
                 )
-                    .addMigrations(MIGRATION_24_25, MIGRATION_25_26)
+                    .addMigrations(MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

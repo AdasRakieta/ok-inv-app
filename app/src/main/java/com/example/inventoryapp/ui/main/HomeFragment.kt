@@ -5,7 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.example.inventoryapp.BuildConfig
+import com.example.inventoryapp.R
 import com.example.inventoryapp.databinding.FragmentHomeBinding
 
 class HomeFragment : Fragment() {
@@ -34,8 +36,16 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        // TODO: Add navigation for equipment, employees, assignments screens
-        // These will be implemented in next phase
+        // Products module - navigate to products list
+        binding.productsCard.setOnClickListener {
+            findNavController().navigate(R.id.action_home_to_products)
+        }
+        
+        // Quick action - bulk add products
+        binding.productsCard.setOnLongClickListener {
+            findNavController().navigate(R.id.action_home_to_bulk_add)
+            true
+        }
     }
 
     override fun onDestroyView() {
