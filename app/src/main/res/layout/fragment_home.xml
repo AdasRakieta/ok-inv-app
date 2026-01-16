@@ -11,60 +11,58 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
         <!-- Welcome Header -->
         <TextView
             android:id="@+id/welcomeText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Equipment Management System"
-            android:textSize="24sp"
+            android:text="Inventory Manager"
+            android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="4dp" />
 
         <TextView
             android:id="@+id/subtitleText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Track IT equipment and employee assignments"
+            android:text="Kompleksowe zarządzanie magazynem i zasobami"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="28dp" />
 
-        <!-- Quick Actions Section -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Quick Actions"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="12dp" />
-
-        <!-- Equipment Card - Coming Soon -->
+        <!-- Products Card -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/equipmentCard"
+            android:id="@+id/productsCard"
             style="@style/Widget.App.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="16dp"
             android:clickable="false"
             android:focusable="false"
-            android:alpha="0.6">
+            app:cardBackgroundColor="@color/surface"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="16dp"
+                android:padding="20dp"
                 android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/products_accent"
+                    android:layout_marginEnd="16dp" />
 
                 <TextView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:text="💻"
+                    android:text="📦"
                     android:textSize="32sp"
                     android:gravity="center"
                     android:layout_marginEnd="16dp" />
@@ -78,8 +76,8 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Equipment"
-                        android:textSize="16sp"
+                        android:text="Produkty"
+                        android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
                         android:layout_marginBottom="4dp" />
@@ -87,9 +85,23 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="View and manage IT equipment (Coming Soon)"
-                        android:textSize="14sp"
+                        android:text="Zarządzaj katalogiem produktów"
+                        android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wkrótce"
+                        android:textSize="11sp"
+                        android:textColor="@color/warning"
+                        android:textStyle="bold"
+                        android:background="@color/background_secondary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:layout_marginTop="6dp" />
 
                 </LinearLayout>
 
@@ -97,23 +109,31 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Employees Card - Coming Soon -->
+        <!-- Employees Card -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/employeesCard"
             style="@style/Widget.App.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="16dp"
             android:clickable="false"
             android:focusable="false"
-            android:alpha="0.6">
+            app:cardBackgroundColor="@color/surface"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="16dp"
+                android:padding="20dp"
                 android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/employees_accent"
+                    android:layout_marginEnd="16dp" />
 
                 <TextView
                     android:layout_width="48dp"
@@ -132,8 +152,8 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Employees"
-                        android:textSize="16sp"
+                        android:text="Pracownicy"
+                        android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
                         android:layout_marginBottom="4dp" />
@@ -141,9 +161,251 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Manage employee records (Coming Soon)"
-                        android:textSize="14sp"
+                        android:text="Zarządzaj danymi pracowników"
+                        android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wkrótce"
+                        android:textSize="11sp"
+                        android:textColor="@color/warning"
+                        android:textStyle="bold"
+                        android:background="@color/background_secondary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:layout_marginTop="6dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Warehouse Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/warehouseCard"
+            style="@style/Widget.App.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:clickable="false"
+            android:focusable="false"
+            app:cardBackgroundColor="@color/surface"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/warehouse_accent"
+                    android:layout_marginEnd="16dp" />
+
+                <TextView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="🏭"
+                    android:textSize="32sp"
+                    android:gravity="center"
+                    android:layout_marginEnd="16dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Magazyn"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Zarządzaj stanami magazynowymi"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wkrótce"
+                        android:textSize="11sp"
+                        android:textColor="@color/warning"
+                        android:textStyle="bold"
+                        android:background="@color/background_secondary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:layout_marginTop="6dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Orders Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/ordersCard"
+            style="@style/Widget.App.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:clickable="false"
+            android:focusable="false"
+            app:cardBackgroundColor="@color/surface"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/orders_accent"
+                    android:layout_marginEnd="16dp" />
+
+                <TextView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="📋"
+                    android:textSize="32sp"
+                    android:gravity="center"
+                    android:layout_marginEnd="16dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Zamówienia"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Zarządzaj zamówieniami i dostawami"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wkrótce"
+                        android:textSize="11sp"
+                        android:textColor="@color/warning"
+                        android:textStyle="bold"
+                        android:background="@color/background_secondary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:layout_marginTop="6dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Backup Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/backupCard"
+            style="@style/Widget.App.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:clickable="false"
+            android:focusable="false"
+            app:cardBackgroundColor="@color/surface"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/backup_accent"
+                    android:layout_marginEnd="16dp" />
+
+                <TextView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="💾"
+                    android:textSize="32sp"
+                    android:gravity="center"
+                    android:layout_marginEnd="16dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Backup i Synchronizacja"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Twórz kopie zapasowe i synchronizuj dane"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wkrótce"
+                        android:textSize="11sp"
+                        android:textColor="@color/warning"
+                        android:textStyle="bold"
+                        android:background="@color/background_secondary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp"
+                        android:layout_marginTop="6dp" />
 
                 </LinearLayout>
 
@@ -156,7 +418,7 @@
             android:id="@+id/appVersionText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Version 1.0.0"
+            android:text="Version 0.2.0"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:gravity="center"
