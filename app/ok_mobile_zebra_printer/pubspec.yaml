@@ -1,0 +1,34 @@
+name: ok_mobile_zebra_printer
+description: "A new Flutter plugin project."
+version: 0.0.1
+
+environment:
+  sdk: ^3.9.2
+  flutter: ">=3.29.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  image: ^4.5.4
+  ok_mobile_common: any
+  ok_mobile_data: any
+  ok_mobile_domain: any
+  permission_handler: ^11.4.0
+  plugin_platform_interface: ^2.1.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^7.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+  plugin:
+    platforms:
+      android:
+        package: com.example.ok_mobile_zebra_printer
+        pluginClass: OkMobileZebraPrinterPlugin
+      ios:
+        pluginClass: OkMobileZebraPrinterPlugin

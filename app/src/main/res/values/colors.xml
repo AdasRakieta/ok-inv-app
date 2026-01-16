@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- GitHub-inspired color palette -->
+    
+    <!-- Primary colors (GitHub Blue) -->
+    <color name="primary">#0969DA</color>
+    <color name="primary_dark">#0550AE</color>
+    <color name="primary_light">#54AEFF</color>
+    
+    <!-- Background colors (GitHub Dark Theme) -->
+    <color name="background">#0D1117</color>
+    <color name="background_secondary">#161B22</color>
+    <color name="surface">#21262D</color>
+    <color name="surface_elevated">#2D333B</color>
+    
+    <!-- Border colors -->
+    <color name="border">#48515B</color>
+    <color name="border_muted">#30363D</color>
+    
+    <!-- Text colors -->
+    <color name="text_primary">#E6EDF3</color>
+    <color name="text_secondary">#7D8590</color>
+    <color name="text_tertiary">#636C76</color>
+    <color name="text_link">#539BF5</color>
+    
+    <!-- Accent colors -->
+    <color name="accent">#0969DA</color>
+    <color name="secondary">#7D8590</color>
+    <color name="success">#3FB950</color>
+    <color name="warning">#D29922</color>
+    <color name="error">#F85149</color>
+    
+    <!-- Import Preview Status Colors -->
+    <color name="status_new">#3FB950</color> <!-- Green for new items -->
+    <color name="status_update">#D29922</color> <!-- Orange for updates -->
+    <color name="danger">#DA3633</color>
+    
+    <!-- Status colors -->
+    <color name="open">#3FB950</color>
+    <color name="closed">#DA3633</color>
+    <color name="merged">#A371F7</color>
+    
+    <!-- Standard colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    
+    <!-- Scanner overlay -->
+    <color name="scanner_overlay">#80000000</color>
+    <color name="scanner_frame">#FFFFFF</color>
+    <color name="scanner_laser">#3FB950</color>
+    
+    <!-- Card colors -->
+    <color name="card_background">#161B22</color>
+    <color name="card_hover">#21262D</color>
+    
+    <!-- Selection highlight -->
+    <color name="selection_highlight">#1F3A5F</color>
+    
+    <!-- App icon background -->
+    <color name="icon_background">#388B3B</color>
+</resources>

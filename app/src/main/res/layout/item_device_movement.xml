@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/actionText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ASSIGN to PACKAGE"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary" />
+
+    <TextView
+        android:id="@+id/containerText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="From BOX 5 → PACKAGE 12"
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/timestampText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Jan 1, 2024 12:34"
+        android:textSize="12sp"
+        android:textColor="@color/text_tertiary"
+        android:layout_marginTop="6dp" />
+
+</LinearLayout>

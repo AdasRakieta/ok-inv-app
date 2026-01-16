@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Inventory App</string>
+    
+    <!-- Main Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_products">Products</string>
+    <string name="nav_packages">Packages</string>
+    <string name="nav_scanner">Scanner</string>
+    
+    <!-- Scanner -->
+    <string name="scanner_title">Scan Barcode/QR Code</string>
+    <string name="scanner_instruction">Point camera at barcode or QR code</string>
+    <string name="scanner_success">Code scanned successfully</string>
+    <string name="scanner_error">Failed to scan code</string>
+    <string name="scanner_duplicate_error">Serial number already exists</string>
+    <string name="scanner_permission_required">Camera permission is required for scanning</string>
+    <string name="scanner_grant_permission">Grant Permission</string>
+    <string name="scanner_assign_serial">Assign Serial Number</string>
+    <string name="scanner_cancel">Cancel</string>
+    
+    <!-- Product -->
+    <string name="product_name">Product Name</string>
+    <string name="product_serial_number">Serial Number</string>
+    <string name="product_category">Category</string>
+    <string name="product_add">Add Product</string>
+    <string name="product_scan_serial">Scan Serial Number</string>
+    <string name="product_manual_entry">Manual Entry</string>
+    <string name="product_details">Product Details</string>
+    
+    <!-- Package -->
+    <string name="package_name">Package Name</string>
+    <string name="package_status">Status</string>
+    <string name="package_add">Add Package</string>
+    <string name="package_details">Package Details</string>
+    
+    <!-- General -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="ok">OK</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    <string name="debug_info_title">Debug Information</string>
+    
+    <!-- Errors -->
+    <string name="error_empty_field">This field cannot be empty</string>
+    <string name="error_duplicate_serial">This serial number is already assigned</string>
+    <string name="error_invalid_format">Invalid format</string>
+
+    <!-- Templates / Catalog -->
+    <string name="title_templates">Product Templates</string>
+    <string name="template_name">Template Name</string>
+    <string name="template_category">Category</string>
+    <string name="template_description">Description (optional)</string>
+    <string name="template_add">Add Template</string>
+    <string name="template_edit">Edit Template</string>
+    <string name="template_delete_confirm">Delete this template?</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Export / Import -->
+    <string name="title_export_import">Export / Import</string>
+    <string name="action_export">Export</string>
+    <string name="action_import">Import</string>
+    <string name="undo_last_import">Undo Last Import</string>
+    <string name="confirm_undo_import">Restore database to state before last import? This will delete all recently imported data.</string>
+    <string name="undo_import_success">Import undone successfully</string>
+    <string name="undo_import_failed">Failed to undo import</string>
+    <string name="no_backup_available">No import backup available</string>
+    
+    <!-- Import Preview -->
+    <string name="import_preview_title">Import Preview</string>
+    <string name="import_preview_subtitle">%1$d new items, %2$d updates</string>
+    <string name="confirm_import">Confirm Import</string>
+    <string name="filter_all">All (%d)</string>
+    <string name="filter_new_products">New Products (%d)</string>
+    <string name="filter_update_products">Updates (%d)</string>
+    <string name="filter_new_packages">New Packages (%d)</string>
+    <string name="filter_update_packages">Package Updates (%d)</string>
+    <string name="filter_new_templates">Templates (%d)</string>
+    <string name="status_new">NEW</string>
+    <string name="status_update">UPDATE</string>
+    <string name="no_items_to_show">No items to display</string>
+    <string name="item_type_icon">Item type icon</string>
+
+    <!-- Bulk Scanning -->
+    <string name="bulk_scan_title">Bulk Scan Products</string>
+    <string name="bulk_scan_instruction">Scan serial numbers for products</string>
+    <string name="bulk_scan_finish">Finish</string>
+    <string name="bulk_scan_scanned_count">Scanned: %d products</string>
+
+    <!-- Boxes / Cartons -->
+    <string name="boxes">Boxes</string>
+    <string name="box_name">Box Name</string>
+    <string name="box_information">Box Information</string>
+    <string name="warehouse_location">Warehouse Location</string>
+    <string name="select_products">Select Products</string>
+    <string name="no_products_available">No products available</string>
+    <string name="no_products_in_box">No products in this box</string>
+    <string name="no_boxes_found">No boxes found</string>
+    <string name="search_boxes">Search boxes...</string>
+    <string name="add_box">Add Box</string>
+    <string name="box_created_successfully">Box created successfully</string>
+    <string name="print_label">Print Label</string>
+    <string name="delete_boxes">Delete Boxes</string>
+    <string name="confirm_delete_boxes">Delete %d selected box(es)?</string>
+    <string name="select_all">Select All</string>
+    <string name="deselect_all">Deselect All</string>
+    <string name="location">Location</string>
+    <string name="search">Search</string>
+    <string name="search_by_sn">Search by serial number...</string>
+    <string name="description">Description</string>
+    
+    <!-- Category Statistics -->
+    <string name="category_statistics">Category Statistics</string>
+    <string name="category_statistics_subtitle">Products grouped by category</string>
+    <string name="total_products">Total Products</string>
+    <string name="close">Close</string>
+</resources>
