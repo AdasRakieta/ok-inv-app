@@ -1453,6 +1453,11 @@ class ExportImportViewModel(
      */
     fun syncFromGoogleSheets() {
         viewModelScope.launch {
+            if (!com.example.inventoryapp.data.remote.GoogleSheetsApiService.ENABLED) {
+                _status.value = "Google Sheets disabled"
+                _googleSheetsSyncState.value = GoogleSheetsSyncState.Error("Google Sheets disabled")
+                return@launch
+            }
             try {
                 _googleSheetsSyncState.value = GoogleSheetsSyncState.Loading
                 _status.value = "Downloading from Google Sheets..."
@@ -1493,6 +1498,11 @@ class ExportImportViewModel(
      */
     fun uploadToGoogleSheets() {
         viewModelScope.launch {
+            if (!com.example.inventoryapp.data.remote.GoogleSheetsApiService.ENABLED) {
+                _status.value = "Google Sheets disabled"
+                _googleSheetsSyncState.value = GoogleSheetsSyncState.Error("Google Sheets disabled")
+                return@launch
+            }
             try {
                 _googleSheetsSyncState.value = GoogleSheetsSyncState.Loading
                 _status.value = "Uploading to Google Sheets..."

@@ -224,13 +224,17 @@ class ExportImportFragment : Fragment() {
             downloadCsvTemplate()
         }
 
-        // Google Sheets Sync buttons
-        binding.syncFromGoogleSheetsButton.setOnClickListener {
-            viewModel.syncFromGoogleSheets()
-        }
-
-        binding.uploadToGoogleSheetsButton.setOnClickListener {
-            viewModel.uploadToGoogleSheets()
+        // Google Sheets Sync buttons (hidden when disabled)
+        if (!com.example.inventoryapp.data.remote.GoogleSheetsApiService.ENABLED) {
+            binding.syncFromGoogleSheetsButton.visibility = View.GONE
+            binding.uploadToGoogleSheetsButton.visibility = View.GONE
+        } else {
+            binding.syncFromGoogleSheetsButton.setOnClickListener {
+                viewModel.syncFromGoogleSheets()
+            }
+            binding.uploadToGoogleSheetsButton.setOnClickListener {
+                viewModel.uploadToGoogleSheets()
+            }
         }
 
         binding.shareQrButton.setOnClickListener {
