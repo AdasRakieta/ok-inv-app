@@ -450,6 +450,58 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 23 -> 24: Add equipment domain tables (employees, equipment, equipment_assignments)
+        private val MIGRATION_23_24 = object : Migration(23, 24) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create employees table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `employees` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `email` TEXT,
+                        `department` TEXT,
+                        `position` TEXT,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+
+                // Create equipment table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `equipment` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `serialNumber` TEXT,
+                        `category` TEXT,
+                        `status` TEXT NOT NULL,
+                        `description` TEXT,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL
+                    )
+                """.trimIndent())
+
+                // Create unique index on equipment.serialNumber
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_equipment_serialNumber` ON equipment(serialNumber)")
+
+                // Create equipment_assignments table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `equipment_assignments` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `employeeId` INTEGER NOT NULL,
+                        `equipmentId` INTEGER NOT NULL,
+                        `assignedAt` INTEGER NOT NULL,
+                        `returnedAt` INTEGER,
+                        `note` TEXT,
+                        FOREIGN KEY(`employeeId`) REFERENCES `employees`(`id`) ON DELETE CASCADE,
+                        FOREIGN KEY(`equipmentId`) REFERENCES `equipment`(`id`) ON DELETE CASCADE
+                    )
+                """.trimIndent())
+
+                // Create unique index on equipment_assignments
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_equipment_assignments_employeeId_equipmentId_assignedAt` ON equipment_assignments(employeeId, equipmentId, assignedAt)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -463,7 +515,7 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, 
                         MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
                         MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21,
-                        MIGRATION_21_22, MIGRATION_22_23
+                        MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24
                     )
                     .fallbackToDestructiveMigration()
                     .build()
