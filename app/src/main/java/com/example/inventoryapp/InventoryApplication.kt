@@ -11,6 +11,10 @@ import com.example.inventoryapp.data.repository.PackageRepository
 import com.example.inventoryapp.data.repository.ProductRepository
 import com.example.inventoryapp.data.repository.ImportBackupRepository
 import com.example.inventoryapp.data.repository.BackfillRunner
+import com.example.inventoryapp.data.repository.EmployeeRepository
+import com.example.inventoryapp.data.repository.EquipmentRepository
+import com.example.inventoryapp.data.repository.AssignmentRepository
+import com.example.inventoryapp.data.repository.EquipmentDataSeeder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,10 +43,25 @@ class InventoryApplication : Application() {
     val packageRepository by lazy { PackageRepository(database.packageDao(), database.productDao(), database.boxDao(), deviceMovementRepository) }
     val productRepository by lazy { ProductRepository(database.productDao()) }
     val importBackupRepository by lazy { ImportBackupRepository(database.importBackupDao()) }
+    
+    // New internal equipment repositories
+    val employeeRepository by lazy { EmployeeRepository(database.employeeDao()) }
+    val equipmentRepository by lazy { EquipmentRepository(database.equipmentDao()) }
+    val assignmentRepository by lazy { AssignmentRepository(database.equipmentAssignmentDao(), database.equipmentDao()) }
 
     override fun onCreate() {
         super.onCreate()
         // Application initialization
+        
+        // Seed sample data for internal equipment on first launch
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                EquipmentDataSeeder.seedSampleData(this@InventoryApplication)
+            } catch (e: Exception) {
+                android.util.Log.e("InventoryApp", "Seeding failed", e)
+            }
+        }
+        
         // Debug: run backfill if a flag file is present in filesDir named "run_backfill_now"
         try {
             if (BuildConfig.DEBUG) {
