@@ -9,6 +9,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.inventoryapp.InventoryApplication
@@ -57,38 +58,42 @@ class ProductDetailsFragment : Fragment() {
     }
 
     private fun observeCategories() {
-        lifecycleScope.launch {
-            categoryRepository.getAllCategories().collect { list ->
-                categories = list
-                updateCategoryLabel()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                categoryRepository.getAllCategories().collect { list ->
+                    categories = list
+                    updateCategoryLabel()
+                }
             }
         }
     }
     
     private fun loadProductDetails() {
-        lifecycleScope.launch {
-            productRepository.getProductById(args.productId).collect { product ->
-                currentProduct = product
-                product?.let {
-                    binding.apply {
-                        productNameText.text = it.name
-                        productCategoryText.text = categoryNameFor(it.categoryId)
-                        manufacturerValue.text = it.manufacturer ?: "-"
-                        modelValue.text = it.model ?: "-"
-                        descriptionValue.text = it.description ?: "-"
-                        locationValue.text = it.shelf ?: "-"
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                productRepository.getProductById(args.productId).collect { product ->
+                    currentProduct = product
+                    product?.let {
+                        binding.apply {
+                            productNameText.text = it.name
+                            productCategoryText.text = categoryNameFor(it.categoryId)
+                            manufacturerValue.text = it.manufacturer ?: "-"
+                            modelValue.text = it.model ?: "-"
+                            descriptionValue.text = it.description ?: "-"
+                            locationValue.text = it.shelf ?: "-"
 
-                        createdAtText.text = formatDate(it.createdAt)
-                        updatedAtText.text = formatDate(it.updatedAt)
+                            createdAtText.text = formatDate(it.createdAt)
+                            updatedAtText.text = formatDate(it.updatedAt)
 
-                        // Serial number visibility
-                        if (it.serialNumber.isNotBlank()) {
-                            serialNumberAssignedLayout.visibility = View.VISIBLE
-                            serialNumberNotAssignedLayout.visibility = View.GONE
-                            serialNumberText.text = it.serialNumber
-                        } else {
-                            serialNumberAssignedLayout.visibility = View.GONE
-                            serialNumberNotAssignedLayout.visibility = View.VISIBLE
+                            // Serial number visibility
+                            if (it.serialNumber.isNotBlank()) {
+                                serialNumberAssignedLayout.visibility = View.VISIBLE
+                                serialNumberNotAssignedLayout.visibility = View.GONE
+                                serialNumberText.text = it.serialNumber
+                            } else {
+                                serialNumberAssignedLayout.visibility = View.GONE
+                                serialNumberNotAssignedLayout.visibility = View.VISIBLE
+                            }
                         }
                     }
                 }

@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.TooltipCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
@@ -129,19 +130,23 @@ class ProductsListFragment : Fragment() {
     }
     
     private fun loadProducts() {
-        lifecycleScope.launch {
-            productRepository.getAllProducts().collect { products ->
-                allProducts = products
-                applyFilters()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                productRepository.getAllProducts().collect { products ->
+                    allProducts = products
+                    applyFilters()
+                }
             }
         }
     }
 
     private fun observeCategories() {
-        lifecycleScope.launch {
-            categoryRepository.getAllCategories().collect { list ->
-                categories = list
-                updateFilterLabels()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                categoryRepository.getAllCategories().collect { list ->
+                    categories = list
+                    updateFilterLabels()
+                }
             }
         }
     }
