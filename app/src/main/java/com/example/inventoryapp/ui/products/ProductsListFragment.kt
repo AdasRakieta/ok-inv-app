@@ -74,7 +74,9 @@ class ProductsListFragment : Fragment() {
         adapter = ProductsAdapter(
             onItemClick = { product ->
                 openDetails(product.id)
-            }
+            },
+            getCategoryName = { categoryId -> categoryNameFor(categoryId) },
+            getCategoryIcon = { categoryId -> categoryIconFor(categoryId) }
         )
         
         binding.productsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -302,6 +304,16 @@ class ProductsListFragment : Fragment() {
         }
         binding.sortButton.contentDescription = "Sortowanie: $sortDescription"
         TooltipCompat.setTooltipText(binding.sortButton, sortDescription)
+    }
+    
+    private fun categoryNameFor(categoryId: Long?): String {
+        if (categoryId == null) return "-"
+        return categories.firstOrNull { it.id == categoryId }?.name ?: "-"
+    }
+    
+    private fun categoryIconFor(categoryId: Long?): String {
+        if (categoryId == null) return "📦"
+        return categories.firstOrNull { it.id == categoryId }?.icon ?: "📦"
     }
     
     private fun openDetails(productId: Long) {

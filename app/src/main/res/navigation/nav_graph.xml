@@ -59,7 +59,32 @@
 
     <fragment
         android:id="@+id/bulkAddFragment"
-        android:name="com.example.inventoryapp.ui.bulkadd.BulkAddFragment"
-        android:label="Masowe Dodawanie" />
+        android:name="com.example.inventoryapp.ui.templates.BulkAddFragment"
+        android:label="Masowe Dodawanie">
+        
+        <action
+            android:id="@+id/action_bulkAdd_to_templates"
+            app:destination="@id/templatesListFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/templatesListFragment"
+        android:name="com.example.inventoryapp.ui.templates.TemplatesListFragment"
+        android:label="Szablony Produktów">
+        
+        <action
+            android:id="@+id/action_templates_to_details"
+            app:destination="@id/templateDetailsFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/templateDetailsFragment"
+        android:name="com.example.inventoryapp.ui.templates.TemplateDetailsFragment"
+        android:label="Szczegóły Szablonu">
+        
+        <argument
+            android:name="templateId"
+            app:argType="long" />
+    </fragment>
 
 </navigation>

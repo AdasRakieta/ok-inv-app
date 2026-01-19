@@ -77,6 +77,7 @@ class ProductDetailsFragment : Fragment() {
                         binding.apply {
                             productNameText.text = it.name
                             productCategoryText.text = categoryNameFor(it.categoryId)
+                            productIconText.text = categoryIconFor(it.categoryId)
                             manufacturerValue.text = it.manufacturer ?: "-"
                             modelValue.text = it.model ?: "-"
                             descriptionValue.text = it.description ?: "-"
@@ -104,6 +105,7 @@ class ProductDetailsFragment : Fragment() {
     private fun updateCategoryLabel() {
         currentProduct?.let {
             binding.productCategoryText.text = categoryNameFor(it.categoryId)
+            binding.productIconText.text = categoryIconFor(it.categoryId)
         }
     }
 
@@ -186,6 +188,11 @@ class ProductDetailsFragment : Fragment() {
     private fun categoryNameFor(id: Long?): String {
         if (id == null) return "-"
         return categories.firstOrNull { it.id == id }?.name ?: "-"
+    }
+    
+    private fun categoryIconFor(id: Long?): String {
+        if (id == null) return "📦"
+        return categories.firstOrNull { it.id == id }?.icon ?: "📦"
     }
 
     override fun onDestroyView() {

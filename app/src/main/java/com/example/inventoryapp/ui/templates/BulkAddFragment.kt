@@ -9,6 +9,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
@@ -81,6 +82,11 @@ class BulkAddFragment : Fragment() {
     }
     
     private fun setupScanInput() {
+        // Template selection button
+        binding.selectTemplateButton.setOnClickListener {
+            openTemplateSelection()
+        }
+        
         // Scanner input field - scanner acts as keyboard
         binding.scanInput.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE || 
@@ -253,9 +259,45 @@ class BulkAddFragment : Fragment() {
     
     private fun updateUI() {
         selectedTemplate?.let { template ->
-            binding.selectedTemplateText.text = "Wzór: ${template.name}"
+            lifecycleScope.launch {
+                val category = categoryRepository.getCategoryById(template.categoryId).firstOrNull()
+                val categoryIcon = category?.icon ?: "📦"
+                binding.selectedTemplateText.text = "$categoryIcon ${template.name}"
+            }
         } ?: run {
-            binding.selectedTemplateText.text = "Brak wzoru - wybierz wzór"
+            binding.selectedTemplateText.text = "⚠️ Brak wzoru - wybierz wzór"
+            binding.scanInput.isEnabled = false
+        }
+        
+        binding.scanInput.isEnabled = selectedTemplate != null
+    }
+    
+    private fun openTemplateSelection() {
+        lifecycleScope.launch {
+            val templates = templateRepository.getAllTemplates().firstOrNull() ?: emptyList()
+            
+            if (templates.isEmpty()) {
+                Toast.makeText(
+                    requireContext(),
+                    "Brak szablonów. Najpierw utwórz szablon produktu.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
+            }
+            
+            // Create dialog with template selection
+            val templateNames = templates.map { it.name }.toTypedArray()
+            val currentIndex = templates.indexOfFirst { it.id == selectedTemplate?.id }
+            
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Wybierz szablon produktu")
+                .setSingleChoiceItems(templateNames, currentIndex) { dialog, which ->
+                    selectedTemplate = templates[which]
+                    updateUI()
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Anuluj", null)
+                .show()
         }
     }
 

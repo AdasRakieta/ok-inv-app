@@ -54,6 +54,9 @@ class InventoryApplication : Application() {
                 // Initialize default categories
                 categoryRepository.initializeDefaultCategories()
                 
+                // Initialize default product templates
+                productTemplateRepository.initializeDefaultTemplates(categoryRepository)
+                
                 // Seed sample products
                 com.example.inventoryapp.data.seeder.ProductDataSeeder.seedSampleProducts(this@InventoryApplication)
                 

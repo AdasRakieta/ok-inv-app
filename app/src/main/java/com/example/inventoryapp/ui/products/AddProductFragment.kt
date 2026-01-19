@@ -56,6 +56,7 @@ class AddProductFragment : Fragment() {
         }
 
         setupCategories()
+        setupStatusDropdown()
         loadProductIfEditing()
     }
 
@@ -78,6 +79,24 @@ class AddProductFragment : Fragment() {
             }
         }
     }
+    
+    private fun setupStatusDropdown() {
+        val statusLabels = mapOf(
+            ProductStatus.IN_STOCK to "Magazyn",
+            ProductStatus.ASSIGNED to "Przypisane",
+            ProductStatus.IN_REPAIR to "Serwis",
+            ProductStatus.RETIRED to "Wycofane",
+            ProductStatus.LOST to "Zaginione"
+        )
+        val statusNames = statusLabels.values.toList()
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, statusNames)
+        binding.statusInput.setAdapter(adapter)
+        
+        // Set default to "Magazyn" for new products
+        val currentStatus = currentProduct?.status ?: ProductStatus.IN_STOCK
+        val currentLabel = statusLabels[currentStatus] ?: "Magazyn"
+        binding.statusInput.setText(currentLabel, false)
+    }
 
     private fun loadProductIfEditing() {
         val productId = args.productId
@@ -98,6 +117,9 @@ class AddProductFragment : Fragment() {
                 // Set category text when categories already loaded
                 val targetCategory = categories.firstOrNull { it.id == product.categoryId }
                 targetCategory?.name?.let { binding.categoryInput.setText(it, false) }
+                
+                // Set status
+                setupStatusDropdown()
             } else {
                 Toast.makeText(requireContext(), "Nie znaleziono produktu", Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
@@ -114,6 +136,17 @@ class AddProductFragment : Fragment() {
         val model = binding.modelInput.text.toString().trim().ifEmpty { null }
         val description = binding.descriptionInput.text.toString().trim().ifEmpty { null }
         val location = binding.locationInput.text.toString().trim().ifEmpty { null }
+        
+        // Get selected status
+        val statusLabel = binding.statusInput.text.toString().trim()
+        val selectedStatus = when (statusLabel) {
+            "Magazyn" -> ProductStatus.IN_STOCK
+            "Przypisane" -> ProductStatus.ASSIGNED
+            "Serwis" -> ProductStatus.IN_REPAIR
+            "Wycofane" -> ProductStatus.RETIRED
+            "Zaginione" -> ProductStatus.LOST
+            else -> ProductStatus.IN_STOCK
+        }
         
         if (name.isEmpty()) {
             Toast.makeText(requireContext(), "Nazwa produktu jest wymagana", Toast.LENGTH_SHORT).show()
@@ -137,7 +170,7 @@ class AddProductFragment : Fragment() {
                 name = name,
                 serialNumber = serialNumber,
                 categoryId = categoryId,
-                status = ProductStatus.IN_STOCK,
+                status = selectedStatus,
                 manufacturer = manufacturer,
                 model = model,
                 description = description,
@@ -150,6 +183,7 @@ class AddProductFragment : Fragment() {
                 name = name,
                 serialNumber = serialNumber,
                 categoryId = categoryId,
+                status = selectedStatus,
                 manufacturer = manufacturer,
                 model = model,
                 description = description,

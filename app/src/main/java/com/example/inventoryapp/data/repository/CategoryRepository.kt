@@ -33,15 +33,15 @@ class CategoryRepository(private val categoryDao: CategoryDao) {
     // Initialize default categories if needed
     suspend fun initializeDefaultCategories() {
         val desired = listOf(
-            CategoryEntity(name = "Laptop", description = "Laptopy", color = "#3B82F6", icon = "L"),
-            CategoryEntity(name = "Telefon", description = "Telefony", color = "#10B981", icon = "T"),
-            CategoryEntity(name = "Tablet", description = "Tablety", color = "#8B5CF6", icon = "Ta"),
-            CategoryEntity(name = "Monitor", description = "Monitory", color = "#F59E0B", icon = "M"),
-            CategoryEntity(name = "Mysz", description = "Myszy komputerowe", color = "#6366F1", icon = "My"),
-            CategoryEntity(name = "Klawiatura", description = "Klawiatury", color = "#EC4899", icon = "K"),
-            CategoryEntity(name = "Stacja dokująca", description = "Stacje dokujące", color = "#0EA5E9", icon = "SD"),
-            CategoryEntity(name = "Narzędzia", description = "Narzędzia i akcesoria", color = "#A16207", icon = "N"),
-            CategoryEntity(name = "Other", description = "Pozostałe", color = "#6B7280", icon = "O")
+            CategoryEntity(name = "Laptop", description = "Laptopy", color = "#3B82F6", icon = "💻"),
+            CategoryEntity(name = "Telefon", description = "Telefony", color = "#10B981", icon = "📱"),
+            CategoryEntity(name = "Tablet", description = "Tablety", color = "#8B5CF6", icon = "📱"),
+            CategoryEntity(name = "Monitor", description = "Monitory", color = "#F59E0B", icon = "🖥️"),
+            CategoryEntity(name = "Mysz", description = "Myszy komputerowe", color = "#6366F1", icon = "🖱️"),
+            CategoryEntity(name = "Klawiatura", description = "Klawiatury", color = "#EC4899", icon = "⌨️"),
+            CategoryEntity(name = "Stacja dokująca", description = "Stacje dokujące", color = "#0EA5E9", icon = "🔌"),
+            CategoryEntity(name = "Narzędzia", description = "Narzędzia i akcesoria", color = "#A16207", icon = "🔧"),
+            CategoryEntity(name = "Other", description = "Pozostałe", color = "#6B7280", icon = "📦")
         )
 
         val existing = categoryDao.getAllCategories().first()
@@ -52,11 +52,19 @@ class CategoryRepository(private val categoryDao: CategoryDao) {
             categoryDao.deleteCategoryById(obsolete.id)
         }
 
-        // Insert missing desired categories
+        // Insert missing or update existing desired categories
         desired.forEach { category ->
             val match = categoryDao.getCategoryByName(category.name)
             if (match == null) {
+                // Insert new category
                 categoryDao.insertCategory(category)
+            } else {
+                // Update existing category to ensure icon, description and color are current
+                categoryDao.updateCategory(match.copy(
+                    description = category.description,
+                    color = category.color,
+                    icon = category.icon
+                ))
             }
         }
     }
