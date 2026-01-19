@@ -1,15 +1,23 @@
 package com.example.inventoryapp.ui.templates
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.AppCompatImageButton
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
@@ -18,6 +26,8 @@ import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.data.local.entities.ProductTemplateEntity
 import com.example.inventoryapp.data.local.entities.ScanType
 import com.example.inventoryapp.databinding.FragmentBulkAddBinding
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -29,6 +39,8 @@ class BulkAddFragment : Fragment() {
 
     private var _binding: FragmentBulkAddBinding? = null
     private val binding get() = _binding!!
+    
+    private val args: BulkAddFragmentArgs by navArgs()
     
     private val productRepository by lazy {
         (requireActivity().application as InventoryApplication).productRepository
@@ -48,7 +60,9 @@ class BulkAddFragment : Fragment() {
     
     private var selectedTemplate: ProductTemplateEntity? = null
     private val scannedProducts = mutableListOf<ProductEntity>()
+    private val scannedSerials = mutableSetOf<String>()
     private lateinit var adapter: ScannedProductsAdapter
+    private var currentInputField: TextInputEditText? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -64,7 +78,17 @@ class BulkAddFragment : Fragment() {
         
         setupRecyclerView()
         setupScanInput()
-        loadTemplates()
+        
+        // Load template from arguments if provided
+        if (args.templateId != 0L) {
+            loadTemplate(args.templateId)
+        } else {
+            loadDefaultTemplate()
+        }
+        
+        // Start with one empty input field
+        addProductInputField()
+        
         updateUI()
     }
     
@@ -82,30 +106,9 @@ class BulkAddFragment : Fragment() {
     }
     
     private fun setupScanInput() {
-        // Template selection button
-        binding.selectTemplateButton.setOnClickListener {
-            openTemplateSelection()
-        }
-        
-        // Scanner input field - scanner acts as keyboard
-        binding.scanInput.setOnEditorActionListener { _, actionId, event ->
-            if (actionId == EditorInfo.IME_ACTION_DONE || 
-                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
-                handleScan(binding.scanInput.text.toString().trim())
-                true
-            } else {
-                false
-            }
-        }
-        
-        // Also handle enter key directly (some scanners send this)
-        binding.scanInput.setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
-                handleScan(binding.scanInput.text.toString().trim())
-                true
-            } else {
-                false
-            }
+        // Template selection - toggle dropdown
+        binding.templateDisplayLayout.setOnClickListener {
+            toggleTemplateDropdown()
         }
         
         // Save all button
@@ -119,11 +122,240 @@ class BulkAddFragment : Fragment() {
         }
     }
     
-    private fun loadTemplates() {
+    private fun toggleTemplateDropdown() {
+        val isExpanded = binding.dropdownContainer.visibility == View.VISIBLE
+        
+        if (isExpanded) {
+            // Close dropdown
+            binding.dropdownContainer.visibility = View.GONE
+            binding.dropdownArrowIcon.rotation = 0f
+        } else {
+            // Open dropdown
+            showTemplateDropdown()
+        }
+    }
+    
+    private fun showTemplateDropdown() {
+        lifecycleScope.launch {
+            val templates = templateRepository.getAllTemplates().firstOrNull() ?: emptyList()
+            
+            if (templates.isEmpty()) {
+                Toast.makeText(
+                    requireContext(),
+                    "Brak szablonów. Najpierw utwórz szablon produktu.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
+            }
+            
+            // Clear previous items
+            binding.dropdownContainer.removeAllViews()
+            
+            // Add each template as a dropdown item
+            templates.forEach { template ->
+                val itemView = LayoutInflater.from(requireContext()).inflate(
+                    R.layout.item_template_dropdown,
+                    binding.dropdownContainer,
+                    false
+                )
+                
+                // Get category icon
+                val categoryIcon = categoryRepository.getCategoryById(template.categoryId).firstOrNull()?.icon ?: "📦"
+                
+                itemView.findViewById<TextView>(R.id.itemEmoji).text = categoryIcon
+                itemView.findViewById<TextView>(R.id.itemName).text = template.name
+                
+                // Get category name
+                val categoryName = categoryRepository.getCategoryById(template.categoryId).firstOrNull()?.name ?: "N/A"
+                itemView.findViewById<TextView>(R.id.itemCategory).text = categoryName
+                
+                // Show checkmark if selected
+                if (template.id == selectedTemplate?.id) {
+                    itemView.findViewById<TextView>(R.id.itemCheckmark).visibility = View.VISIBLE
+                }
+                
+                // Item click handler
+                itemView.setOnClickListener {
+                    selectedTemplate = template
+                    binding.dropdownContainer.visibility = View.GONE
+                    binding.dropdownArrowIcon.rotation = 0f
+                    updateUI()
+                    showTemplateDropdown() // Reopen to show updated checkmark
+                }
+                
+                // Add divider (except last item)
+                binding.dropdownContainer.addView(itemView)
+                
+                if (template != templates.last()) {
+                    val divider = View(requireContext()).apply {
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            1
+                        )
+                        setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.darker_gray))
+                    }
+                    binding.dropdownContainer.addView(divider)
+                }
+            }
+            
+            // Show dropdown with animation
+            binding.dropdownContainer.visibility = View.VISIBLE
+            binding.dropdownArrowIcon.animate()
+                .rotation(180f)
+                .setDuration(200)
+                .start()
+        }
+    }
+    
+    private fun addProductInputField() {
+        // Only reuse field if it's still enabled (not processed yet)
+        if (binding.productsInputContainer.childCount > 0 &&
+            currentInputField != null &&
+            currentInputField?.isEnabled == true) {
+            // Field already exists and is active, just clear and focus it
+            currentInputField?.setText("")
+            currentInputField?.requestFocus()
+            return
+        }
+
+        val context = requireContext()
+        val productNumber = scannedProducts.size + 1
+
+        // Create horizontal container for input field and delete button
+        val horizontalContainer = LinearLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = 16
+            }
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+
+        // Create TextInputLayout
+        val inputLayout = TextInputLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+            hint = "$productNumber. Skanuj numer seryjny"
+            setBoxBackgroundMode(TextInputLayout.BOX_BACKGROUND_OUTLINE)
+        }
+
+        // Create TextInputEditText
+        val editText = TextInputEditText(inputLayout.context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            maxLines = 1
+            imeOptions = EditorInfo.IME_ACTION_DONE
+
+            // Handle enter key
+            setOnEditorActionListener { _, actionId, event ->
+                if (actionId == EditorInfo.IME_ACTION_DONE ||
+                    (event?.action == KeyEvent.ACTION_DOWN && event.keyCode == KeyEvent.KEYCODE_ENTER)) {
+                    val serialNumber = text.toString().trim()
+                    handleScan(serialNumber)
+                    true
+                } else {
+                    false
+                }
+            }
+
+            // Auto-detect barcode scanner input
+            addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    val text = s.toString().trim()
+                    if (text.isNotEmpty() && text.length >= 5) {
+                        postDelayed({
+                            if (this@apply.text.toString().trim() == text) {
+                                handleScan(text)
+                            }
+                        }, 100)
+                    }
+                }
+            })
+        }
+
+        // Create delete button
+        val deleteButton = AppCompatImageButton(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                resources.getDimensionPixelSize(com.google.android.material.R.dimen.design_fab_size_mini),
+                resources.getDimensionPixelSize(com.google.android.material.R.dimen.design_fab_size_mini)
+            ).apply {
+                marginStart = 8
+            }
+            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+            contentDescription = "Usuń wpis"
+            background = null
+            setColorFilter(ContextCompat.getColor(context, android.R.color.holo_red_dark))
+            setOnClickListener {
+                removeProductInputField(horizontalContainer, editText)
+            }
+        }
+
+        // Assemble the layout
+        inputLayout.addView(editText)
+        horizontalContainer.addView(inputLayout)
+        horizontalContainer.addView(deleteButton)
+
+        binding.productsInputContainer.addView(horizontalContainer)
+
+        // Store current input field reference
+        currentInputField = editText
+
+        // Focus the new field
+        editText.requestFocus()
+    }
+
+    private fun removeProductInputField(container: LinearLayout, editText: TextInputEditText) {
+        val serialNumber = editText.text.toString().trim()
+
+        // Remove from pending list
+        if (serialNumber.isNotEmpty()) {
+            scannedSerials.remove(serialNumber)
+            // Find and remove product matching this SN
+            val product = scannedProducts.find { it.serialNumber == serialNumber }
+            if (product != null) {
+                scannedProducts.remove(product)
+                adapter.submitList(scannedProducts.toList())
+            }
+            showStatus("❌ Usunięto: $serialNumber")
+            updateStats()
+        }
+
+        // Remove the container from the layout
+        binding.productsInputContainer.removeView(container)
+
+        if (currentInputField == editText) {
+            currentInputField = null
+        }
+
+        // If no more input fields, add a new empty one
+        if (binding.productsInputContainer.childCount == 0) {
+            addProductInputField()
+        }
+    }
+    
+    private fun loadTemplate(templateId: Long) {
+        lifecycleScope.launch {
+            templateRepository.getTemplateById(templateId).collect { template ->
+                if (template != null) {
+                    selectedTemplate = template
+                    updateUI()
+                }
+            }
+        }
+    }
+    
+    private fun loadDefaultTemplate() {
         lifecycleScope.launch {
             templateRepository.getAllTemplates().collect { templates ->
-                // For now, just show template selection in spinner/dropdown
-                // You can expand this with a proper template picker dialog
                 if (templates.isNotEmpty() && selectedTemplate == null) {
                     selectedTemplate = templates.first()
                     updateUI()
@@ -139,40 +371,29 @@ class BulkAddFragment : Fragment() {
         
         if (selectedTemplate == null) {
             Toast.makeText(requireContext(), "Wybierz wzór produktu", Toast.LENGTH_SHORT).show()
-            binding.scanInput.text?.clear()
+            currentInputField?.setText("")
             return
         }
         
         lifecycleScope.launch {
             try {
-                // Check if serial number already exists
-                val existing = productRepository.getProductBySerialNumber(scannedValue)
-                if (existing != null) {
-                    Toast.makeText(requireContext(), "SN już istnieje: $scannedValue", Toast.LENGTH_SHORT).show()
-                    binding.scanInput.text?.clear()
-                    binding.scanInput.error = "Duplikat SN"
-                    
-                    // Record failed scan
-                    scanHistoryRepository.recordScan(
-                        scannedValue = scannedValue,
-                        scanType = ScanType.SERIAL_NUMBER,
-                        context = "bulk_add",
-                        success = false,
-                        errorMessage = "Duplicate serial number"
-                    )
+                // Check if already in current session
+                if (scannedSerials.contains(scannedValue)) {
+                    showStatus("⚠️ Już zeskanowano: $scannedValue")
+                    currentInputField?.setText("")
                     return@launch
                 }
                 
-                // Check if already in current session
-                if (scannedProducts.any { it.serialNumber == scannedValue }) {
-                    Toast.makeText(requireContext(), "SN już zeskanowany w sesji", Toast.LENGTH_SHORT).show()
-                    binding.scanInput.text?.clear()
+                // Check if serial number already exists in database
+                val existing = productRepository.getProductBySerialNumber(scannedValue)
+                if (existing != null) {
+                    showStatus("⚠️ SN już istnieje: $scannedValue")
+                    currentInputField?.setText("")
                     return@launch
                 }
                 
                 // Create product from template
                 val template = selectedTemplate!!
-                val category = categoryRepository.getCategoryById(template.categoryId).firstOrNull()
                 
                 val newProduct = ProductEntity(
                     name = "${template.name} - $scannedValue",
@@ -186,11 +407,9 @@ class BulkAddFragment : Fragment() {
                 
                 // Add to list
                 scannedProducts.add(0, newProduct)
+                scannedSerials.add(scannedValue)
                 adapter.submitList(scannedProducts.toList())
                 updateStats()
-                
-                // Clear input
-                binding.scanInput.text?.clear()
                 
                 // Record successful scan
                 scanHistoryRepository.recordScan(
@@ -201,10 +420,15 @@ class BulkAddFragment : Fragment() {
                 )
                 
                 // Visual feedback
-                Toast.makeText(requireContext(), "✓ Dodano: $scannedValue", Toast.LENGTH_SHORT).show()
+                showStatus("✅ Dodano: $scannedValue")
+                
+                // Mark current field as processed and add new one
+                currentInputField?.isEnabled = false
+                addProductInputField()
                 
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_LONG).show()
+                showStatus("❌ Błąd: ${e.message}")
+                currentInputField?.setText("")
                 
                 // Record error
                 scanHistoryRepository.recordScan(
@@ -248,7 +472,10 @@ class BulkAddFragment : Fragment() {
     
     private fun clearAll() {
         scannedProducts.clear()
+        scannedSerials.clear()
+        binding.productsInputContainer.removeAllViews()
         adapter.submitList(emptyList())
+        addProductInputField()
         updateStats()
         Toast.makeText(requireContext(), "Wyczyszczono sesję", Toast.LENGTH_SHORT).show()
     }
@@ -257,19 +484,24 @@ class BulkAddFragment : Fragment() {
         binding.scannedCountText.text = "Zeskanowano: ${scannedProducts.size}"
     }
     
+    private fun showStatus(message: String) {
+        activity?.runOnUiThread {
+            binding.lastScannedText.text = message
+        }
+    }
+    
     private fun updateUI() {
         selectedTemplate?.let { template ->
             lifecycleScope.launch {
                 val category = categoryRepository.getCategoryById(template.categoryId).firstOrNull()
                 val categoryIcon = category?.icon ?: "📦"
-                binding.selectedTemplateText.text = "$categoryIcon ${template.name}"
+                binding.templateEmojiText.text = categoryIcon
+                binding.selectedTemplateText.text = template.name
             }
         } ?: run {
-            binding.selectedTemplateText.text = "⚠️ Brak wzoru - wybierz wzór"
-            binding.scanInput.isEnabled = false
+            binding.templateEmojiText.text = "❓"
+            binding.selectedTemplateText.text = "Brak wybranego wzoru"
         }
-        
-        binding.scanInput.isEnabled = selectedTemplate != null
     }
     
     private fun openTemplateSelection() {

@@ -263,7 +263,111 @@
 
     </LinearLayout>
 
-    <!-- Floating Action Button -->
+    <!-- FAB Menu Overlay -->
+    <View
+        android:id="@+id/fabMenuOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#80000000"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- FAB Menu Option - Masowe dodawanie -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/bulkAddCard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="28dp"
+        app:cardBackgroundColor="#10B981"
+        app:layout_constraintBottom_toTopOf="@id/singleAddCard"
+        app:layout_constraintEnd_toEndOf="@id/addProductFab"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:id="@+id/bulkAddLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Masowe dodawanie według wzoru"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="12dp" />
+
+            <ImageView
+                android:id="@+id/bulkAddIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_upload"
+                android:contentDescription="Masowe dodawanie"
+                app:tint="@color/white"
+                android:padding="8dp" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- FAB Menu Option - Jeden produkt -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/singleAddCard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="28dp"
+        app:cardBackgroundColor="#8B5CF6"
+        app:layout_constraintBottom_toTopOf="@id/addProductFab"
+        app:layout_constraintEnd_toEndOf="@id/addProductFab"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:id="@+id/singleAddLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dodaj jeden produkt"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="12dp" />
+
+            <ImageView
+                android:id="@+id/singleAddIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_add"
+                android:contentDescription="Dodaj jeden produkt"
+                app:tint="@color/white"
+                android:padding="8dp" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Main Floating Action Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addProductFab"
         android:layout_width="wrap_content"

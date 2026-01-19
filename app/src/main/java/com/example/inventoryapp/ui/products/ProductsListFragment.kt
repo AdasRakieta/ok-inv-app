@@ -41,6 +41,7 @@ class ProductsListFragment : Fragment() {
     private var selectedStatus: ProductStatus? = null
     private var sortOption: SortOption = SortOption.NEWEST
     private var searchQuery: String = ""
+    private var isFabMenuOpen = false
 
     private enum class SortOption {
         NEWEST,
@@ -84,8 +85,126 @@ class ProductsListFragment : Fragment() {
     }
 
     private fun setupActions() {
-        binding.addProductFab.setOnClickListener { openAddProduct() }
-        binding.emptyAddButton.setOnClickListener { openAddProduct() }
+        binding.addProductFab.setOnClickListener { 
+            toggleFabMenu()
+        }
+        binding.emptyAddButton.setOnClickListener { 
+            openAddProduct()
+        }
+        
+        // Overlay closes menu
+        binding.fabMenuOverlay.setOnClickListener {
+            closeFabMenu()
+        }
+        
+        // Card actions
+        binding.singleAddCard.setOnClickListener {
+            closeFabMenu()
+            openAddProduct()
+        }
+        
+        binding.bulkAddCard.setOnClickListener {
+            closeFabMenu()
+            openTemplatesList()
+        }
+    }
+    
+    private fun toggleFabMenu() {
+        if (isFabMenuOpen) {
+            closeFabMenu()
+        } else {
+            openFabMenu()
+        }
+    }
+    
+    private fun openFabMenu() {
+        isFabMenuOpen = true
+        
+        // Show overlay
+        binding.fabMenuOverlay.visibility = View.VISIBLE
+        binding.fabMenuOverlay.alpha = 0f
+        binding.fabMenuOverlay.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+        
+        // Rotate main FAB
+        binding.addProductFab.animate()
+            .rotation(45f)
+            .setDuration(200)
+            .start()
+        
+        // Show cards with animation
+        showCard(binding.singleAddCard, 0)
+        showCard(binding.bulkAddCard, 50)
+    }
+    
+    private fun closeFabMenu() {
+        isFabMenuOpen = false
+        
+        // Hide overlay
+        _binding?.fabMenuOverlay?.animate()
+            ?.alpha(0f)
+            ?.setDuration(200)
+            ?.withEndAction {
+                _binding?.fabMenuOverlay?.visibility = View.GONE
+            }
+            ?.start()
+        
+        // Rotate main FAB back
+        _binding?.addProductFab?.animate()
+            ?.rotation(0f)
+            ?.setDuration(200)
+            ?.start()
+        
+        // Hide cards
+        _binding?.let {
+            hideCard(it.singleAddCard)
+            hideCard(it.bulkAddCard)
+        }
+    }
+    
+    private fun showCard(card: View, delay: Long) {
+        card.visibility = View.VISIBLE
+        card.alpha = 0f
+        card.translationY = 20f
+        card.scaleX = 0.8f
+        card.scaleY = 0.8f
+        
+        card.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(200)
+            .setStartDelay(delay)
+            .start()
+    }
+    
+    private fun hideCard(card: View) {
+        card.animate()
+            .alpha(0f)
+            .translationY(20f)
+            .scaleX(0.8f)
+            .scaleY(0.8f)
+            .setDuration(150)
+            .withEndAction {
+                card.visibility = View.GONE
+            }
+            .start()
+    }
+    
+    private fun showAddOptionsDialog() {
+        val options = arrayOf("Dodaj jeden produkt", "Masowe dodawanie według wzoru")
+        AlertDialog.Builder(requireContext())
+            .setTitle("Wybierz opcję")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> openAddProduct()
+                    1 -> openTemplatesList()
+                }
+            }
+            .show()
     }
 
     private fun setupFilters() {
@@ -327,6 +446,12 @@ class ProductsListFragment : Fragment() {
             ProductsListFragmentDirections.actionProductsToAdd()
         )
     }
+    
+    private fun openTemplatesList() {
+        findNavController().navigate(
+            ProductsListFragmentDirections.actionProductsToTemplates()
+        )
+    }
 
     private fun updateEmptyState(isEmpty: Boolean) {
         if (isEmpty) {
@@ -340,6 +465,13 @@ class ProductsListFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Anuluj wszystkie animacje
+        _binding?.apply {
+            fabMenuOverlay.animate().cancel()
+            addProductFab.animate().cancel()
+            singleAddCard.animate().cancel()
+            bulkAddCard.animate().cancel()
+        }
         _binding = null
     }
 }

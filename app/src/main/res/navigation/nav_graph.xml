@@ -12,10 +12,6 @@
         <action
             android:id="@+id/action_home_to_products"
             app:destination="@id/productsListFragment" />
-        
-        <action
-            android:id="@+id/action_home_to_bulk_add"
-            app:destination="@id/bulkAddFragment" />
     </fragment>
 
     <fragment
@@ -30,6 +26,10 @@
         <action
             android:id="@+id/action_products_to_add"
             app:destination="@id/addProductFragment" />
+        
+        <action
+            android:id="@+id/action_products_to_templates"
+            app:destination="@id/templatesListFragment" />
     </fragment>
     
     <fragment
@@ -62,9 +62,10 @@
         android:name="com.example.inventoryapp.ui.templates.BulkAddFragment"
         android:label="Masowe Dodawanie">
         
-        <action
-            android:id="@+id/action_bulkAdd_to_templates"
-            app:destination="@id/templatesListFragment" />
+        <argument
+            android:name="templateId"
+            app:argType="long"
+            android:defaultValue="0L" />
     </fragment>
     
     <fragment
@@ -75,6 +76,10 @@
         <action
             android:id="@+id/action_templates_to_details"
             app:destination="@id/templateDetailsFragment" />
+        
+        <action
+            android:id="@+id/action_templates_to_bulkAdd"
+            app:destination="@id/bulkAddFragment" />
     </fragment>
     
     <fragment

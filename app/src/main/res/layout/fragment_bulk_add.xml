@@ -27,6 +27,7 @@
 
     <!-- Template Selection -->
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/templateSelectionCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="@color/surface"
@@ -34,30 +35,76 @@
         app:cardCornerRadius="12dp"
         android:layout_marginBottom="16dp">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/selectedTemplateText"
+            <!-- Default Template Display -->
+            <LinearLayout
+                android:id="@+id/templateDisplayLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Wzór: Nie wybrano"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="16dp"
+                android:background="?attr/selectableItemBackground">
 
-            <Button
-                android:id="@+id/selectTemplateButton"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/templateEmojiText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📦"
+                    android:textSize="28sp"
+                    android:layout_marginEnd="12dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="12dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Aktualny wzór"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/selectedTemplateText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Nie wybrano"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/dropdownArrowIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:text="▼"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+            <!-- Dropdown Menu Container -->
+            <LinearLayout
+                android:id="@+id/dropdownContainer"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Zmień wzór"
-                android:layout_marginTop="8dp" />
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:background="@color/surface"
+                android:padding="8dp" />
 
-        </LinearLayout>
+        </FrameLayout>
 
     </com.google.android.material.card.MaterialCardView>
 
@@ -79,33 +126,31 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Skanuj Numer Seryjny"
+                android:text="Skanuj Numery Seryjne"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_secondary"
                 android:layout_marginBottom="8dp" />
 
-            <com.google.android.material.textfield.TextInputLayout
+            <!-- Dynamic Products Input Container -->
+            <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Skanuj tutaj (Enter = dodaj)"
-                app:boxBackgroundMode="outline"
-                app:boxBackgroundColor="@color/background_secondary">
+                android:maxHeight="300dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/scanInput"
+                <LinearLayout
+                    android:id="@+id/productsInputContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:imeOptions="actionDone"
-                    android:maxLines="1" />
+                    android:orientation="vertical"
+                    android:padding="8dp" />
 
-            </com.google.android.material.textfield.TextInputLayout>
+            </ScrollView>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="💡 Skaner automatycznie wprowadzi kod i zatwierdzi Enterem"
+                android:text="💡 Po każdym skanowaniu pojawi się nowe pole"
                 android:textSize="12sp"
                 android:textColor="@color/text_tertiary"
                 android:layout_marginTop="8dp" />
@@ -113,6 +158,20 @@
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
+
+    <!-- Status Messages -->
+    <TextView
+        android:id="@+id/lastScannedText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Gotowy do skanowania..."
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="8dp"
+        android:padding="8dp"
+        android:background="@drawable/rounded_background"
+        android:backgroundTint="@color/surface" />
 
     <!-- Stats -->
     <LinearLayout

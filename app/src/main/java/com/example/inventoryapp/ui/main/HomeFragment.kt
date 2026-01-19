@@ -40,12 +40,6 @@ class HomeFragment : Fragment() {
         binding.productsCard.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_products)
         }
-        
-        // Quick action - bulk add products
-        binding.productsCard.setOnLongClickListener {
-            findNavController().navigate(R.id.action_home_to_bulk_add)
-            true
-        }
     }
 
     override fun onDestroyView() {

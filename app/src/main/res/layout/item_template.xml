@@ -1,109 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    style="@style/Widget.App.Card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    android:clickable="true"
-    android:focusable="true"
-    app:cardBackgroundColor="@color/card_background"
-    app:cardCornerRadius="6dp"
-    app:cardElevation="0dp"
-    app:strokeColor="@color/border"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="6dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="12dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:strokeColor="#E5E7EB"
     app:strokeWidth="1dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Template Header -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Category Icon -->
+        <TextView
+            android:id="@+id/categoryIcon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:text="💻"
+            android:textSize="28sp"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Template Name -->
+        <TextView
+            android:id="@+id/templateName"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:text="Laptop Dell Latitude"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#111827"
+            android:layout_marginStart="12dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintTop_toTopOf="@id/categoryIcon"
+            app:layout_constraintStart_toEndOf="@id/categoryIcon"
+            app:layout_constraintEnd_toStartOf="@id/moreButton" />
 
-            <TextView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginEnd="12dp"
-                android:gravity="center"
-                android:text="📋"
-                android:textSize="24sp" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/templateNameText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="Template Name"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    tools:text="Scanner Model XYZ" />
-
-                <TextView
-                    android:id="@+id/templateDescriptionText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="Description"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    tools:text="Handheld barcode scanner" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Template Info Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Category Name -->
+        <TextView
+            android:id="@+id/categoryName"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:text="Laptop"
+            android:textSize="14sp"
+            android:textColor="#6B7280"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintTop_toBottomOf="@id/templateName"
+            app:layout_constraintStart_toEndOf="@id/categoryIcon"
+            app:layout_constraintEnd_toStartOf="@id/moreButton" />
 
-            <!-- Category Badge (if exists) -->
-            <TextView
-                android:id="@+id/templateCategoryText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:background="@color/surface"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                android:text="Category"
-                android:textColor="@color/text_primary"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
+        <!-- Manufacturer -->
+        <TextView
+            android:id="@+id/manufacturer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Dell"
+            android:textSize="12sp"
+            android:textColor="#9CA3AF"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="2dp"
+            app:layout_constraintTop_toBottomOf="@id/categoryName"
+            app:layout_constraintStart_toEndOf="@id/categoryIcon"
+            app:layout_constraintEnd_toStartOf="@id/moreButton"
+            app:layout_constraintBottom_toBottomOf="@id/categoryIcon" />
 
-            <!-- Date Created -->
-            <TextView
-                android:id="@+id/templateDateText"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Created: Jan 15, 2024"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                tools:text="Created: Jan 15, 2024" />
+        <!-- More Options Button -->
+        <ImageView
+            android:id="@+id/moreButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_menu_more"
+            android:contentDescription="Więcej opcji"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="#6B7280"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        </LinearLayout>
+        <!-- Use Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/useTemplateButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Użyj szablonu"
+            android:textAllCaps="false"
+            android:backgroundTint="#0EA5E9"
+            android:textColor="@color/white"
+            android:layout_marginTop="12dp"
+            app:layout_constraintTop_toBottomOf="@id/categoryIcon"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>
