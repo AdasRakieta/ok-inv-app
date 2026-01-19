@@ -18,7 +18,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.ProductEntity
@@ -61,7 +60,6 @@ class BulkAddFragment : Fragment() {
     private var selectedTemplate: ProductTemplateEntity? = null
     private val scannedProducts = mutableListOf<ProductEntity>()
     private val scannedSerials = mutableSetOf<String>()
-    private lateinit var adapter: ScannedProductsAdapter
     private var currentInputField: TextInputEditText? = null
 
     override fun onCreateView(
@@ -76,7 +74,6 @@ class BulkAddFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        setupRecyclerView()
         setupScanInput()
         
         // Load template from arguments if provided
@@ -92,118 +89,10 @@ class BulkAddFragment : Fragment() {
         updateUI()
     }
     
-    private fun setupRecyclerView() {
-        adapter = ScannedProductsAdapter(
-            onDeleteClick = { product ->
-                scannedProducts.remove(product)
-                adapter.submitList(scannedProducts.toList())
-                updateStats()
-            }
-        )
-        
-        binding.scannedProductsRecycler.layoutManager = LinearLayoutManager(requireContext())
-        binding.scannedProductsRecycler.adapter = adapter
-    }
-    
     private fun setupScanInput() {
-        // Template selection - toggle dropdown
-        binding.templateDisplayLayout.setOnClickListener {
-            toggleTemplateDropdown()
-        }
-        
         // Save all button
         binding.saveAllButton.setOnClickListener {
             saveAllProducts()
-        }
-        
-        // Clear all button
-        binding.clearAllButton.setOnClickListener {
-            clearAll()
-        }
-    }
-    
-    private fun toggleTemplateDropdown() {
-        val isExpanded = binding.dropdownContainer.visibility == View.VISIBLE
-        
-        if (isExpanded) {
-            // Close dropdown
-            binding.dropdownContainer.visibility = View.GONE
-            binding.dropdownArrowIcon.rotation = 0f
-        } else {
-            // Open dropdown
-            showTemplateDropdown()
-        }
-    }
-    
-    private fun showTemplateDropdown() {
-        lifecycleScope.launch {
-            val templates = templateRepository.getAllTemplates().firstOrNull() ?: emptyList()
-            
-            if (templates.isEmpty()) {
-                Toast.makeText(
-                    requireContext(),
-                    "Brak szablonów. Najpierw utwórz szablon produktu.",
-                    Toast.LENGTH_LONG
-                ).show()
-                return@launch
-            }
-            
-            // Clear previous items
-            binding.dropdownContainer.removeAllViews()
-            
-            // Add each template as a dropdown item
-            templates.forEach { template ->
-                val itemView = LayoutInflater.from(requireContext()).inflate(
-                    R.layout.item_template_dropdown,
-                    binding.dropdownContainer,
-                    false
-                )
-                
-                // Get category icon
-                val categoryIcon = categoryRepository.getCategoryById(template.categoryId).firstOrNull()?.icon ?: "📦"
-                
-                itemView.findViewById<TextView>(R.id.itemEmoji).text = categoryIcon
-                itemView.findViewById<TextView>(R.id.itemName).text = template.name
-                
-                // Get category name
-                val categoryName = categoryRepository.getCategoryById(template.categoryId).firstOrNull()?.name ?: "N/A"
-                itemView.findViewById<TextView>(R.id.itemCategory).text = categoryName
-                
-                // Show checkmark if selected
-                if (template.id == selectedTemplate?.id) {
-                    itemView.findViewById<TextView>(R.id.itemCheckmark).visibility = View.VISIBLE
-                }
-                
-                // Item click handler
-                itemView.setOnClickListener {
-                    selectedTemplate = template
-                    binding.dropdownContainer.visibility = View.GONE
-                    binding.dropdownArrowIcon.rotation = 0f
-                    updateUI()
-                    showTemplateDropdown() // Reopen to show updated checkmark
-                }
-                
-                // Add divider (except last item)
-                binding.dropdownContainer.addView(itemView)
-                
-                if (template != templates.last()) {
-                    val divider = View(requireContext()).apply {
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            1
-                        )
-                        setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.darker_gray))
-                    }
-                    binding.dropdownContainer.addView(divider)
-                }
-            }
-            
-            // Show dropdown with animation
-            binding.dropdownContainer.visibility = View.VISIBLE
-            binding.dropdownArrowIcon.animate()
-                .rotation(180f)
-                .setDuration(200)
-                .start()
         }
     }
     
@@ -323,7 +212,6 @@ class BulkAddFragment : Fragment() {
             val product = scannedProducts.find { it.serialNumber == serialNumber }
             if (product != null) {
                 scannedProducts.remove(product)
-                adapter.submitList(scannedProducts.toList())
             }
             showStatus("❌ Usunięto: $serialNumber")
             updateStats()
@@ -408,7 +296,6 @@ class BulkAddFragment : Fragment() {
                 // Add to list
                 scannedProducts.add(0, newProduct)
                 scannedSerials.add(scannedValue)
-                adapter.submitList(scannedProducts.toList())
                 updateStats()
                 
                 // Record successful scan
@@ -461,23 +348,22 @@ class BulkAddFragment : Fragment() {
                 
                 // Clear session
                 scannedProducts.clear()
-                adapter.submitList(emptyList())
+                scannedSerials.clear()
+                binding.productsInputContainer.removeAllViews()
+                addProductInputField()
                 updateStats()
                 
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd zapisu: ${e.message}", Toast.LENGTH_LONG).show()
+                
+                // Clear on error too
+                scannedProducts.clear()
+                scannedSerials.clear()
+                binding.productsInputContainer.removeAllViews()
+                addProductInputField()
+                updateStats()
             }
         }
-    }
-    
-    private fun clearAll() {
-        scannedProducts.clear()
-        scannedSerials.clear()
-        binding.productsInputContainer.removeAllViews()
-        adapter.submitList(emptyList())
-        addProductInputField()
-        updateStats()
-        Toast.makeText(requireContext(), "Wyczyszczono sesję", Toast.LENGTH_SHORT).show()
     }
     
     private fun updateStats() {
