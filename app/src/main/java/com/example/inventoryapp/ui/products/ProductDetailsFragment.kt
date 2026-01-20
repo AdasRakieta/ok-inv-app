@@ -15,6 +15,9 @@ import androidx.navigation.fragment.navArgs
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.databinding.FragmentProductDetailsBinding
+import com.example.inventoryapp.databinding.BottomSheetEditSerialBinding
+import com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -117,29 +120,46 @@ class ProductDetailsFragment : Fragment() {
 
     private fun promptEditSerial() {
         val product = currentProduct ?: return
-        val input = EditText(requireContext()).apply {
-            setText(product.serialNumber)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+        
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetEditSerialBinding.inflate(layoutInflater)
+        
+        // Set current serial number
+        sheetBinding.serialNumberInput.setText(product.serialNumber)
+        sheetBinding.serialNumberInput.requestFocus()
+        
+        // Cancel button
+        sheetBinding.cancelButton.setOnClickListener {
+            bottomSheet.dismiss()
         }
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Edytuj numer seryjny")
-            .setView(input)
-            .setPositiveButton("Zapisz") { _, _ ->
-                val newSerial = input.text.toString().trim()
-                if (newSerial.isEmpty()) {
+        
+        // Save button
+        sheetBinding.saveButton.setOnClickListener {
+            val newSerial = sheetBinding.serialNumberInput.text.toString().trim()
+            
+            when {
+                newSerial.isEmpty() -> {
                     toast("Numer seryjny nie może być pusty")
-                } else if (newSerial == product.serialNumber) {
+                }
+                newSerial == product.serialNumber -> {
                     toast("Numer seryjny bez zmian")
-                } else {
+                    bottomSheet.dismiss()
+                }
+                else -> {
                     saveProduct(product.copy(serialNumber = newSerial, updatedAt = System.currentTimeMillis()))
+                    bottomSheet.dismiss()
                 }
             }
-            .setNegativeButton("Anuluj", null)
-            .show()
+        }
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+        
+        // Show keyboard
+        sheetBinding.serialNumberInput.postDelayed({
+            val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.showSoftInput(sheetBinding.serialNumberInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        }, 100)
     }
 
     private fun navigateToEditForm() {
@@ -150,18 +170,43 @@ class ProductDetailsFragment : Fragment() {
 
     private fun confirmDeleteProduct() {
         val product = currentProduct ?: return
-        AlertDialog.Builder(requireContext())
-            .setTitle("Usuń produkt")
-            .setMessage("Czy na pewno chcesz usunąć ten produkt?")
-            .setPositiveButton("Usuń") { _, _ ->
-                lifecycleScope.launch {
-                    productRepository.deleteProductById(product.id)
-                    toast("Produkt usunięty")
-                    requireActivity().onBackPressedDispatcher.onBackPressed()
+        
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
+        
+        // Set product name
+        sheetBinding.productNameText.text = product.name
+        
+        // Cancel button
+        sheetBinding.cancelButton.setOnClickListener {
+            bottomSheet.dismiss()
+        }
+        
+        // Delete button with animation
+        sheetBinding.deleteButton.setOnClickListener {
+            it.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(100)
+                .withEndAction {
+                    it.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(100)
+                        .start()
+                    
+                    lifecycleScope.launch {
+                        productRepository.deleteProductById(product.id)
+                        toast("Produkt usunięty")
+                        bottomSheet.dismiss()
+                        requireActivity().onBackPressedDispatcher.onBackPressed()
+                    }
                 }
-            }
-            .setNegativeButton("Anuluj", null)
-            .show()
+                .start()
+        }
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
     }
 
     private fun saveProduct(updated: ProductEntity) {

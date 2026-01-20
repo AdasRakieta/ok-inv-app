@@ -552,13 +552,17 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/deleteProductButton"
-            style="@style/Widget.App.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Usuń produkt"
-            android:textColor="@color/error"
-            android:strokeColor="@color/error"
-            android:textAllCaps="false" />
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#EF4444"
+            android:textAllCaps="false"
+            app:cornerRadius="8dp"
+            app:elevation="2dp"
+            app:icon="@android:drawable/ic_menu_delete"
+            app:iconTint="#FFFFFF"
+            app:iconGravity="textStart" />
 
     </LinearLayout>
 
