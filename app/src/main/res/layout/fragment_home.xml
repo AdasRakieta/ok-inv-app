@@ -89,20 +89,6 @@
                         android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wkrótce"
-                        android:textSize="11sp"
-                        android:textColor="@color/warning"
-                        android:textStyle="bold"
-                        android:background="@color/background_secondary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="2dp"
-                        android:layout_marginTop="6dp" />
-
                 </LinearLayout>
 
             </LinearLayout>
@@ -116,8 +102,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:clickable="false"
-            android:focusable="false"
+            android:clickable="true"
+            android:focusable="true"
             app:cardBackgroundColor="@color/surface"
             app:cardElevation="2dp"
             app:cardCornerRadius="12dp">
@@ -161,23 +147,9 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Zarządzaj danymi pracowników"
+                        android:text="Zarządzaj pracownikami i przypisaniami sprzętu"
                         android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wkrótce"
-                        android:textSize="11sp"
-                        android:textColor="@color/warning"
-                        android:textStyle="bold"
-                        android:background="@color/background_secondary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="2dp"
-                        android:layout_marginTop="6dp" />
 
                 </LinearLayout>
 

@@ -12,6 +12,10 @@
         <action
             android:id="@+id/action_home_to_products"
             app:destination="@id/productsListFragment" />
+        
+        <action
+            android:id="@+id/action_home_to_employees"
+            app:destination="@id/employeesListFragment" />
     </fragment>
 
     <fragment
@@ -90,6 +94,50 @@
         <argument
             android:name="templateId"
             app:argType="long" />
+    </fragment>
+
+    <!-- Employees -->
+    <fragment
+        android:id="@+id/employeesListFragment"
+        android:name="com.example.inventoryapp.ui.employees.EmployeesListFragment"
+        android:label="Pracownicy">
+        
+        <action
+            android:id="@+id/action_employeesList_to_employeeDetails"
+            app:destination="@id/employeeDetailsFragment" />
+        
+        <action
+            android:id="@+id/action_employeesList_to_addEmployee"
+            app:destination="@id/addEmployeeFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/employeeDetailsFragment"
+        android:name="com.example.inventoryapp.ui.employees.EmployeeDetailsFragment"
+        android:label="Szczegóły pracownika">
+        
+        <argument
+            android:name="employeeId"
+            app:argType="long" />
+        
+        <action
+            android:id="@+id/action_employeeDetails_to_addEmployee"
+            app:destination="@id/addEmployeeFragment" />
+        
+        <action
+            android:id="@+id/action_employeeDetails_to_productDetails"
+            app:destination="@id/productDetailsFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/addEmployeeFragment"
+        android:name="com.example.inventoryapp.ui.employees.AddEmployeeFragment"
+        android:label="Dodaj pracownika">
+        
+        <argument
+            android:name="employeeId"
+            app:argType="long"
+            android:defaultValue="0L" />
     </fragment>
 
 </navigation>

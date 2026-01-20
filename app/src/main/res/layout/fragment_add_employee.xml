@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/background">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Header -->
+        <TextView
+            android:id="@+id/headerText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Dodaj pracownika"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginBottom="24dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Personal Info Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/personalInfoCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp"
+            app:layout_constraintTop_toBottomOf="@id/headerText"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👤 Dane osobowe"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#111827"
+                    android:layout_marginBottom="16dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/firstNameLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Imię *"
+                    app:boxBackgroundColor="@color/surface"
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/firstNameInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:inputType="textCapWords"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/lastNameLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="Nazwisko *"
+                    app:boxBackgroundColor="@color/surface"
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/lastNameInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:inputType="textCapWords"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Work Info Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/workInfoCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp"
+            app:layout_constraintTop_toBottomOf="@id/personalInfoCard"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏢 Informacje służbowe"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#111827"
+                    android:layout_marginBottom="16dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/departmentLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Dział"
+                    app:boxBackgroundColor="@color/surface"
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/departmentInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:inputType="text"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/positionLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="Stanowisko"
+                    app:boxBackgroundColor="@color/surface"
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/positionInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:inputType="text"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Contact Info Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/contactInfoCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp"
+            app:layout_constraintTop_toBottomOf="@id/workInfoCard"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📞 Kontakt"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#111827"
+                    android:layout_marginBottom="16dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/emailLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Email"
+                    app:boxBackgroundColor="@color/surface"
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/emailInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:inputType="textEmailAddress"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/phoneLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="Telefon"
+                    app:boxBackgroundColor="@color/surface"
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/phoneInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:inputType="phone"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Notes Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/notesCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp"
+            app:layout_constraintTop_toBottomOf="@id/contactInfoCard"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📝 Notatki"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#111827"
+                    android:layout_marginBottom="16dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/notesLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Dodatkowe informacje"
+                    app:boxBackgroundColor="@color/surface"
+                    app:boxStrokeColor="@color/primary"
+                    app:hintTextColor="@color/text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/notesInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_primary"
+                        android:inputType="textMultiLine"
+                        android:minLines="3"
+                        android:gravity="top" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:id="@+id/buttonsLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            app:layout_constraintTop_toBottomOf="@id/notesCard"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Anuluj"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#EF4444"
+                android:textAllCaps="false"
+                android:layout_marginEnd="8dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/saveButton"
+                style="@style/Widget.App.Button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Zapisz pracownika"
+                android:textAllCaps="false"
+                android:layout_marginStart="8dp" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

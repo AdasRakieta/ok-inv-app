@@ -40,6 +40,11 @@ class HomeFragment : Fragment() {
         binding.productsCard.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_products)
         }
+        
+        // Employees module - navigate to employees list
+        binding.employeesCard.setOnClickListener {
+            findNavController().navigate(R.id.action_home_to_employees)
+        }
     }
 
     override fun onDestroyView() {

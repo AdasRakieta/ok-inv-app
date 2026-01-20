@@ -20,7 +20,10 @@ object ProductDataSeeder {
             val electronicsId = 1L
             val furnitureId = 2L
             val toolsId = 3L
-            
+        
+
+
+
             // Sample products
             val sampleProducts = listOf(
                 ProductEntity(

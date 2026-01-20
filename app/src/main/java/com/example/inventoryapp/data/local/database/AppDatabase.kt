@@ -38,7 +38,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 28,
+    version = 29,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -326,6 +326,57 @@ abstract class AppDatabase : RoomDatabase() {
                 database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_products_customId ON products(customId) WHERE customId IS NOT NULL")
             }
         }
+        
+        // Migration 28 -> 29: Update employees table structure
+        private val MIGRATION_28_29 = object : Migration(28, 29) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create new employees table with updated structure
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS employees_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        firstName TEXT NOT NULL,
+                        lastName TEXT NOT NULL,
+                        email TEXT,
+                        phone TEXT,
+                        department TEXT,
+                        position TEXT,
+                        notes TEXT,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL
+                    )
+                """)
+                
+                // Migrate data from old table (split name into firstName and lastName)
+                database.execSQL("""
+                    INSERT INTO employees_new (id, firstName, lastName, email, phone, department, position, notes, createdAt, updatedAt)
+                    SELECT 
+                        id,
+                        CASE 
+                            WHEN instr(name, ' ') > 0 THEN substr(name, 1, instr(name, ' ') - 1)
+                            ELSE name
+                        END as firstName,
+                        CASE 
+                            WHEN instr(name, ' ') > 0 THEN substr(name, instr(name, ' ') + 1)
+                            ELSE ''
+                        END as lastName,
+                        email,
+                        NULL as phone,
+                        department,
+                        position,
+                        NULL as notes,
+                        createdAt,
+                        updatedAt
+                    FROM employees
+                """)
+                
+                // Drop old table and rename new one
+                database.execSQL("DROP TABLE employees")
+                database.execSQL("ALTER TABLE employees_new RENAME TO employees")
+                
+                // Create unique index for email
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_employees_email ON employees(email) WHERE email IS NOT NULL")
+            }
+        }
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -334,7 +385,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "inventory_database"
                 )
-                    .addMigrations(MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28)
+                    .addMigrations(MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
