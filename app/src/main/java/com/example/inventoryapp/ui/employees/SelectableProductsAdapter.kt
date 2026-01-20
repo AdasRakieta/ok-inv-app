@@ -1,5 +1,7 @@
 package com.example.inventoryapp.ui.employees
 
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
@@ -67,9 +69,30 @@ class SelectableProductsAdapter(
                 categoryIcon.text = item.categoryIcon
                 productName.text = item.product.name
                 productCategory.text = item.categoryLabel
+
+                val (statusLabel, statusColor) = when (item.product.status) {
+                    ProductStatus.IN_STOCK -> "Magazyn" to "#10B981"
+                    ProductStatus.ASSIGNED -> "Przypisane" to "#3B82F6"
+                    ProductStatus.IN_REPAIR -> "Serwis" to "#F59E0B"
+                    ProductStatus.RETIRED -> "Wycofane" to "#6B7280"
+                    ProductStatus.LOST -> "Zaginione" to "#EF4444"
+                }
+                productStatus.text = statusLabel
+
+                val statusDrawable = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    setColor(Color.parseColor(statusColor))
+                    cornerRadius = 12f
+                }
+                productStatus.background = statusDrawable
                 
-                productSerialNumber.isVisible = item.product.serialNumber?.isNotEmpty() == true
-                productSerialNumber.text = "S/N: ${item.product.serialNumber}"
+                val serial = item.product.serialNumber.orEmpty()
+                val hasSerial = serial.isNotBlank()
+
+                serialNumberContainer.isVisible = hasSerial
+                if (hasSerial) {
+                    productSerialNumber.text = serial
+                }
 
                 root.setOnClickListener {
                     onProductClick(item.product)

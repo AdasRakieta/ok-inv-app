@@ -13,9 +13,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
+import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.databinding.DialogAssignEquipmentBinding
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.example.inventoryapp.databinding.BottomSheetFilterBinding
+import com.example.inventoryapp.ui.products.FilterOption
+import com.example.inventoryapp.ui.products.FilterOptionsAdapter
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -33,6 +37,7 @@ class AssignEquipmentDialogFragment(
     private var allProducts = listOf<SelectableProductItem>()
     private var filteredProducts = listOf<SelectableProductItem>()
     private var currentCategoryFilter: String? = null
+    private var currentStatusFilter: ProductStatus? = null
     private var currentSearchQuery: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,11 +101,11 @@ class AssignEquipmentDialogFragment(
 
     private fun setupFilterButtons() {
         binding.filterButton.setOnClickListener {
-            showCategoryFilterDialog()
+            showCategoryFilterBottomSheet()
         }
 
         binding.statusFilterButton.setOnClickListener {
-            // Status filter can be added if needed
+            showStatusFilterBottomSheet()
         }
 
         binding.selectAllButton.setOnClickListener {
@@ -148,6 +153,7 @@ class AssignEquipmentDialogFragment(
 
             filteredProducts = allProducts
             adapter.submitList(filteredProducts)
+            updateFilterLabels()
             updateEmptyState()
         }
     }
@@ -158,40 +164,140 @@ class AssignEquipmentDialogFragment(
                 true
             } else {
                 item.product.name.contains(currentSearchQuery, ignoreCase = true) ||
-                        item.product.serialNumber?.contains(currentSearchQuery, ignoreCase = true) == true ||
+                        item.product.serialNumber.orEmpty().contains(currentSearchQuery, ignoreCase = true) ||
                         item.categoryLabel.contains(currentSearchQuery, ignoreCase = true)
             }
 
-            val matchesCategory = if (currentCategoryFilter == null || currentCategoryFilter == "Wszystkie") {
-                true
-            } else {
-                item.categoryLabel == currentCategoryFilter
-            }
+            val matchesCategory = currentCategoryFilter?.let { category ->
+                item.categoryLabel == category
+            } ?: true
 
-            matchesSearch && matchesCategory
+            val matchesStatus = currentStatusFilter?.let { status ->
+                item.product.status == status
+            } ?: true
+
+            matchesSearch && matchesCategory && matchesStatus
         }
 
         adapter.submitList(filteredProducts)
         updateEmptyState()
         updateSelectAllButton()
+        updateFilterLabels()
     }
 
-    private fun showCategoryFilterDialog() {
-        lifecycleScope.launch {
-            val categories = allProducts.map { it.categoryLabel }.distinct().sorted()
-            val items = (listOf("Wszystkie") + categories).toTypedArray()
-            val currentIndex = items.indexOf(currentCategoryFilter ?: "Wszystkie")
+    private fun showCategoryFilterBottomSheet() {
+        val categories = allProducts.map { it.categoryLabel }.distinct().sorted()
+        val options = mutableListOf(
+            FilterOption(
+                id = "all",
+                label = "Wszystkie kategorie",
+                icon = "📦",
+                isSelected = currentCategoryFilter == null
+            )
+        )
 
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Wybierz kategorię")
-                .setSingleChoiceItems(items, currentIndex) { dialog, which ->
-                    currentCategoryFilter = if (which == 0) null else items[which]
-                    binding.filterButton.text = items[which]
-                    filterProducts()
-                    dialog.dismiss()
-                }
-                .setNegativeButton("Anuluj", null)
-                .show()
+        categories.forEach { categoryName ->
+            options.add(
+                FilterOption(
+                    id = categoryName,
+                    label = categoryName,
+                    icon = getCategoryIcon(categoryName),
+                    isSelected = currentCategoryFilter == categoryName
+                )
+            )
+        }
+
+        showFilterBottomSheet("🗂️ Filtruj po kategorii", options) { option ->
+            currentCategoryFilter = if (option.id == "all") null else option.id
+            updateFilterLabels()
+            filterProducts()
+        }
+    }
+
+    private fun showStatusFilterBottomSheet() {
+        val options = listOf(
+            FilterOption(
+                id = "all",
+                label = "Wszystkie statusy",
+                icon = "🔄",
+                isSelected = currentStatusFilter == null
+            ),
+            FilterOption(
+                id = ProductStatus.IN_STOCK.name,
+                label = "Magazyn",
+                icon = "✅",
+                isSelected = currentStatusFilter == ProductStatus.IN_STOCK
+            ),
+            FilterOption(
+                id = ProductStatus.ASSIGNED.name,
+                label = "Przypisane",
+                icon = "👤",
+                isSelected = currentStatusFilter == ProductStatus.ASSIGNED
+            ),
+            FilterOption(
+                id = ProductStatus.IN_REPAIR.name,
+                label = "Serwis",
+                icon = "🔧",
+                isSelected = currentStatusFilter == ProductStatus.IN_REPAIR
+            ),
+            FilterOption(
+                id = ProductStatus.RETIRED.name,
+                label = "Wycofane",
+                icon = "📁",
+                isSelected = currentStatusFilter == ProductStatus.RETIRED
+            ),
+            FilterOption(
+                id = ProductStatus.LOST.name,
+                label = "Zaginione",
+                icon = "❓",
+                isSelected = currentStatusFilter == ProductStatus.LOST
+            )
+        )
+
+        showFilterBottomSheet("🏷️ Filtruj po statusie", options) { option ->
+            currentStatusFilter = if (option.id == "all") null else ProductStatus.valueOf(option.id)
+            updateFilterLabels()
+            filterProducts()
+        }
+    }
+
+    private fun showFilterBottomSheet(
+        title: String,
+        options: List<FilterOption>,
+        onOptionSelected: (FilterOption) -> Unit
+    ) {
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetFilterBinding.inflate(layoutInflater)
+
+        sheetBinding.sheetTitle.text = title
+
+        val adapter = FilterOptionsAdapter(options) { selected ->
+            bottomSheet.dismiss()
+            onOptionSelected(selected)
+        }
+
+        sheetBinding.optionsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        sheetBinding.optionsRecyclerView.adapter = adapter
+
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+
+    private fun updateFilterLabels() {
+        val categoryLabel = currentCategoryFilter ?: "Kategoria"
+        binding.filterButton.text = categoryLabel
+
+        val statusLabel = currentStatusFilter?.let { statusLabel(it) } ?: "Status"
+        binding.statusFilterButton.text = statusLabel
+    }
+
+    private fun statusLabel(status: ProductStatus): String {
+        return when (status) {
+            ProductStatus.IN_STOCK -> "Magazyn"
+            ProductStatus.ASSIGNED -> "Przypisane"
+            ProductStatus.IN_REPAIR -> "Serwis"
+            ProductStatus.RETIRED -> "Wycofane"
+            ProductStatus.LOST -> "Zaginione"
         }
     }
 

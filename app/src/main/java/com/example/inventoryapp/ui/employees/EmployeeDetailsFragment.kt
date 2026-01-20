@@ -16,6 +16,8 @@ import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.databinding.FragmentEmployeeDetailsBinding
+import com.example.inventoryapp.databinding.BottomSheetDeleteEmployeeConfirmBinding
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -202,25 +204,40 @@ class EmployeeDetailsFragment : Fragment() {
     }
 
     private fun showDeleteConfirmation() {
-        lifecycleScope.launch {
-            val assignedCount = productRepository.getAssignedProductsCount(args.employeeId)
-            
-            val message = if (assignedCount > 0) {
-                "⚠️ UWAGA!\n\nTen pracownik ma przypisanych $assignedCount urządzeń.\n\nUsunięcie pracownika spowoduje odłączenie całego sprzętu i ustawienie statusu na \"Dostępny\".\n\nCzy na pewno chcesz kontynuować?"
-            } else {
-                "Czy na pewno chcesz usunąć tego pracownika?\n\nTej operacji nie można cofnąć."
-            }
-            
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Usuń pracownika")
-                .setMessage(message)
-                .setPositiveButton("Usuń pracownika") { _, _ ->
-                    deleteEmployee()
-                }
-                .setNegativeButton("Anuluj", null)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .show()
+        val employee = currentEmployee ?: return
+        
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetDeleteEmployeeConfirmBinding.inflate(layoutInflater)
+        
+        // Set employee name
+        sheetBinding.employeeNameText.text = employee.fullName
+        
+        // Cancel button
+        sheetBinding.cancelButton.setOnClickListener {
+            bottomSheet.dismiss()
         }
+        
+        // Delete button with animation
+        sheetBinding.deleteButton.setOnClickListener {
+            it.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(100)
+                .withEndAction {
+                    it.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(100)
+                        .start()
+                    
+                    deleteEmployee()
+                    bottomSheet.dismiss()
+                }
+                .start()
+        }
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
     }
 
     private fun deleteEmployee() {
