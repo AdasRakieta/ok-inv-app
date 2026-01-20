@@ -66,7 +66,7 @@ class SelectableProductsAdapter(
                 productCheckbox.isChecked = isSelected
                 categoryIcon.text = item.categoryIcon
                 productName.text = item.product.name
-                productCategory.text = item.product.categoryName
+                productCategory.text = item.categoryLabel
                 
                 productSerialNumber.isVisible = item.product.serialNumber?.isNotEmpty() == true
                 productSerialNumber.text = "S/N: ${item.product.serialNumber}"
@@ -97,5 +97,6 @@ class SelectableProductsAdapter(
 
 data class SelectableProductItem(
     val product: ProductEntity,
-    val categoryIcon: String
+    val categoryIcon: String,
+    val categoryLabel: String
 )

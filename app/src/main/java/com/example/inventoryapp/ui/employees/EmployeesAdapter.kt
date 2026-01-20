@@ -80,17 +80,11 @@ class EmployeesAdapter(
                 // Employee name
                 employeeName.text = employee.fullName
                 
-                // Department and position
-                val deptAndPos = buildString {
-                    if (!employee.department.isNullOrBlank()) {
-                        append(employee.department)
-                    }
-                    if (!employee.position.isNullOrBlank()) {
-                        if (isNotEmpty()) append(" • ")
-                        append(employee.position)
-                    }
-                }
-                employeeDepartment.text = deptAndPos.ifBlank { "Brak działu" }
+                // Department
+                employeeDepartment.text = employee.department?.takeIf { it.isNotBlank() } ?: "IT"
+                
+                // Position  
+                employeePosition.text = employee.position?.takeIf { it.isNotBlank() } ?: "Pracownik"
                 
                 // Assigned equipment count
                 assignedCount.text = when (equipmentCount) {

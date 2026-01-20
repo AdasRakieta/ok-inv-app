@@ -151,36 +151,11 @@ class EmployeeDetailsFragment : Fragment() {
     }
 
     private fun showAssignEquipmentDialog() {
-        lifecycleScope.launch {
-            // Get all products that are not assigned
-            val allProducts = productRepository.getAllProducts().first()
-            val availableProducts = allProducts.filter { it.assignedToEmployeeId == null }
-            
-            if (availableProducts.isEmpty()) {
-                Toast.makeText(requireContext(), "Brak dostępnego sprzętu do przypisania", Toast.LENGTH_SHORT).show()
-                return@launch
+        currentEmployee?.let { employee ->
+            val dialog = AssignEquipmentDialogFragment(employee.id) { selectedProducts ->
+                assignProducts(selectedProducts)
             }
-            
-            val productNames = availableProducts.map { "${it.name} (S/N: ${it.serialNumber})" }.toTypedArray()
-            val selectedProducts = mutableListOf<ProductEntity>()
-            val checkedItems = BooleanArray(productNames.size) { false }
-            
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Przypisz sprzęt")
-                .setMultiChoiceItems(productNames, checkedItems) { _, which, isChecked ->
-                    if (isChecked) {
-                        selectedProducts.add(availableProducts[which])
-                    } else {
-                        selectedProducts.remove(availableProducts[which])
-                    }
-                }
-                .setPositiveButton("Przypisz (${selectedProducts.size})") { _, _ ->
-                    if (selectedProducts.isNotEmpty()) {
-                        assignProducts(selectedProducts)
-                    }
-                }
-                .setNegativeButton("Anuluj", null)
-                .show()
+            dialog.show(childFragmentManager, "AssignEquipmentDialog")
         }
     }
 
@@ -205,12 +180,13 @@ class EmployeeDetailsFragment : Fragment() {
 
     private fun showUnassignConfirmation(product: ProductEntity) {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Usuń przypisanie")
-            .setMessage("Czy chcesz usunąć przypisanie: ${product.name}?")
-            .setPositiveButton("Usuń") { _, _ ->
+            .setTitle("Usuń przypisanie sprzętu")
+            .setMessage("Czy na pewno chcesz usunąć przypisanie?\n\n${product.name}\nS/N: ${product.serialNumber}")
+            .setPositiveButton("Usuń przypisanie") { _, _ ->
                 unassignProduct(product)
             }
             .setNegativeButton("Anuluj", null)
+            .setIcon(android.R.drawable.ic_dialog_alert)
             .show()
     }
 
@@ -230,18 +206,19 @@ class EmployeeDetailsFragment : Fragment() {
             val assignedCount = productRepository.getAssignedProductsCount(args.employeeId)
             
             val message = if (assignedCount > 0) {
-                "Ten pracownik ma przypisanych $assignedCount urządzeń. Usunięcie pracownika spowoduje odłączenie całego sprzętu. Kontynuować?"
+                "⚠️ UWAGA!\n\nTen pracownik ma przypisanych $assignedCount urządzeń.\n\nUsunięcie pracownika spowoduje odłączenie całego sprzętu i ustawienie statusu na \"Dostępny\".\n\nCzy na pewno chcesz kontynuować?"
             } else {
-                "Czy na pewno chcesz usunąć tego pracownika?"
+                "Czy na pewno chcesz usunąć tego pracownika?\n\nTej operacji nie można cofnąć."
             }
             
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Usuń pracownika")
                 .setMessage(message)
-                .setPositiveButton("Usuń") { _, _ ->
+                .setPositiveButton("Usuń pracownika") { _, _ ->
                     deleteEmployee()
                 }
                 .setNegativeButton("Anuluj", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
                 .show()
         }
     }

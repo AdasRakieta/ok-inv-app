@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
 import com.example.inventoryapp.databinding.FragmentEmployeesListBinding
+import com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
@@ -30,6 +32,7 @@ class EmployeesListFragment : Fragment() {
 
     private val searchQueryFlow = MutableStateFlow("")
     private val departmentFilterFlow = MutableStateFlow<String?>(null)
+    private val statusFilterFlow = MutableStateFlow<String?>(null)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -50,6 +53,8 @@ class EmployeesListFragment : Fragment() {
         setupRecyclerView()
         setupSearchBar()
         setupFilterButton()
+        setupStatusFilterButton()
+        setupSortButton()
         setupStatsButton()
         setupFab()
         setupSelectionPanel()
@@ -90,10 +95,22 @@ class EmployeesListFragment : Fragment() {
         }
     }
 
+    private fun setupStatusFilterButton() {
+        binding.statusFilterButton.setOnClickListener {
+            showStatusFilterDialog()
+        }
+    }
+
+    private fun setupSortButton() {
+        binding.sortButton.setOnClickListener {
+            showSortDialog()
+        }
+    }
+
     private fun showDepartmentFilterDialog() {
         lifecycleScope.launch {
             val departments = employeeRepository.getAllDepartments()
-            val options = listOf("Wszystkie działy") + departments
+            val options = listOf("Wszystkie") + departments
             val selectedIndex = if (departmentFilterFlow.value == null) 0 
                 else departments.indexOf(departmentFilterFlow.value) + 1
 
@@ -101,12 +118,51 @@ class EmployeesListFragment : Fragment() {
                 .setTitle("Filtruj po dziale")
                 .setSingleChoiceItems(options.toTypedArray(), selectedIndex) { dialog, which ->
                     departmentFilterFlow.value = if (which == 0) null else departments[which - 1]
-                    binding.filterButton.text = options[which]
+                    binding.filterButton.text = if (which == 0) "Dział" else departments[which - 1]
                     dialog.dismiss()
                 }
                 .setNegativeButton("Anuluj", null)
                 .show()
         }
+    }
+
+    private fun showStatusFilterDialog() {
+        val options = arrayOf("Wszystkie", "Aktywni", "Nieaktywni")
+        val selectedIndex = when (statusFilterFlow.value) {
+            null -> 0
+            "Aktywni" -> 1
+            "Nieaktywni" -> 2
+            else -> 0
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Filtruj po statusie")
+            .setSingleChoiceItems(options, selectedIndex) { dialog, which ->
+                statusFilterFlow.value = if (which == 0) null else options[which]
+                binding.statusFilterButton.text = options[which]
+                dialog.dismiss()
+            }
+            .setNegativeButton("Anuluj", null)
+            .show()
+    }
+
+    private fun showSortDialog() {
+        val options = arrayOf(
+            "Alfabetycznie (A-Z)",
+            "Alfabetycznie (Z-A)",
+            "Najnowsi",
+            "Najstarsi"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Sortuj")
+            .setItems(options) { dialog, which ->
+                // TODO: Implement sorting
+                Toast.makeText(requireContext(), "Sortowanie: ${options[which]}", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Anuluj", null)
+            .show()
     }
 
     private fun setupStatsButton() {
@@ -152,11 +208,6 @@ class EmployeesListFragment : Fragment() {
             updateSelectionPanel()
         }
 
-        binding.cancelSelectionButton.setOnClickListener {
-            adapter.clearSelection()
-            updateSelectionPanel()
-        }
-
         binding.deleteSelectedButton.setOnClickListener {
             showDeleteConfirmationDialog()
         }
@@ -165,7 +216,7 @@ class EmployeesListFragment : Fragment() {
     private fun updateSelectionPanel() {
         val selectedCount = adapter.getSelectedCount()
         binding.selectionPanel.isVisible = adapter.selectionMode
-        binding.selectionCount.text = "Zaznaczono: $selectedCount"
+        binding.selectionCountText.text = "Zaznaczono: $selectedCount"
         
         if (selectedCount == 0 && adapter.selectionMode) {
             adapter.clearSelection()
@@ -175,14 +226,33 @@ class EmployeesListFragment : Fragment() {
     private fun showDeleteConfirmationDialog() {
         val selectedCount = adapter.getSelectedCount()
         
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Usuń pracowników")
-            .setMessage("Czy na pewno chcesz usunąć $selectedCount pracowników? Ta operacja jest nieodwracalna.")
-            .setPositiveButton("Usuń") { _, _ ->
-                deleteSelectedEmployees()
-            }
-            .setNegativeButton("Anuluj", null)
-            .show()
+        if (selectedCount == 0) return
+        
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
+        
+        sheetBinding.productNameText.text = "$selectedCount ${pluralForm(selectedCount, "pracownik", "pracowników", "pracowników")}"
+        
+        sheetBinding.cancelButton.setOnClickListener {
+            bottomSheet.dismiss()
+        }
+        
+        sheetBinding.deleteButton.text = "Usuń pracowników"
+        sheetBinding.deleteButton.setOnClickListener {
+            bottomSheet.dismiss()
+            deleteSelectedEmployees()
+        }
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+    
+    private fun pluralForm(count: Int, singular: String, few: String, many: String): String {
+        return when {
+            count == 1 -> singular
+            count % 10 in 2..4 && count % 100 !in 12..14 -> few
+            else -> many
+        }
     }
 
     private fun deleteSelectedEmployees() {
