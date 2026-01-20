@@ -1,50 +1,47 @@
 package com.example.inventoryapp.ui.products
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.example.inventoryapp.R
-import com.example.inventoryapp.databinding.FragmentProductDetailsBinding
 import com.example.inventoryapp.InventoryApplication
-import com.example.inventoryapp.ui.products.adapters.DeviceMovementAdapter
-import com.example.inventoryapp.utils.CategoryHelper
-import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.coroutines.flow.collect
+import com.example.inventoryapp.data.local.entities.CategoryEntity
+import com.example.inventoryapp.databinding.FragmentProductDetailsBinding
+import com.example.inventoryapp.databinding.BottomSheetEditSerialBinding
+import com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
+import com.example.inventoryapp.data.local.entities.ProductEntity
+import androidx.appcompat.app.AlertDialog
 
 class ProductDetailsFragment : Fragment() {
 
     private var _binding: FragmentProductDetailsBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: ProductDetailsViewModel
     private val args: ProductDetailsFragmentArgs by navArgs()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        // Prefer using application-level repositories (InventoryApplication)
-        val app = requireActivity().application as InventoryApplication
-        val productRepo = app.productRepository
-        val deviceMovementRepo = app.deviceMovementRepository
-        val boxRepo = app.boxRepository
-        val packageRepo = app.packageRepository
-        val factory = ProductDetailsViewModelFactory(productRepo, deviceMovementRepo, boxRepo, packageRepo, args.productId)
-        val vm: ProductDetailsViewModel by viewModels { factory }
-        viewModel = vm
+    
+    private val productRepository by lazy {
+        (requireActivity().application as InventoryApplication).productRepository
     }
+    private val categoryRepository by lazy {
+        (requireActivity().application as InventoryApplication).categoryRepository
+    }
+
+    private var currentProduct: ProductEntity? = null
+    private var categories: List<CategoryEntity> = emptyList()
+    
+    private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,186 +54,191 @@ class ProductDetailsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Setup movements list
-        setupMovementsList()
-        observeProduct()
-        observeSnUpdateError()
-        setupClickListeners()
+        
+        observeCategories()
+        loadProductDetails()
+        setupActions()
     }
 
-    private lateinit var movementAdapter: DeviceMovementAdapter
-
-    private fun setupMovementsList() {
-        movementAdapter = DeviceMovementAdapter()
-        binding.movementsRecyclerView.apply {
-            adapter = movementAdapter
-            layoutManager = LinearLayoutManager(requireContext())
-            // Allow nested scrolling inside ScrollView
-            isNestedScrollingEnabled = false
-        }
-
-        // Click once: scroll to movement card on summary tap when data exists
-        binding.movementSummaryText.setOnClickListener {
-            if (movementAdapter.itemCount > 0) {
-                try {
-                    binding.root.smoothScrollTo(0, binding.movementsRecyclerView.top)
-                } catch (e: Exception) {
-                    binding.movementsRecyclerView.post { binding.movementsRecyclerView.smoothScrollToPosition(0) }
-                }
-            }
-        }
-
+    private fun observeCategories() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.movements.collect { list ->
-                movementAdapter.submitList(list)
-                // Show empty state when there are no movements to display
-                binding.movementsEmptyText.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
-
-                // Update summary row in Information card: show count or 'See below'
-                if (list.isEmpty()) {
-                    binding.movementSummaryText.text = "No movements"
-                    binding.movementSummaryText.isClickable = false
-                } else {
-                    binding.movementSummaryText.text = "See below"
-                    binding.movementSummaryText.isClickable = true
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                categoryRepository.getAllCategories().collect { list ->
+                    categories = list
+                    updateCategoryLabel()
                 }
             }
         }
     }
-
-    private fun observeProduct() {
+    
+    private fun loadProductDetails() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.product.collect { product ->
-                product?.let {
-                    // Update product name, icon and category
-                    binding.productIconText.text = CategoryHelper.getCategoryIcon(it.categoryId)
-                    binding.productNameText.text = it.name
-                    binding.productCategoryText.text = getCategoryName(it.categoryId)
-                    
-                    // Update serial number section (always present now)
-                    binding.serialNumberAssignedLayout.visibility = View.VISIBLE
-                    binding.serialNumberNotAssignedLayout.visibility = View.GONE
-                    binding.serialNumberText.text = it.serialNumber ?: "N/A"
-                    binding.editSerialButton.text = "Edit"
-                    
-                    // Show quantity section only for "Other" category (SN is empty or default)
-                    val isOtherCategory = it.serialNumber.isNullOrEmpty() || it.serialNumber == "N/A"
-                    if (isOtherCategory) {
-                        binding.quantitySectionLabel.visibility = View.VISIBLE
-                        binding.quantityCard.visibility = View.VISIBLE
-                        binding.quantityText.text = it.quantity.toString()
-                        
-                        // Hide serial number section for Other
-                        binding.serialNumberAssignedLayout.visibility = View.GONE
-                        binding.serialNumberNotAssignedLayout.visibility = View.GONE
-                    } else {
-                        binding.quantitySectionLabel.visibility = View.GONE
-                        binding.quantityCard.visibility = View.GONE
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                productRepository.getProductById(args.productId).collect { product ->
+                    currentProduct = product
+                    product?.let {
+                        binding.apply {
+                            productNameText.text = it.name
+                            productCategoryText.text = categoryNameFor(it.categoryId)
+                            productIconText.text = categoryIconFor(it.categoryId)
+                            productIdValue.text = it.customId ?: "-"
+                            manufacturerValue.text = it.manufacturer ?: "-"
+                            modelValue.text = it.model ?: "-"
+                            descriptionValue.text = it.description ?: "-"
+                            locationValue.text = it.shelf ?: "-"
+
+                            createdAtText.text = formatDate(it.createdAt)
+                            updatedAtText.text = formatDate(it.updatedAt)
+
+                            // Serial number visibility
+                            if (it.serialNumber.isNotBlank()) {
+                                serialNumberAssignedLayout.visibility = View.VISIBLE
+                                serialNumberNotAssignedLayout.visibility = View.GONE
+                                serialNumberText.text = it.serialNumber
+                            } else {
+                                serialNumberAssignedLayout.visibility = View.GONE
+                                serialNumberNotAssignedLayout.visibility = View.VISIBLE
+                            }
+                        }
                     }
+                }
+            }
+        }
+    }
+
+    private fun updateCategoryLabel() {
+        currentProduct?.let {
+            binding.productCategoryText.text = categoryNameFor(it.categoryId)
+            binding.productIconText.text = categoryIconFor(it.categoryId)
+        }
+    }
+
+    private fun setupActions() {
+        binding.editSerialButton.setOnClickListener { promptEditSerial() }
+        binding.editProductButton.setOnClickListener { navigateToEditForm() }
+        binding.deleteProductButton.setOnClickListener { confirmDeleteProduct() }
+    }
+
+    private fun promptEditSerial() {
+        val product = currentProduct ?: return
+        
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetEditSerialBinding.inflate(layoutInflater)
+        
+        // Set current serial number
+        sheetBinding.serialNumberInput.setText(product.serialNumber)
+        sheetBinding.serialNumberInput.requestFocus()
+        
+        // Cancel button
+        sheetBinding.cancelButton.setOnClickListener {
+            bottomSheet.dismiss()
+        }
+        
+        // Save button
+        sheetBinding.saveButton.setOnClickListener {
+            val newSerial = sheetBinding.serialNumberInput.text.toString().trim()
+            
+            when {
+                newSerial.isEmpty() -> {
+                    toast("Numer seryjny nie może być pusty")
+                }
+                newSerial == product.serialNumber -> {
+                    toast("Numer seryjny bez zmian")
+                    bottomSheet.dismiss()
+                }
+                else -> {
+                    saveProduct(product.copy(serialNumber = newSerial, updatedAt = System.currentTimeMillis()))
+                    bottomSheet.dismiss()
+                }
+            }
+        }
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+        
+        // Show keyboard
+        sheetBinding.serialNumberInput.postDelayed({
+            val imm = requireContext().getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.showSoftInput(sheetBinding.serialNumberInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        }, 100)
+    }
+
+    private fun navigateToEditForm() {
+        val product = currentProduct ?: return
+        val action = ProductDetailsFragmentDirections.actionProductDetailsToAdd(product.id)
+        findNavController().navigate(action)
+    }
+
+    private fun confirmDeleteProduct() {
+        val product = currentProduct ?: return
+        
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
+        
+        // Set product name
+        sheetBinding.productNameText.text = product.name
+        
+        // Cancel button
+        sheetBinding.cancelButton.setOnClickListener {
+            bottomSheet.dismiss()
+        }
+        
+        // Delete button with animation
+        sheetBinding.deleteButton.setOnClickListener {
+            it.animate()
+                .scaleX(0.95f)
+                .scaleY(0.95f)
+                .setDuration(100)
+                .withEndAction {
+                    it.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(100)
+                        .start()
                     
-                    // Update timestamps
-                    val dateFormat = SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault())
-                    binding.createdAtText.text = dateFormat.format(Date(it.createdAt))
-                    binding.updatedAtText.text = dateFormat.format(Date(it.updatedAt))
+                    lifecycleScope.launch {
+                        productRepository.deleteProductById(product.id)
+                        toast("Produkt usunięty")
+                        bottomSheet.dismiss()
+                        requireActivity().onBackPressedDispatcher.onBackPressed()
+                    }
                 }
+                .start()
+        }
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+
+    private fun saveProduct(updated: ProductEntity) {
+        lifecycleScope.launch {
+            try {
+                productRepository.updateProduct(updated)
+                toast("Zapisano zmiany")
+            } catch (e: Exception) {
+                toast("Błąd: ${e.message}")
             }
         }
     }
 
-    private fun observeSnUpdateError() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.snUpdateError.collect { error ->
-                error?.let {
-                    Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
-                    viewModel.clearSnError()
-                }
-            }
-        }
+    private fun formatDate(timestamp: Long?): String {
+        return if (timestamp == null) "-" else dateFormat.format(Date(timestamp))
     }
 
-    private fun setupClickListeners() {
-        binding.scanSerialButton.setOnClickListener {
-            // TODO: Navigate to scanner with product ID
-            Toast.makeText(requireContext(), "Scanner integration coming soon", Toast.LENGTH_SHORT).show()
-        }
-        
-        binding.editSerialButton.setOnClickListener {
-            showEditSerialNumberDialog()
-        }
-        
-        binding.editProductButton.setOnClickListener {
-            val currentProduct = viewModel.product.value ?: return@setOnClickListener
-            val action = ProductDetailsFragmentDirections.actionProductDetailsToEditProduct(currentProduct.id)
-            findNavController().navigate(action)
-        }
-        
-        binding.deleteProductButton.setOnClickListener {
-            showDeleteConfirmationDialog()
-        }
-        
-        // Quantity controls
-        binding.increaseQuantityButton.setOnClickListener {
-            val currentProduct = viewModel.product.value ?: return@setOnClickListener
-            val newQuantity = currentProduct.quantity + 1
-            viewModel.updateQuantity(newQuantity)
-            Toast.makeText(requireContext(), "Quantity increased to $newQuantity", Toast.LENGTH_SHORT).show()
-        }
-        
-        binding.decreaseQuantityButton.setOnClickListener {
-            val currentProduct = viewModel.product.value ?: return@setOnClickListener
-            if (currentProduct.quantity > 1) {
-                val newQuantity = currentProduct.quantity - 1
-                viewModel.updateQuantity(newQuantity)
-                Toast.makeText(requireContext(), "Quantity decreased to $newQuantity", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "Quantity cannot be less than 1", Toast.LENGTH_SHORT).show()
-            }
-        }
+    private fun toast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun showEditSerialNumberDialog() {
-        val currentProduct = viewModel.product.value ?: return
-        
-        val editText = EditText(requireContext()).apply {
-            setText(currentProduct.serialNumber)
-            hint = "Enter serial number"
-            setSingleLine(true)
-        }
-        
-        AlertDialog.Builder(requireContext())
-            .setTitle("Serial Number")
-            .setMessage("Enter or edit the serial number for this product")
-            .setView(editText)
-            .setPositiveButton("Save") { _, _ ->
-                val newSerialNumber = editText.text.toString().trim()
-                if (newSerialNumber.isNotEmpty()) {
-                    viewModel.updateSerialNumber(newSerialNumber)
-                } else {
-                    Toast.makeText(requireContext(), "Serial number cannot be empty", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
+    private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()
 
-    private fun showDeleteConfirmationDialog() {
-        val currentProduct = viewModel.product.value ?: return
-        
-        AlertDialog.Builder(requireContext())
-            .setTitle("Delete Product")
-            .setMessage("Are you sure you want to delete \"${currentProduct.name}\"? This action cannot be undone.")
-            .setPositiveButton("Delete") { _, _ ->
-                viewModel.deleteProduct()
-                Toast.makeText(requireContext(), "Product deleted", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+    private fun categoryNameFor(id: Long?): String {
+        if (id == null) return "-"
+        return categories.firstOrNull { it.id == id }?.name ?: "-"
     }
-
-    private fun getCategoryName(categoryId: Long?): String {
-        return CategoryHelper.getCategoryName(categoryId)
+    
+    private fun categoryIconFor(id: Long?): String {
+        if (id == null) return "📦"
+        return categories.firstOrNull { it.id == id }?.icon ?: "📦"
     }
 
     override fun onDestroyView() {

@@ -8,25 +8,19 @@ import kotlinx.coroutines.flow.Flow
 interface ProductTemplateDao {
     @Query("SELECT * FROM product_templates ORDER BY name ASC")
     fun getAllTemplates(): Flow<List<ProductTemplateEntity>>
-
+    
     @Query("SELECT * FROM product_templates WHERE id = :templateId")
     fun getTemplateById(templateId: Long): Flow<ProductTemplateEntity?>
-
+    
     @Query("SELECT * FROM product_templates WHERE categoryId = :categoryId ORDER BY name ASC")
     fun getTemplatesByCategory(categoryId: Long): Flow<List<ProductTemplateEntity>>
-
-    @Query("SELECT * FROM product_templates WHERE LOWER(name) = LOWER(:name) LIMIT 1")
-    suspend fun getTemplateByName(name: String): ProductTemplateEntity?
-
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTemplate(template: ProductTemplateEntity): Long
-
+    
     @Update
     suspend fun updateTemplate(template: ProductTemplateEntity)
-
+    
     @Delete
     suspend fun deleteTemplate(template: ProductTemplateEntity)
-
-    @Query("SELECT COUNT(*) FROM product_templates WHERE name = :name")
-    suspend fun isTemplateNameExists(name: String): Int
 }

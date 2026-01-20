@@ -1,186 +1,152 @@
 package com.example.inventoryapp.ui.products
 
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.inventoryapp.R
-import com.example.inventoryapp.databinding.ItemProductBinding
 import com.example.inventoryapp.data.local.entities.ProductEntity
-import com.example.inventoryapp.data.local.entities.PackageEntity
-import com.example.inventoryapp.utils.CategoryHelper
-
-data class ProductWithPackage(
-    val productEntity: ProductEntity,
-    val packageEntity: PackageEntity? = null
-)
+import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.databinding.ItemProductBinding
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ProductsAdapter(
-    private val onProductClick: (ProductEntity) -> Unit,
-    private val onProductLongClick: (ProductEntity) -> Boolean = { false }
-) : ListAdapter<ProductWithPackage, ProductsAdapter.ProductViewHolder>(ProductDiffCallback()) {
+    private val onItemClick: (ProductEntity) -> Unit,
+    private val onItemLongClick: (ProductEntity) -> Unit = {},
+    private val getCategoryName: (Long?) -> String = { _ -> "-" },
+    private val getCategoryIcon: (Long?) -> String = { _ -> "📦" }
+) : ListAdapter<ProductEntity, ProductsAdapter.ViewHolder>(DiffCallback()) {
 
-    private val selectedProducts = mutableSetOf<Long>()
+    private val selectedItems = mutableSetOf<Long>()
     var selectionMode = false
-        private set
-
+        set(value) {
+            if (!value) {
+                selectedItems.clear()
+            }
+            field = value
+            notifyDataSetChanged()
+        }
+    
+    fun getSelectedItems(): Set<Long> = selectedItems.toSet()
+    
+    fun getSelectedCount(): Int = selectedItems.size
+    
+    fun selectAll() {
+        currentList.forEach { selectedItems.add(it.id) }
+        notifyDataSetChanged()
+    }
+    
+    fun clearSelection() {
+        selectedItems.clear()
+        selectionMode = false
+        notifyDataSetChanged()
+    }
+    
     fun toggleSelection(productId: Long) {
-        if (selectedProducts.contains(productId)) {
-            selectedProducts.remove(productId)
+        if (selectedItems.contains(productId)) {
+            selectedItems.remove(productId)
         } else {
-            selectedProducts.add(productId)
+            selectedItems.add(productId)
         }
         notifyDataSetChanged()
     }
 
-    fun getSelectedProducts(): Set<Long> = selectedProducts.toSet()
-
-    fun clearSelection() {
-        selectedProducts.clear()
-        selectionMode = false
-        notifyDataSetChanged()
+    companion object {
+        private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     }
 
-    fun enterSelectionMode() {
-        selectionMode = true
-        notifyDataSetChanged()
-    }
-
-    fun getSelectedCount(): Int = selectedProducts.size
-
-    fun selectAll(products: List<ProductWithPackage>) {
-        products.forEach { selectedProducts.add(it.productEntity.id) }
-        notifyDataSetChanged()
-    }
-
-    fun deselectAll() {
-        selectedProducts.clear()
-        notifyDataSetChanged()
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemProductBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false
         )
-        return ProductViewHolder(binding, onProductClick, onProductLongClick, ::toggleSelection, ::isSelected, ::isInSelectionMode)
+        return ViewHolder(binding, onItemClick, onItemLongClick, getCategoryName, getCategoryIcon)
     }
 
-    private fun isSelected(productId: Long): Boolean = selectedProducts.contains(productId)
-    
-    private fun isInSelectionMode(): Boolean = selectionMode
-
-    override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
-        holder.bind(getItem(position))
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val product = getItem(position)
+        val isSelected = selectedItems.contains(product.id)
+        holder.bind(product, selectionMode, isSelected)
     }
 
-    class ProductViewHolder(
+    class ViewHolder(
         private val binding: ItemProductBinding,
-        private val onProductClick: (ProductEntity) -> Unit,
-        private val onProductLongClick: (ProductEntity) -> Boolean,
-        private val onToggleSelection: (Long) -> Unit,
-        private val isSelected: (Long) -> Boolean,
-        private val isInSelectionMode: () -> Boolean
+        private val onItemClick: (ProductEntity) -> Unit,
+        private val onItemLongClick: (ProductEntity) -> Unit,
+        private val getCategoryName: (Long?) -> String,
+        private val getCategoryIcon: (Long?) -> String
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(productWithPackage: ProductWithPackage) {
-            val product = productWithPackage.productEntity
-            val pkg = productWithPackage.packageEntity
-            
-            // Display product name with quantity if > 1
-            binding.productName.text = if (product.quantity > 1) {
-                "${product.name} (x${product.quantity})"
-            } else {
-                product.name
-            }
-            
-            binding.productCategory.text = CategoryHelper.getCategoryName(product.categoryId)
-            binding.categoryIcon.text = CategoryHelper.getCategoryIcon(product.categoryId)
-            
-            // Display package information with status
-            if (pkg != null) {
-                val statusIcon = when (pkg.status) {
-                    "PREPARATION" -> "📦"
-                    "READY" -> "✅"
-                    "SHIPPED" -> "🚚"
-                    "DELIVERED" -> "📬"
-                    "RETURNED" -> "↩️"
-                    "ISSUED" -> "🔖"
-                    "WAREHOUSE" -> "🏬"
-                    else -> "❓"
-                }
-                val statusText = when (pkg.status) {
-                    "PREPARATION" -> "Preparation"
-                    "READY" -> "Ready"
-                    "SHIPPED" -> "Shipped"
-                    "DELIVERED" -> "Delivered"
-                    "RETURNED" -> "Returned"
-                    "ISSUED" -> "Issued"
-                    "WAREHOUSE" -> "Warehouse"
-                    else -> pkg.status
-                }
-                binding.packageInfo.text = "$statusIcon ${pkg.name} - $statusText"
-                binding.packageInfo.visibility = View.VISIBLE
-            } else {
-                binding.packageInfo.text = "❓ Unassigned"
-                binding.packageInfo.visibility = View.VISIBLE
-            }
-            
-            if (product.serialNumber != null) {
-                binding.serialNumberContainer.visibility = View.VISIBLE
-                binding.noSerialNumber.visibility = View.GONE
-                binding.productSerialNumber.text = product.serialNumber
-            } else {
-                binding.serialNumberContainer.visibility = View.GONE
-                binding.noSerialNumber.visibility = View.VISIBLE
-            }
-
-            // Display created date
-            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
-            val createdDate = dateFormat.format(java.util.Date(product.createdAt))
-            binding.productCreatedDate.text = "Created: $createdDate"
-
-            // Selection mode styling
-            if (isInSelectionMode()) {
-                if (isSelected(product.id)) {
-                    binding.root.setBackgroundColor(
-                        ContextCompat.getColor(binding.root.context, R.color.selection_highlight)
-                    )
+        fun bind(product: ProductEntity, selectionMode: Boolean, isSelected: Boolean) {
+            binding.apply {
+                productName.text = product.name
+                productSerialNumber.text = product.serialNumber
+                productCategory.text = getCategoryName(product.categoryId)
+                categoryIcon.text = getCategoryIcon(product.categoryId)
+                
+                // Selection mode UI
+                selectionCheckbox.visibility = if (selectionMode) android.view.View.VISIBLE else android.view.View.GONE
+                selectionCheckbox.isChecked = isSelected
+                
+                // Highlight selected items
+                if (selectionMode && isSelected) {
+                    productCard.strokeColor = Color.parseColor("#3B82F6")
+                    productCard.strokeWidth = 4
                 } else {
-                    binding.root.setBackgroundColor(
-                        ContextCompat.getColor(binding.root.context, android.R.color.transparent)
-                    )
+                    productCard.strokeColor = Color.parseColor("#E5E7EB")
+                    productCard.strokeWidth = 2
                 }
-            } else {
-                binding.root.setBackgroundColor(
-                    ContextCompat.getColor(binding.root.context, android.R.color.transparent)
-                )
-            }
-
-            binding.root.setOnClickListener {
-                if (isInSelectionMode()) {
-                    onToggleSelection(product.id)
+                
+                // Set status with Polish label and color
+                val (statusLabel, statusColor) = when (product.status) {
+                    ProductStatus.IN_STOCK -> "Magazyn" to "#10B981"
+                    ProductStatus.ASSIGNED -> "Przypisane" to "#3B82F6"
+                    ProductStatus.IN_REPAIR -> "Serwis" to "#F59E0B"
+                    ProductStatus.RETIRED -> "Wycofane" to "#6B7280"
+                    ProductStatus.LOST -> "Zaginione" to "#EF4444"
+                }
+                productStatus.text = statusLabel
+                
+                // Create rounded background with status color
+                val drawable = GradientDrawable()
+                drawable.shape = GradientDrawable.RECTANGLE
+                drawable.setColor(Color.parseColor(statusColor))
+                drawable.cornerRadius = 12f
+                productStatus.background = drawable
+                
+                if (product.createdAt > 0) {
+                    productCreatedDate.text = "Dodano: ${dateFormat.format(Date(product.createdAt))}"
+                    productCreatedDate.visibility = android.view.View.VISIBLE
                 } else {
-                    onProductClick(product)
+                    productCreatedDate.visibility = android.view.View.GONE
                 }
-            }
-
-            binding.root.setOnLongClickListener {
-                onProductLongClick(product)
+                
+                // Handle clicks
+                root.setOnClickListener {
+                    if (selectionMode) {
+                        selectionCheckbox.isChecked = !selectionCheckbox.isChecked
+                    }
+                    onItemClick(product)
+                }
+                
+                root.setOnLongClickListener {
+                    onItemLongClick(product)
+                    true
+                }
             }
         }
     }
 
-    private class ProductDiffCallback : DiffUtil.ItemCallback<ProductWithPackage>() {
-        override fun areItemsTheSame(oldItem: ProductWithPackage, newItem: ProductWithPackage): Boolean {
-            return oldItem.productEntity.id == newItem.productEntity.id
+    private class DiffCallback : DiffUtil.ItemCallback<ProductEntity>() {
+        override fun areItemsTheSame(oldItem: ProductEntity, newItem: ProductEntity): Boolean {
+            return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: ProductWithPackage, newItem: ProductWithPackage): Boolean {
+        override fun areContentsTheSame(oldItem: ProductEntity, newItem: ProductEntity): Boolean {
             return oldItem == newItem
         }
     }

@@ -6,18 +6,18 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ScanHistoryDao {
-    @Query("SELECT * FROM scan_history ORDER BY timestamp DESC")
-    fun getAllScans(): Flow<List<ScanHistoryEntity>>
-
+    @Query("SELECT * FROM scan_history ORDER BY timestamp DESC LIMIT 100")
+    fun getRecentScans(): Flow<List<ScanHistoryEntity>>
+    
     @Query("SELECT * FROM scan_history WHERE productId = :productId ORDER BY timestamp DESC")
     fun getScansByProduct(productId: Long): Flow<List<ScanHistoryEntity>>
-
+    
+    @Query("SELECT * FROM scan_history WHERE context = :context ORDER BY timestamp DESC LIMIT 50")
+    fun getScansByContext(context: String): Flow<List<ScanHistoryEntity>>
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertScan(scanHistory: ScanHistoryEntity): Long
-
-    @Delete
-    suspend fun deleteScan(scanHistory: ScanHistoryEntity)
-
-    @Query("DELETE FROM scan_history WHERE timestamp < :timestamp")
-    suspend fun deleteScansOlderThan(timestamp: Long)
+    suspend fun insertScan(scan: ScanHistoryEntity): Long
+    
+    @Query("DELETE FROM scan_history WHERE timestamp < :cutoffTime")
+    suspend fun deleteOldScans(cutoffTime: Long)
 }

@@ -1,24 +1,41 @@
 package com.example.inventoryapp.data.local.entities
 
-import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlinx.parcelize.Parcelize
+import androidx.room.ForeignKey
+import androidx.room.Index
 
-/**
- * Product template for inventory catalog.
- * Allows creating product definitions without serial numbers,
- * which can be used during bulk inventory scanning.
- */
-@Parcelize
-@Entity(tableName = "product_templates")
+@Entity(
+    tableName = "product_templates",
+    foreignKeys = [
+        ForeignKey(
+            entity = CategoryEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["categoryId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["name"], unique = true),
+        Index(value = ["categoryId"])
+    ]
+)
 data class ProductTemplateEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    
     val name: String,
-    val categoryId: Long? = null,
-    val description: String? = null,
-    val imageUri: String? = null,
+    val categoryId: Long,
+    
+    // Template defaults
+    val defaultManufacturer: String? = null,
+    val defaultModel: String? = null,
+    val defaultDescription: String? = null,
+    
+    // Serial number pattern (e.g., "SN-{YYYY}-{####}")
+    val serialNumberPattern: String? = null,
+    val serialNumberPrefix: String? = null,
+    
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
-) : Parcelable
+)

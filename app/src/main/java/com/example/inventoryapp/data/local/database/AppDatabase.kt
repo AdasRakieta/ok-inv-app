@@ -11,442 +11,319 @@ import com.example.inventoryapp.data.local.entities.*
 
 @Database(
     entities = [
+        // Employees
+        EmployeeEntity::class,
+        
+        // Products
         ProductEntity::class,
         CategoryEntity::class,
-        PackageEntity::class,
-        PackageProductCrossRef::class,
-        ScanHistoryEntity::class,
         ProductTemplateEntity::class,
-        ScannerSettingsEntity::class,
-        ContractorEntity::class,
-        BoxEntity::class,
-        BoxProductCrossRef::class,
-        ImportBackupEntity::class,
-        PrinterEntity::class,
-        InventoryCountSessionEntity::class,
-        InventoryCountItemEntity::class,
-        DeviceMovementEntity::class,
-        // New internal equipment domain
-        EmployeeEntity::class,
+        
+        // Equipment (legacy - keeping for compatibility)
         EquipmentEntity::class,
-        EquipmentAssignmentEntity::class
+        EquipmentAssignmentEntity::class,
+        
+        // Warehouse
+        WarehouseLocationEntity::class,
+        
+        // Orders
+        OrderEntity::class,
+        OrderItemEntity::class,
+        SupplierEntity::class,
+        
+        // Inventory Management
+        InventoryCountEntity::class,
+        InventoryCountItemEntity::class,
+        
+        // Tracking
+        ScanHistoryEntity::class
     ],
-    version = 24,
+    version = 28,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
+    // Employee DAO
+    abstract fun employeeDao(): EmployeeDao
+    
+    // Product DAOs
     abstract fun productDao(): ProductDao
     abstract fun categoryDao(): CategoryDao
-    abstract fun packageDao(): PackageDao
-    abstract fun scanHistoryDao(): ScanHistoryDao
     abstract fun productTemplateDao(): ProductTemplateDao
-    abstract fun scannerSettingsDao(): ScannerSettingsDao
-    abstract fun contractorDao(): ContractorDao
-    abstract fun boxDao(): BoxDao
-    abstract fun importBackupDao(): ImportBackupDao
-    abstract fun printerDao(): PrinterDao
-    abstract fun inventoryCountDao(): InventoryCountDao
-    abstract fun deviceMovementDao(): DeviceMovementDao
-    // New DAOs
-    abstract fun employeeDao(): EmployeeDao
+    
+    // Equipment DAOs (legacy)
     abstract fun equipmentDao(): EquipmentDao
     abstract fun equipmentAssignmentDao(): EquipmentAssignmentDao
+    
+    // Warehouse DAOs
+    abstract fun warehouseLocationDao(): WarehouseLocationDao
+    
+    // Order DAOs
+    abstract fun orderDao(): OrderDao
+    abstract fun orderItemDao(): OrderItemDao
+    abstract fun supplierDao(): SupplierDao
+    
+    // Inventory Count DAOs
+    abstract fun inventoryCountDao(): InventoryCountDao
+    abstract fun inventoryCountItemDao(): InventoryCountItemDao
+    
+    // Tracking DAOs
+    abstract fun scanHistoryDao(): ScanHistoryDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
         
-        // Migration 1 -> 2: Add ProductTemplate table
-        private val MIGRATION_1_2 = object : Migration(1, 2) {
+        // Migration 24 -> 25: Remove warehouse inventory domain (destructive migration)
+        // This migration drops all warehouse tables and keeps only equipment domain
+        private val MIGRATION_24_25 = object : Migration(24, 25) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `product_templates` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `name` TEXT NOT NULL,
-                        `categoryId` INTEGER,
-                        `createdAt` INTEGER NOT NULL,
-                        `updatedAt` INTEGER NOT NULL
-                    )
-                """.trimIndent())
+                // Drop all warehouse inventory tables
+                database.execSQL("DROP TABLE IF EXISTS products")
+                database.execSQL("DROP TABLE IF EXISTS categories")
+                database.execSQL("DROP TABLE IF EXISTS packages")
+                database.execSQL("DROP TABLE IF EXISTS package_product_cross_ref")
+                database.execSQL("DROP TABLE IF EXISTS scan_history")
+                database.execSQL("DROP TABLE IF EXISTS product_templates")
+                database.execSQL("DROP TABLE IF EXISTS scanner_settings")
+                database.execSQL("DROP TABLE IF EXISTS contractors")
+                database.execSQL("DROP TABLE IF EXISTS boxes")
+                database.execSQL("DROP TABLE IF EXISTS box_product_cross_ref")
+                database.execSQL("DROP TABLE IF EXISTS import_backups")
+                database.execSQL("DROP TABLE IF EXISTS printers")
+                database.execSQL("DROP TABLE IF EXISTS inventory_count_sessions")
+                database.execSQL("DROP TABLE IF EXISTS inventory_count_items")
+                database.execSQL("DROP TABLE IF EXISTS device_movements")
+                
+                // Equipment tables already exist from Migration 23->24, no need to recreate
             }
         }
         
-        // Migration 2 -> 3: Add ScannerSettings table and make serialNumber required in products
-        private val MIGRATION_2_3 = object : Migration(2, 3) {
+        // Migration 25 -> 26: Add new complete inventory management system
+        private val MIGRATION_25_26 = object : Migration(25, 26) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Create scanner_settings table
+                // Create categories table
                 database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `scanner_settings` (
-                        `id` INTEGER PRIMARY KEY NOT NULL,
-                        `scannerId` TEXT NOT NULL,
-                        `updatedAt` INTEGER NOT NULL
+                    CREATE TABLE IF NOT EXISTS categories (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        description TEXT,
+                        color TEXT,
+                        icon TEXT,
+                        createdAt INTEGER NOT NULL,
+                        UNIQUE(name)
                     )
-                """.trimIndent())
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_categories_name ON categories(name)")
                 
-                // For products: serialNumber is now required (non-null)
-                // Note: Existing products with null SNs will be deleted in destructive migration
-                // In production, you'd migrate data carefully
-            }
-        }
-
-        // Migration 3 -> 4: Ensure unique index on products.serialNumber exists
-        // Also remove duplicate non-null serial numbers to satisfy UNIQUE constraint
-        private val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Remove duplicate rows keeping the lowest id for each non-null serialNumber
-                database.execSQL(
-                    """
-                    DELETE FROM products
-                    WHERE id NOT IN (
-                        SELECT MIN(id)
-                        FROM products
-                        WHERE serialNumber IS NOT NULL
-                        GROUP BY serialNumber
+                // Create products table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS products (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        serialNumber TEXT NOT NULL,
+                        categoryId INTEGER,
+                        warehouseLocationId INTEGER,
+                        shelf TEXT,
+                        bin TEXT,
+                        description TEXT,
+                        manufacturer TEXT,
+                        model TEXT,
+                        status TEXT NOT NULL,
+                        condition TEXT,
+                        purchaseDate INTEGER,
+                        purchasePrice REAL,
+                        warrantyExpiryDate INTEGER,
+                        assignedToEmployeeId INTEGER,
+                        assignmentDate INTEGER,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        notes TEXT,
+                        FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL
                     )
-                    AND serialNumber IS NOT NULL
-                    """.trimIndent()
-                )
-
-                // Create the unique index if it doesn't exist
-                database.execSQL(
-                    """
-                    CREATE UNIQUE INDEX IF NOT EXISTS index_products_serialNumber
-                    ON products(serialNumber)
-                    """.trimIndent()
-                )
-            }
-        }
-
-        // Migration 4 -> 5: Add contractors table and contractorId column to packages
-        private val MIGRATION_4_5 = object : Migration(4, 5) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Create contractors table
+                """)
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_products_serialNumber ON products(serialNumber)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_products_categoryId ON products(categoryId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_products_warehouseLocationId ON products(warehouseLocationId)")
+                
+                // Create warehouse_locations table
                 database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `contractors` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `name` TEXT NOT NULL,
-                        `contactPerson` TEXT,
-                        `email` TEXT,
-                        `phone` TEXT,
-                        `address` TEXT,
-                        `notes` TEXT,
-                        `createdAt` INTEGER NOT NULL,
-                        `updatedAt` INTEGER NOT NULL
+                    CREATE TABLE IF NOT EXISTS warehouse_locations (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        code TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        zone TEXT,
+                        type TEXT NOT NULL,
+                        description TEXT,
+                        capacity INTEGER,
+                        currentOccupancy INTEGER NOT NULL,
+                        createdAt INTEGER NOT NULL,
+                        UNIQUE(code)
                     )
-                """.trimIndent())
-
-                // Add contractorId column to packages table
-                database.execSQL("ALTER TABLE packages ADD COLUMN contractorId INTEGER")
-            }
-        }
-
-        // Migration 5 -> 6: Add description column to products table
-        private val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Add description column to products table
-                database.execSQL("ALTER TABLE products ADD COLUMN description TEXT")
-            }
-        }
-
-        // Migration 6 -> 7: Add boxes table and box_product_cross_ref table
-        private val MIGRATION_6_7 = object : Migration(6, 7) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Create boxes table
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_warehouse_locations_code ON warehouse_locations(code)")
+                
+                // Create product_templates table
                 database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `boxes` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `name` TEXT NOT NULL,
-                        `description` TEXT,
-                        `warehouseLocation` TEXT,
-                        `createdAt` INTEGER NOT NULL,
-                        `updatedAt` INTEGER NOT NULL
+                    CREATE TABLE IF NOT EXISTS product_templates (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        categoryId INTEGER NOT NULL,
+                        defaultManufacturer TEXT,
+                        defaultModel TEXT,
+                        defaultDescription TEXT,
+                        serialNumberPattern TEXT,
+                        serialNumberPrefix TEXT,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE CASCADE,
+                        UNIQUE(name)
                     )
-                """.trimIndent())
-
-                // Create box_product_cross_ref table
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_product_templates_name ON product_templates(name)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_product_templates_categoryId ON product_templates(categoryId)")
+                
+                // Create suppliers table
                 database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `box_product_cross_ref` (
-                        `boxId` INTEGER NOT NULL,
-                        `productId` INTEGER NOT NULL,
-                        `addedAt` INTEGER NOT NULL,
-                        PRIMARY KEY(`boxId`, `productId`),
-                        FOREIGN KEY(`boxId`) REFERENCES `boxes`(`id`) ON DELETE CASCADE,
-                        FOREIGN KEY(`productId`) REFERENCES `products`(`id`) ON DELETE CASCADE
+                    CREATE TABLE IF NOT EXISTS suppliers (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        contactPerson TEXT,
+                        email TEXT,
+                        phone TEXT,
+                        address TEXT,
+                        website TEXT,
+                        taxId TEXT,
+                        notes TEXT,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        UNIQUE(name)
                     )
-                """.trimIndent())
-
-                // Create indices
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_box_product_cross_ref_boxId` ON `box_product_cross_ref` (`boxId`)")
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_box_product_cross_ref_productId` ON `box_product_cross_ref` (`productId`)")
-            }
-        }
-
-        private val MIGRATION_7_8 = object : Migration(7, 8) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Create import_backups table for undo functionality
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_suppliers_name ON suppliers(name)")
+                
+                // Create orders table
                 database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `import_backups` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `backupTimestamp` INTEGER NOT NULL,
-                        `backupJson` TEXT NOT NULL,
-                        `importDescription` TEXT NOT NULL,
-                        `productsCount` INTEGER NOT NULL,
-                        `packagesCount` INTEGER NOT NULL,
-                        `templatesCount` INTEGER NOT NULL
+                    CREATE TABLE IF NOT EXISTS orders (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        orderNumber TEXT NOT NULL,
+                        supplierId INTEGER,
+                        status TEXT NOT NULL,
+                        orderDate INTEGER NOT NULL,
+                        expectedDeliveryDate INTEGER,
+                        actualDeliveryDate INTEGER,
+                        totalAmount REAL,
+                        currency TEXT NOT NULL,
+                        notes TEXT,
+                        trackingNumber TEXT,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        UNIQUE(orderNumber)
                     )
-                """.trimIndent())
-            }
-        }
-
-        private val MIGRATION_8_9 = object : Migration(8, 9) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Add requiresSerialNumber column to categories table
-                database.execSQL("ALTER TABLE `categories` ADD COLUMN `requiresSerialNumber` INTEGER NOT NULL DEFAULT 1")
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_orders_orderNumber ON orders(orderNumber)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_orders_supplierId ON orders(supplierId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_orders_status ON orders(status)")
                 
-                // Create "Other" category that doesn't require serial numbers
+                // Create order_items table
                 database.execSQL("""
-                    INSERT INTO `categories` (`name`, `iconResId`, `requiresSerialNumber`, `createdAt`)
-                    VALUES ('Other', 0, 0, ${System.currentTimeMillis()})
-                """.trimIndent())
-            }
-        }
-
-        private val MIGRATION_9_10 = object : Migration(9, 10) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Add quantity column to products table for aggregated products (especially "Other" category)
-                database.execSQL("ALTER TABLE `products` ADD COLUMN `quantity` INTEGER NOT NULL DEFAULT 1")
-            }
-        }
-
-        private val MIGRATION_10_11 = object : Migration(10, 11) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Create printers table
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `printers` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `name` TEXT NOT NULL,
-                        `macAddress` TEXT NOT NULL,
-                        `labelWidthMm` INTEGER NOT NULL DEFAULT 50,
-                        `labelHeightMm` INTEGER NOT NULL DEFAULT 30,
-                        `isDefault` INTEGER NOT NULL DEFAULT 0,
-                        `createdAt` INTEGER NOT NULL
+                    CREATE TABLE IF NOT EXISTS order_items (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        orderId INTEGER NOT NULL,
+                        productId INTEGER,
+                        productName TEXT NOT NULL,
+                        quantity INTEGER NOT NULL,
+                        unitPrice REAL,
+                        totalPrice REAL,
+                        receivedQuantity INTEGER NOT NULL,
+                        notes TEXT,
+                        FOREIGN KEY(orderId) REFERENCES orders(id) ON DELETE CASCADE,
+                        FOREIGN KEY(productId) REFERENCES products(id) ON DELETE SET NULL
                     )
-                """.trimIndent())
-            }
-        }
-
-        private val MIGRATION_11_12 = object : Migration(11, 12) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Remove label size columns from printers table - let printer use default settings
-                // SQLite doesn't support DROP COLUMN, so we need to recreate the table
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_order_items_orderId ON order_items(orderId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_order_items_productId ON order_items(productId)")
                 
-                // Create new printers table without size columns
+                // Create scan_history table
                 database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `printers_new` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `name` TEXT NOT NULL,
-                        `macAddress` TEXT NOT NULL,
-                        `isDefault` INTEGER NOT NULL DEFAULT 0,
-                        `createdAt` INTEGER NOT NULL
+                    CREATE TABLE IF NOT EXISTS scan_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        scannedValue TEXT NOT NULL,
+                        scanType TEXT NOT NULL,
+                        context TEXT,
+                        productId INTEGER,
+                        employeeId INTEGER,
+                        timestamp INTEGER NOT NULL,
+                        success INTEGER NOT NULL,
+                        errorMessage TEXT
                     )
-                """.trimIndent())
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_scan_history_scannedValue ON scan_history(scannedValue)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_scan_history_timestamp ON scan_history(timestamp)")
                 
-                // Copy data from old table (without size columns)
+                // Create inventory_counts table
                 database.execSQL("""
-                    INSERT INTO `printers_new` (id, name, macAddress, isDefault, createdAt)
-                    SELECT id, name, macAddress, isDefault, createdAt FROM `printers`
-                """.trimIndent())
-                
-                // Drop old table
-                database.execSQL("DROP TABLE `printers`")
-                
-                // Rename new table to printers
-                database.execSQL("ALTER TABLE `printers_new` RENAME TO `printers`")
-            }
-        }
-
-        private val MIGRATION_12_13 = object : Migration(12, 13) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Simplify contractors table - remove contactPerson and address, rename notes to description
-                
-                // Create new contractors table with simplified schema
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `contractors_new` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `name` TEXT NOT NULL,
-                        `phone` TEXT,
-                        `email` TEXT,
-                        `description` TEXT,
-                        `createdAt` INTEGER NOT NULL,
-                        `updatedAt` INTEGER NOT NULL
+                    CREATE TABLE IF NOT EXISTS inventory_counts (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        sessionId TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        description TEXT,
+                        status TEXT NOT NULL,
+                        startDate INTEGER NOT NULL,
+                        endDate INTEGER,
+                        countedById INTEGER,
+                        totalExpectedItems INTEGER NOT NULL,
+                        totalCountedItems INTEGER NOT NULL,
+                        totalMissingItems INTEGER NOT NULL,
+                        totalExtraItems INTEGER NOT NULL,
+                        notes TEXT,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        UNIQUE(sessionId)
                     )
-                """.trimIndent())
-                
-                // Copy data from old table (map notes to description, drop contactPerson and address)
-                database.execSQL("""
-                    INSERT INTO `contractors_new` (id, name, phone, email, description, createdAt, updatedAt)
-                    SELECT id, name, phone, email, notes, createdAt, updatedAt FROM `contractors`
-                """.trimIndent())
-                
-                // Drop old table
-                database.execSQL("DROP TABLE `contractors`")
-                
-                // Rename new table to contractors
-                database.execSQL("ALTER TABLE `contractors_new` RENAME TO `contractors`")
-            }
-        }
-
-        // Migration 13 -> 14: Add label dimension fields to printers table
-        private val MIGRATION_13_14 = object : Migration(13, 14) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Add new columns for label dimensions and DPI
-                // Default values: 50mm width, null height (continuous roll), 203 DPI
-                database.execSQL("""
-                    ALTER TABLE `printers` ADD COLUMN `labelWidthMm` INTEGER NOT NULL DEFAULT 50
-                """.trimIndent())
-                
-                database.execSQL("""
-                    ALTER TABLE `printers` ADD COLUMN `labelHeightMm` INTEGER DEFAULT NULL
-                """.trimIndent())
-                
-                database.execSQL("""
-                    ALTER TABLE `printers` ADD COLUMN `dpi` INTEGER NOT NULL DEFAULT 203
-                """.trimIndent())
-            }
-        }
-
-        // Migration 14 -> 15: Add font size field to printers table
-        private val MIGRATION_14_15 = object : Migration(14, 15) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Add font size column with default "small"
-                database.execSQL("""
-                    ALTER TABLE `printers` ADD COLUMN `fontSize` TEXT NOT NULL DEFAULT 'small'
-                """.trimIndent())
-            }
-        }
-
-        // Migration 15 -> 16: Add printer model field for connection strategy
-        private val MIGRATION_15_16 = object : Migration(15, 16) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Add model column with default "GENERIC_ESC_POS"
-                database.execSQL("""
-                    ALTER TABLE `printers` ADD COLUMN `model` TEXT NOT NULL DEFAULT 'GENERIC_ESC_POS'
-                """.trimIndent())
-            }
-        }
-
-        // Migration 16 -> 17: Add inventory count tables
-        private val MIGRATION_16_17 = object : Migration(16, 17) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Create inventory_count_sessions table
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `inventory_count_sessions` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `name` TEXT NOT NULL,
-                        `createdAt` INTEGER NOT NULL,
-                        `completedAt` INTEGER,
-                        `status` TEXT NOT NULL,
-                        `notes` TEXT
-                    )
-                """.trimIndent())
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_inventory_counts_sessionId ON inventory_counts(sessionId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_inventory_counts_status ON inventory_counts(status)")
                 
                 // Create inventory_count_items table
                 database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `inventory_count_items` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `sessionId` INTEGER NOT NULL,
-                        `productId` INTEGER NOT NULL,
-                        `scannedAt` INTEGER NOT NULL,
-                        `sequenceNumber` INTEGER NOT NULL,
-                        FOREIGN KEY(`sessionId`) REFERENCES `inventory_count_sessions`(`id`) ON DELETE CASCADE,
-                        FOREIGN KEY(`productId`) REFERENCES `products`(`id`) ON DELETE CASCADE
+                    CREATE TABLE IF NOT EXISTS inventory_count_items (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        countId INTEGER NOT NULL,
+                        productId INTEGER NOT NULL,
+                        expectedQuantity INTEGER NOT NULL,
+                        actualQuantity INTEGER NOT NULL,
+                        variance INTEGER NOT NULL,
+                        scannedAt INTEGER,
+                        notes TEXT,
+                        status TEXT NOT NULL,
+                        FOREIGN KEY(countId) REFERENCES inventory_counts(id) ON DELETE CASCADE,
+                        FOREIGN KEY(productId) REFERENCES products(id) ON DELETE CASCADE,
+                        UNIQUE(countId, productId)
                     )
-                """.trimIndent())
-                
-                // Create indices for performance
-                database.execSQL("""
-                    CREATE INDEX IF NOT EXISTS `index_inventory_count_items_sessionId` 
-                    ON `inventory_count_items` (`sessionId`)
-                """.trimIndent())
-                
-                database.execSQL("""
-                    CREATE INDEX IF NOT EXISTS `index_inventory_count_items_productId` 
-                    ON `inventory_count_items` (`productId`)
-                """.trimIndent())
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_inventory_count_items_countId ON inventory_count_items(countId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_inventory_count_items_productId ON inventory_count_items(productId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_inventory_count_items_countId_productId ON inventory_count_items(countId, productId)")
             }
         }
-
-        // Migration 17 -> 18: Add returnedAt field to packages table
-        private val MIGRATION_17_18 = object : Migration(17, 18) {
+        
+        // Migration 26 -> 27: Fix index_products_serialNumber to be UNIQUE
+        private val MIGRATION_26_27 = object : Migration(26, 27) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Add returnedAt column to packages table
-                database.execSQL("ALTER TABLE packages ADD COLUMN returnedAt INTEGER")
+                // Drop existing non-unique index
+                database.execSQL("DROP INDEX IF EXISTS index_products_serialNumber")
+                // Create unique index
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_products_serialNumber ON products(serialNumber)")
             }
         }
-
-        // Migration 18 -> 19: Add archived field to packages table
-        private val MIGRATION_18_19 = object : Migration(18, 19) {
+        
+        // Migration 27 -> 28: Add customId field to products table
+        private val MIGRATION_27_28 = object : Migration(27, 28) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Add archived column to packages table (default false)
-                database.execSQL("ALTER TABLE packages ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
-            }
-        }
-
-        // Migration 19 -> 20: Add device_movements table and backfill from existing cross-ref tables
-        private val MIGRATION_19_20 = object : Migration(19, 20) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `device_movements` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `productId` INTEGER NOT NULL,
-                        `action` TEXT NOT NULL,
-                        `fromContainerType` TEXT,
-                        `fromContainerId` INTEGER,
-                        `toContainerType` TEXT,
-                        `toContainerId` INTEGER,
-                        `timestamp` INTEGER NOT NULL,
-                        `packageStatus` TEXT,
-                        `note` TEXT
-                    )
-                """.trimIndent())
-
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_device_movements_product_timestamp` ON device_movements(productId, timestamp DESC)")
-
-                // Backfill: box assignments (use addedAt)
-                database.execSQL("""
-                    INSERT INTO device_movements (productId, action, toContainerType, toContainerId, timestamp, note)
-                    SELECT productId, 'ASSIGN', 'BOX', boxId, addedAt, 'backfill' FROM box_product_cross_ref
-                """.trimIndent())
-
-                // Backfill: package assignments (use packages.shippedAt or packages.createdAt)
-                database.execSQL("""
-                    INSERT INTO device_movements (productId, action, toContainerType, toContainerId, timestamp, note)
-                    SELECT ppc.productId, 'ASSIGN', 'PACKAGE', ppc.packageId, COALESCE(pkg.shippedAt, pkg.createdAt), 'backfill'
-                    FROM package_product_cross_ref ppc
-                    LEFT JOIN packages pkg ON ppc.packageId = pkg.id
-                """.trimIndent())
-            }
-        }
-
-        // Migration 20 -> 21: Add packageCode field to packages table for Google Sheets deduplication
-        private val MIGRATION_20_21 = object : Migration(20, 21) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE packages ADD COLUMN packageCode TEXT")
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_package_code` ON packages(packageCode)")
-            }
-        }
-
-        // Migration 21 -> 22: Add deviceId field to products table for fixed device IDs from Google Sheets
-        private val MIGRATION_21_22 = object : Migration(21, 22) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE products ADD COLUMN deviceId TEXT")
-            }
-        }
-
-        // Migration 22 -> 23: Add configValue field to products table for scanner config values (0-10)
-        private val MIGRATION_22_23 = object : Migration(22, 23) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE products ADD COLUMN configValue INTEGER")
+                // Add customId column (nullable, unique)
+                database.execSQL("ALTER TABLE products ADD COLUMN customId TEXT")
+                // Create unique index for customId (excluding NULL values)
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_products_customId ON products(customId) WHERE customId IS NOT NULL")
             }
         }
 
@@ -457,14 +334,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "inventory_database"
                 )
-                    .addMigrations(
-                        MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, 
-                        MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, 
-                        MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, 
-                        MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
-                        MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21,
-                        MIGRATION_21_22, MIGRATION_22_23
-                    )
+                    .addMigrations(MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

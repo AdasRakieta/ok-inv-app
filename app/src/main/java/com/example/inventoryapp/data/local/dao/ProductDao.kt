@@ -1,60 +1,60 @@
 package com.example.inventoryapp.data.local.dao
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.example.inventoryapp.data.local.entities.ProductEntity
+import com.example.inventoryapp.data.local.entities.ProductStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProductDao {
     @Query("SELECT * FROM products ORDER BY createdAt DESC")
     fun getAllProducts(): Flow<List<ProductEntity>>
-
+    
     @Query("SELECT * FROM products WHERE id = :productId")
     fun getProductById(productId: Long): Flow<ProductEntity?>
-
-    @Query("SELECT * FROM products WHERE serialNumber = :serialNumber")
+    
+    @Query("SELECT * FROM products WHERE serialNumber = :serialNumber LIMIT 1")
     suspend fun getProductBySerialNumber(serialNumber: String): ProductEntity?
-
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    
+    @Query("SELECT * FROM products WHERE categoryId = :categoryId ORDER BY name ASC")
+    fun getProductsByCategory(categoryId: Long): Flow<List<ProductEntity>>
+    
+    @Query("SELECT * FROM products WHERE warehouseLocationId = :locationId")
+    fun getProductsByLocation(locationId: Long): Flow<List<ProductEntity>>
+    
+    @Query("SELECT * FROM products WHERE assignedToEmployeeId = :employeeId")
+    fun getProductsAssignedToEmployee(employeeId: Long): Flow<List<ProductEntity>>
+    
+    @Query("SELECT * FROM products WHERE status = :status ORDER BY createdAt DESC")
+    fun getProductsByStatus(status: ProductStatus): Flow<List<ProductEntity>>
+    
+    @Query("SELECT * FROM products WHERE name LIKE '%' || :query || '%' OR serialNumber LIKE '%' || :query || '%'")
+    fun searchProducts(query: String): Flow<List<ProductEntity>>
+    
+    @Query("SELECT COUNT(*) FROM products")
+    fun getProductCount(): Flow<Int>
+    
+    @Query("SELECT COUNT(*) FROM products WHERE status = :status")
+    fun getProductCountByStatus(status: ProductStatus): Flow<Int>
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProduct(product: ProductEntity): Long
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertProducts(products: List<ProductEntity>)
-
+    suspend fun insertProducts(products: List<ProductEntity>): List<Long>
+    
     @Update
     suspend fun updateProduct(product: ProductEntity)
-
+    
     @Delete
     suspend fun deleteProduct(product: ProductEntity)
-
-    @Query("DELETE FROM products WHERE serialNumber = :serialNumber")
-    suspend fun deleteProductBySerialNumber(serialNumber: String)
     
     @Query("DELETE FROM products WHERE id = :productId")
     suspend fun deleteProductById(productId: Long)
-
-    @Query("UPDATE products SET serialNumber = :serialNumber, updatedAt = :updatedAt WHERE id = :productId")
-    suspend fun updateSerialNumber(productId: Long, serialNumber: String, updatedAt: Long = System.currentTimeMillis())
-
-    @Query("SELECT COUNT(*) FROM products WHERE serialNumber = :serialNumber")
-    suspend fun isSerialNumberExists(serialNumber: String): Int
-
-    @Query("SELECT * FROM products WHERE name = :name AND categoryId = :categoryId AND serialNumber IS NULL LIMIT 1")
-    suspend fun findProductByNameAndCategory(name: String, categoryId: Long?): ProductEntity?
-
-    @Query("UPDATE products SET quantity = :quantity, updatedAt = :updatedAt WHERE id = :productId")
-    suspend fun updateQuantity(productId: Long, quantity: Int, updatedAt: Long = System.currentTimeMillis())
-
-    @Query("""
-        SELECT categoryId, SUM(quantity) as totalQuantity
-        FROM products
-        GROUP BY categoryId
-    """)
-    suspend fun getCategoryStatistics(): List<CategoryCount>
+    
+    @Query("UPDATE products SET assignedToEmployeeId = :employeeId, assignmentDate = :assignmentDate, status = :status, updatedAt = :updatedAt WHERE id = :productId")
+    suspend fun assignToEmployee(productId: Long, employeeId: Long, assignmentDate: Long, status: ProductStatus, updatedAt: Long)
+    
+    @Query("UPDATE products SET assignedToEmployeeId = NULL, assignmentDate = NULL, status = :status, updatedAt = :updatedAt WHERE id = :productId")
+    suspend fun unassignFromEmployee(productId: Long, status: ProductStatus, updatedAt: Long)
 }
-
-data class CategoryCount(
-    val categoryId: Long?,
-    val totalQuantity: Int
-)

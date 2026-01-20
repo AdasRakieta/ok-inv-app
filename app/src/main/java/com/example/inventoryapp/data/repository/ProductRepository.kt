@@ -1,8 +1,8 @@
 package com.example.inventoryapp.data.repository
 
 import com.example.inventoryapp.data.local.dao.ProductDao
-import com.example.inventoryapp.data.local.dao.CategoryCount
 import com.example.inventoryapp.data.local.entities.ProductEntity
+import com.example.inventoryapp.data.local.entities.ProductStatus
 import kotlinx.coroutines.flow.Flow
 
 class ProductRepository(private val productDao: ProductDao) {
@@ -11,39 +11,51 @@ class ProductRepository(private val productDao: ProductDao) {
     
     fun getProductById(productId: Long): Flow<ProductEntity?> = productDao.getProductById(productId)
     
-    suspend fun getProductBySerialNumber(serialNumber: String): ProductEntity? =
+    suspend fun getProductBySerialNumber(serialNumber: String): ProductEntity? = 
         productDao.getProductBySerialNumber(serialNumber)
     
-    suspend fun insertProduct(product: ProductEntity): Long =
+    fun getProductsByCategory(categoryId: Long): Flow<List<ProductEntity>> = 
+        productDao.getProductsByCategory(categoryId)
+    
+    fun getProductsByLocation(locationId: Long): Flow<List<ProductEntity>> = 
+        productDao.getProductsByLocation(locationId)
+    
+    fun getProductsAssignedToEmployee(employeeId: Long): Flow<List<ProductEntity>> = 
+        productDao.getProductsAssignedToEmployee(employeeId)
+    
+    fun getProductsByStatus(status: ProductStatus): Flow<List<ProductEntity>> = 
+        productDao.getProductsByStatus(status)
+    
+    fun searchProducts(query: String): Flow<List<ProductEntity>> = 
+        productDao.searchProducts(query)
+    
+    fun getProductCount(): Flow<Int> = productDao.getProductCount()
+    
+    fun getProductCountByStatus(status: ProductStatus): Flow<Int> = 
+        productDao.getProductCountByStatus(status)
+    
+    suspend fun insertProduct(product: ProductEntity): Long = 
         productDao.insertProduct(product)
     
-    suspend fun insertProducts(products: List<ProductEntity>) =
+    suspend fun insertProducts(products: List<ProductEntity>): List<Long> = 
         productDao.insertProducts(products)
     
-    suspend fun updateProduct(product: ProductEntity) =
+    suspend fun updateProduct(product: ProductEntity) = 
         productDao.updateProduct(product)
     
-    suspend fun deleteProduct(product: ProductEntity) =
+    suspend fun deleteProduct(product: ProductEntity) = 
         productDao.deleteProduct(product)
     
-    suspend fun deleteProductBySerialNumber(serialNumber: String) =
-        productDao.deleteProductBySerialNumber(serialNumber)
-    
-    suspend fun deleteProductById(productId: Long) =
+    suspend fun deleteProductById(productId: Long) = 
         productDao.deleteProductById(productId)
-
-    suspend fun updateSerialNumber(productId: Long, serialNumber: String) =
-        productDao.updateSerialNumber(productId, serialNumber, System.currentTimeMillis())
     
-    suspend fun isSerialNumberExists(serialNumber: String): Boolean =
-        productDao.isSerialNumberExists(serialNumber) > 0
-
-    suspend fun findProductByNameAndCategory(name: String, categoryId: Long?): ProductEntity? =
-        productDao.findProductByNameAndCategory(name, categoryId)
-
-    suspend fun updateQuantity(productId: Long, quantity: Int) =
-        productDao.updateQuantity(productId, quantity, System.currentTimeMillis())
-
-    suspend fun getCategoryStatistics(): List<CategoryCount> =
-        productDao.getCategoryStatistics()
+    suspend fun assignToEmployee(productId: Long, employeeId: Long) {
+        val now = System.currentTimeMillis()
+        productDao.assignToEmployee(productId, employeeId, now, ProductStatus.ASSIGNED, now)
+    }
+    
+    suspend fun unassignFromEmployee(productId: Long) {
+        val now = System.currentTimeMillis()
+        productDao.unassignFromEmployee(productId, ProductStatus.IN_STOCK, now)
+    }
 }

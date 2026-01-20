@@ -2,13 +2,20 @@ package com.example.inventoryapp.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.Index
 
-@Entity(tableName = "categories")
+@Entity(
+    tableName = "categories",
+    indices = [Index(value = ["name"], unique = true)]
+)
 data class CategoryEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    
     val name: String,
-    val iconResId: Int = 0,
-    val requiresSerialNumber: Boolean = true, // false for "Other" category
+    val description: String? = null,
+    val color: String? = null, // Hex color for UI
+    val icon: String? = null, // Icon name or emoji
+    
     val createdAt: Long = System.currentTimeMillis()
 )

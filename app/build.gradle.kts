@@ -13,8 +13,8 @@ android {
         applicationId = "com.ok.inv"
         minSdkVersion(26)
         targetSdkVersion(31)
-            versionCode = 156
-            versionName = "1.3.5"
+            versionCode = 2
+            versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

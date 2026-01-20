@@ -4,25 +4,17 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.inventoryapp.R
+import com.example.inventoryapp.InventoryApplication
+import com.example.inventoryapp.data.local.entities.CategoryEntity
+import com.example.inventoryapp.data.local.entities.ProductTemplateEntity
 import com.example.inventoryapp.databinding.FragmentTemplateDetailsBinding
-import com.example.inventoryapp.data.local.database.AppDatabase
-import com.example.inventoryapp.data.repository.ProductRepository
-import com.example.inventoryapp.data.repository.ProductTemplateRepository
-import com.example.inventoryapp.ui.products.ProductWithPackage
-import com.example.inventoryapp.ui.products.ProductsAdapter
-import com.example.inventoryapp.utils.CategoryHelper
-import kotlinx.coroutines.flow.collect
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class TemplateDetailsFragment : Fragment() {
 
@@ -30,9 +22,18 @@ class TemplateDetailsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val args: TemplateDetailsFragmentArgs by navArgs()
-    private lateinit var templateRepository: ProductTemplateRepository
-    private lateinit var productRepository: ProductRepository
-    private lateinit var productsAdapter: ProductsAdapter
+
+    private val templateRepository by lazy {
+        (requireActivity().application as InventoryApplication).productTemplateRepository
+    }
+
+    private val categoryRepository by lazy {
+        (requireActivity().application as InventoryApplication).categoryRepository
+    }
+
+    private var categories: List<CategoryEntity> = emptyList()
+    private var selectedCategoryId: Long? = null
+    private var editingTemplate: ProductTemplateEntity? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,145 +47,111 @@ class TemplateDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupRepositories()
-        setupRecyclerView()
-        setupClickListeners()
-        loadTemplateDetails()
-        observeProducts()
+        observeCategories()
+        setupCategoryDropdown()
+        setupActions()
+
+        if (args.templateId != 0L) {
+            loadTemplate(args.templateId)
+        }
     }
 
-    private fun setupRepositories() {
-        val database = AppDatabase.getDatabase(requireContext())
-        templateRepository = ProductTemplateRepository(database.productTemplateDao())
-        productRepository = ProductRepository(database.productDao())
-    }
-
-    private fun setupRecyclerView() {
-        productsAdapter = ProductsAdapter(
-            onProductClick = { product ->
-                // Navigate to product details if needed
+    private fun observeCategories() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            categoryRepository.getAllCategories().collect { list ->
+                categories = list
+                updateCategoryDropdown()
             }
+        }
+    }
+
+    private fun setupCategoryDropdown() {
+        updateCategoryDropdown()
+    }
+
+    private fun updateCategoryDropdown() {
+        val categoryNames = categories.map { it.name }
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            categoryNames
         )
-        binding.productsRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = productsAdapter
+        binding.categoryInput.setAdapter(adapter)
+        binding.categoryInput.setOnItemClickListener { _, _, position, _ ->
+            selectedCategoryId = categories[position].id
         }
     }
 
-    private fun setupClickListeners() {
-        binding.addProductsBulkButton.setOnClickListener {
-            navigateToBulkScan()
-        }
-
-        binding.editTemplateButton.setOnClickListener {
-            // Edit template - will load template and show dialog
-            viewLifecycleOwner.lifecycleScope.launch {
-                templateRepository.getTemplateById(args.templateId).collect { template ->
-                    template?.let {
-                        val dialog = TemplateDialogFragment.newInstance(it)
-                        dialog.setOnSaveListener { name, categoryId, description ->
-                            viewLifecycleOwner.lifecycleScope.launch {
-                                val updatedTemplate = it.copy(
-                                    name = name,
-                                    categoryId = categoryId,
-                                    description = description,
-                                    updatedAt = System.currentTimeMillis()
-                                )
-                                templateRepository.updateTemplate(updatedTemplate)
-                                loadTemplateDetails() // Refresh
-                            }
-                        }
-                        dialog.show(childFragmentManager, "EditTemplateDialog")
-                    }
-                }
-            }
-        }
-
-        binding.deleteTemplateButton.setOnClickListener {
-            showDeleteConfirmation()
-        }
-    }
-
-    private fun loadTemplateDetails() {
+    private fun loadTemplate(templateId: Long) {
         viewLifecycleOwner.lifecycleScope.launch {
-            templateRepository.getTemplateById(args.templateId).collect { template ->
-                template?.let {
-                    binding.templateNameText.text = it.name
-                    
-                    // Category
-                    val categoryText = if (it.categoryId != null) {
-                        val category = CategoryHelper.getAllCategories()
-                            .find { cat -> cat.id == it.categoryId }
-                        "Category: ${category?.name ?: "Unknown"}"
-                    } else {
-                        "Category: None"
-                    }
-                    binding.templateCategoryText.text = categoryText
-
-                    // Description
-                    binding.templateDescriptionText.text = it.description ?: "No description"
-
-                    // Date
-                    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                    binding.templateDateText.text = "Created: ${dateFormat.format(Date(it.createdAt))}"
+            templateRepository.getTemplateById(templateId).collect { template ->
+                if (template != null) {
+                    editingTemplate = template
+                    populateFields(template)
                 }
             }
         }
     }
 
-    private fun observeProducts() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            // Get products that match this template (by name)
-            // Since we don't have templateId in ProductEntity, we'll filter by name
-            templateRepository.getTemplateById(args.templateId).collect { template ->
-                template?.let {
-                    productRepository.getAllProducts().collect { products ->
-                        val filteredProducts = products.filter { product ->
-                            product.name == it.name && product.categoryId == it.categoryId
-                        }.map { product ->
-                            ProductWithPackage(product, null) // Template products don't have packages
-                        }
-                        
-                        if (filteredProducts.isEmpty()) {
-                            binding.emptyStateLayout.visibility = View.VISIBLE
-                            binding.productsRecyclerView.visibility = View.GONE
-                        } else {
-                            binding.emptyStateLayout.visibility = View.GONE
-                            binding.productsRecyclerView.visibility = View.VISIBLE
-                            productsAdapter.submitList(filteredProducts)
-                        }
-                    }
-                }
-            }
+    private fun populateFields(template: ProductTemplateEntity) {
+        binding.nameInput.setText(template.name)
+        binding.manufacturerInput.setText(template.defaultManufacturer)
+        binding.modelInput.setText(template.defaultModel)
+        binding.descriptionInput.setText(template.defaultDescription)
+
+        selectedCategoryId = template.categoryId
+        val categoryName = categories.firstOrNull { it.id == template.categoryId }?.name
+        binding.categoryInput.setText(categoryName, false)
+    }
+
+    private fun setupActions() {
+        binding.saveButton.setOnClickListener {
+            saveTemplate()
+        }
+
+        binding.cancelButton.setOnClickListener {
+            findNavController().navigateUp()
         }
     }
 
-    private fun navigateToBulkScan() {
-        val action = TemplateDetailsFragmentDirections
-            .actionTemplateDetailsToBulkScan(args.templateId)
-        findNavController().navigate(action)
-    }
+    private fun saveTemplate() {
+        val name = binding.nameInput.text.toString().trim()
+        val manufacturer = binding.manufacturerInput.text.toString().trim()
+        val model = binding.modelInput.text.toString().trim()
+        val description = binding.descriptionInput.text.toString().trim()
 
-    private fun showDeleteConfirmation() {
-        AlertDialog.Builder(requireContext())
-            .setTitle(R.string.delete)
-            .setMessage(R.string.template_delete_confirm)
-            .setPositiveButton(R.string.delete) { _, _ ->
-                deleteTemplate()
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
-    }
+        // Validation
+        if (name.isEmpty()) {
+            Snackbar.make(binding.root, "Podaj nazwę szablonu", Snackbar.LENGTH_SHORT).show()
+            return
+        }
 
-    private fun deleteTemplate() {
+        if (selectedCategoryId == null) {
+            Snackbar.make(binding.root, "Wybierz kategorię", Snackbar.LENGTH_SHORT).show()
+            return
+        }
+
+        val categoryId = selectedCategoryId ?: return
+        
         viewLifecycleOwner.lifecycleScope.launch {
-            templateRepository.getTemplateById(args.templateId).collect { template ->
-                template?.let {
-                    templateRepository.deleteTemplate(it)
-                    // Navigate back
-                    findNavController().navigateUp()
-                }
+            val template = ProductTemplateEntity(
+                id = editingTemplate?.id ?: 0L,
+                name = name,
+                categoryId = categoryId,
+                defaultManufacturer = manufacturer.takeIf { it.isNotEmpty() },
+                defaultModel = model.takeIf { it.isNotEmpty() },
+                defaultDescription = description.takeIf { it.isNotEmpty() }
+            )
+
+            if (editingTemplate != null) {
+                templateRepository.updateTemplate(template)
+                Snackbar.make(binding.root, "Szablon zaktualizowany", Snackbar.LENGTH_SHORT).show()
+            } else {
+                templateRepository.insertTemplate(template)
+                Snackbar.make(binding.root, "Szablon utworzony", Snackbar.LENGTH_SHORT).show()
             }
+
+            findNavController().navigateUp()
         }
     }
 

@@ -1,44 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- GitHub-inspired color palette -->
+    <!-- Modern Gradient Color Palette -->
     
-    <!-- Primary colors (GitHub Blue) -->
-    <color name="primary">#0969DA</color>
-    <color name="primary_dark">#0550AE</color>
-    <color name="primary_light">#54AEFF</color>
+    <!-- Primary colors (Vibrant Purple-Blue) -->
+    <color name="primary">#6366F1</color>
+    <color name="primary_dark">#4F46E5</color>
+    <color name="primary_light">#818CF8</color>
     
-    <!-- Background colors (GitHub Dark Theme) -->
-    <color name="background">#0D1117</color>
-    <color name="background_secondary">#161B22</color>
-    <color name="surface">#21262D</color>
-    <color name="surface_elevated">#2D333B</color>
+    <!-- Background colors (Clean Light/Dark) -->
+    <color name="background">#F9FAFB</color>
+    <color name="background_secondary">#F3F4F6</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_elevated">#FFFFFF</color>
+    
+    <!-- Dark mode backgrounds -->
+    <color name="background_dark">#111827</color>
+    <color name="surface_dark">#1F2937</color>
     
     <!-- Border colors -->
-    <color name="border">#48515B</color>
-    <color name="border_muted">#30363D</color>
+    <color name="border">#E5E7EB</color>
+    <color name="border_muted">#F3F4F6</color>
     
     <!-- Text colors -->
-    <color name="text_primary">#E6EDF3</color>
-    <color name="text_secondary">#7D8590</color>
-    <color name="text_tertiary">#636C76</color>
-    <color name="text_link">#539BF5</color>
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_tertiary">#9CA3AF</color>
+    <color name="text_link">#6366F1</color>
     
-    <!-- Accent colors -->
-    <color name="accent">#0969DA</color>
-    <color name="secondary">#7D8590</color>
-    <color name="success">#3FB950</color>
-    <color name="warning">#D29922</color>
-    <color name="error">#F85149</color>
+    <!-- Accent colors (Modern Palette) -->
+    <color name="accent">#EC4899</color> <!-- Pink -->
+    <color name="secondary">#8B5CF6</color> <!-- Purple -->
+    <color name="success">#10B981</color> <!-- Emerald -->
+    <color name="warning">#F59E0B</color> <!-- Amber -->
+    <color name="error">#EF4444</color> <!-- Red -->
+    <color name="info">#3B82F6</color> <!-- Blue -->
     
-    <!-- Import Preview Status Colors -->
-    <color name="status_new">#3FB950</color> <!-- Green for new items -->
-    <color name="status_update">#D29922</color> <!-- Orange for updates -->
-    <color name="danger">#DA3633</color>
+    <!-- Module-specific accent colors -->
+    <color name="products_accent">#F59E0B</color> <!-- Amber -->
+    <color name="employees_accent">#3B82F6</color> <!-- Blue -->
+    <color name="warehouse_accent">#8B5CF6</color> <!-- Purple -->
+    <color name="orders_accent">#EC4899</color> <!-- Pink -->
+    <color name="backup_accent">#10B981</color> <!-- Emerald -->
     
     <!-- Status colors -->
-    <color name="open">#3FB950</color>
-    <color name="closed">#DA3633</color>
-    <color name="merged">#A371F7</color>
+    <color name="status_new">#10B981</color>
+    <color name="status_update">#F59E0B</color>
+    <color name="status_completed">#3B82F6</color>
+    <color name="status_pending">#F59E0B</color>
+    <color name="status_cancelled">#EF4444</color>
+    <color name="danger">#DC2626</color>
     
     <!-- Standard colors -->
     <color name="white">#FFFFFF</color>
@@ -46,8 +56,8 @@
     
     <!-- Scanner overlay -->
     <color name="scanner_overlay">#80000000</color>
-    <color name="scanner_frame">#FFFFFF</color>
-    <color name="scanner_laser">#3FB950</color>
+    <color name="scanner_frame">#6366F1</color>
+    <color name="scanner_laser">#10B981</color>
     
     <!-- Card colors -->
     <color name="card_background">#161B22</color>

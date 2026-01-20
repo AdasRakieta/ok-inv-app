@@ -1,33 +1,71 @@
 package com.example.inventoryapp.data.local.entities
 
 import androidx.room.Entity
-import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.ForeignKey
+import androidx.room.Index
+import java.util.Date
 
 @Entity(
     tableName = "products",
-    indices = [Index(value = ["serialNumber"], unique = true)]
+    foreignKeys = [
+        ForeignKey(
+            entity = CategoryEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["categoryId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [
+        Index(value = ["serialNumber"], unique = true),
+        Index(value = ["customId"], unique = true),
+        Index(value = ["categoryId"]),
+        Index(value = ["warehouseLocationId"])
+    ]
 )
 data class ProductEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    
     val name: String,
+    val customId: String? = null,  // Custom ID like "LapOK10"
+    val serialNumber: String,
     val categoryId: Long? = null,
-    val serialNumber: String?, // Nullable in DB, but required in UI validation
+    
+    // Warehouse location
+    val warehouseLocationId: Long? = null,
+    val shelf: String? = null,
+    val bin: String? = null,
+    
+    // Product details
     val description: String? = null,
-    val imageUri: String? = null,
-    val quantity: Int = 1, // Quantity for aggregated products (especially "Other" category)
-    val deviceId: String? = null, // Fixed device ID from Google Sheets column J
-    val configValue: Int? = null, // Config value from Google Sheets (0-10 range)
+    val manufacturer: String? = null,
+    val model: String? = null,
+    
+    // Status
+    val status: ProductStatus = ProductStatus.IN_STOCK,
+    val condition: String? = null,
+    
+    // Tracking
+    val purchaseDate: Long? = null,
+    val purchasePrice: Double? = null,
+    val warrantyExpiryDate: Long? = null,
+    
+    // Assignment (if assigned to employee)
+    val assignedToEmployeeId: Long? = null,
+    val assignmentDate: Long? = null,
+    
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    
+    // Notes
+    val notes: String? = null
 )
 
-/**
- * Data class that holds a Product and its Package information
- * Used for displaying missing products with package assignment status
- */
-data class ProductWithPackageInfo(
-    val product: ProductEntity,
-    val packageInfo: PackageEntity? = null
-)
+enum class ProductStatus {
+    IN_STOCK,
+    ASSIGNED,
+    IN_REPAIR,
+    RETIRED,
+    LOST
+}

@@ -2,18 +2,21 @@ package com.example.inventoryapp.ui.templates
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.inventoryapp.databinding.ItemTemplateBinding
+import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.ProductTemplateEntity
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.inventoryapp.databinding.ItemTemplateBinding
 
 class TemplatesAdapter(
-    private val onTemplateClick: (ProductTemplateEntity) -> Unit,
-    private val onTemplateLongClick: (ProductTemplateEntity) -> Unit
+    private val onItemClick: (ProductTemplateEntity) -> Unit,
+    private val onUseTemplate: (ProductTemplateEntity) -> Unit,
+    private val onEditTemplate: (ProductTemplateEntity) -> Unit,
+    private val onDeleteTemplate: (ProductTemplateEntity) -> Unit,
+    private val getCategoryName: (Long?) -> String,
+    private val getCategoryIcon: (Long?) -> String
 ) : ListAdapter<ProductTemplateEntity, TemplatesAdapter.TemplateViewHolder>(TemplateDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TemplateViewHolder {
@@ -34,24 +37,47 @@ class TemplatesAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(template: ProductTemplateEntity) {
-            binding.templateNameText.text = template.name
-            binding.templateDescriptionText.text = template.description ?: "No description"
-            
-            val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-            binding.templateDateText.text = "Created: ${dateFormat.format(Date(template.createdAt))}"
+            binding.apply {
+                templateName.text = template.name
+                categoryName.text = getCategoryName(template.categoryId)
+                categoryIcon.text = getCategoryIcon(template.categoryId)
+                manufacturer.text = template.defaultManufacturer ?: "-"
 
-            binding.root.setOnClickListener {
-                onTemplateClick(template)
-            }
+                root.setOnClickListener {
+                    onItemClick(template)
+                }
 
-            binding.root.setOnLongClickListener {
-                onTemplateLongClick(template)
-                true
+                useTemplateButton.setOnClickListener {
+                    onUseTemplate(template)
+                }
+
+                moreButton.setOnClickListener {
+                    showPopupMenu(template)
+                }
             }
+        }
+
+        private fun showPopupMenu(template: ProductTemplateEntity) {
+            val popup = PopupMenu(binding.root.context, binding.moreButton)
+            popup.menuInflater.inflate(R.menu.template_item_menu, popup.menu)
+            popup.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.action_edit -> {
+                        onEditTemplate(template)
+                        true
+                    }
+                    R.id.action_delete -> {
+                        onDeleteTemplate(template)
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
         }
     }
 
-    class TemplateDiffCallback : DiffUtil.ItemCallback<ProductTemplateEntity>() {
+    private class TemplateDiffCallback : DiffUtil.ItemCallback<ProductTemplateEntity>() {
         override fun areItemsTheSame(
             oldItem: ProductTemplateEntity,
             newItem: ProductTemplateEntity

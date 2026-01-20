@@ -99,5 +99,5 @@ data class BulkOperation(
     val status: String? = null,
     val miejsce: String? = null,
     @SerializedName("Data wydania") val dataWydania: String? = null,
-    val dane: InsertData? = null          // For insert operations
-)
+    val dane: InsertData? = null
+) 

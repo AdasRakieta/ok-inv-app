@@ -1,25 +1,29 @@
 package com.example.inventoryapp.ui.products
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.TooltipCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.inventoryapp.R
+import androidx.core.content.ContextCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import com.example.inventoryapp.InventoryApplication
+import com.example.inventoryapp.data.local.entities.CategoryEntity
+import com.example.inventoryapp.data.local.entities.ProductEntity
+import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentProductsListBinding
-import com.example.inventoryapp.data.local.database.AppDatabase
-import com.example.inventoryapp.data.repository.ProductRepository
-import com.example.inventoryapp.data.repository.PackageRepository
-import com.example.inventoryapp.utils.CategoryHelper
-import kotlinx.coroutines.flow.collect
+import com.example.inventoryapp.databinding.BottomSheetStatsBinding
+import com.example.inventoryapp.databinding.BottomSheetFilterBinding
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 class ProductsListFragment : Fragment() {
@@ -27,19 +31,29 @@ class ProductsListFragment : Fragment() {
     private var _binding: FragmentProductsListBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var viewModel: ProductsViewModel
+    private val productRepository by lazy {
+        (requireActivity().application as InventoryApplication).productRepository
+    }
+    private val categoryRepository by lazy {
+        (requireActivity().application as InventoryApplication).categoryRepository
+    }
+    
     private lateinit var adapter: ProductsAdapter
-    private val fabOffset by lazy { resources.getDimension(R.dimen.selection_panel_fab_spacing) }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        val app = requireActivity().application as com.example.inventoryapp.InventoryApplication
-        val productRepository = app.productRepository
-        val packageRepository = app.packageRepository
-        val factory = ProductsViewModelFactory(productRepository, packageRepository)
-        val vm: ProductsViewModel by viewModels { factory }
-        viewModel = vm
+    private var allProducts: List<ProductEntity> = emptyList()
+    private var categories: List<CategoryEntity> = emptyList()
+    private var selectedCategoryId: Long? = null
+    private var selectedStatus: ProductStatus? = null
+    private var sortOption: SortOption = SortOption.NEWEST
+    private var searchQuery: String = ""
+    private var isFabMenuOpen = false
+
+    private enum class SortOption {
+        NEWEST,
+        NAME_ASC,
+        NAME_DESC,
+        STATUS,
+        SERIAL
     }
 
     override fun onCreateView(
@@ -54,309 +68,574 @@ class ProductsListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Improve status/navigation bar readability
+        val window = requireActivity().window
+        window.statusBarColor = ContextCompat.getColor(requireContext(), com.example.inventoryapp.R.color.background)
+        window.navigationBarColor = ContextCompat.getColor(requireContext(), com.example.inventoryapp.R.color.background)
+        WindowInsetsControllerCompat(window, view).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
+        
         setupRecyclerView()
-        setupClickListeners()
-        setupSearchBar()
-        setupFilterAndSort()
-        observeProducts()
+        setupSearch()
+        setupActions()
+        setupFilters()
+        observeCategories()
+        loadProducts()
     }
-
+    
     private fun setupRecyclerView() {
         adapter = ProductsAdapter(
-            onProductClick = { product ->
-                val action = ProductsListFragmentDirections
-                    .actionProductsToProductDetails(product.id)
-                findNavController().navigate(action)
+            onItemClick = { product ->
+                if (adapter.selectionMode) {
+                    // Toggle selection in selection mode
+                    adapter.toggleSelection(product.id)
+                    updateSelectionPanel()
+                } else {
+                    // Normal click opens details
+                    openDetails(product.id)
+                }
             },
-            onProductLongClick = { product ->
-                adapter.enterSelectionMode()
-                adapter.toggleSelection(product.id)
-                updateSelectionUI()
-                true
-            }
+            onItemLongClick = { product ->
+                if (!adapter.selectionMode) {
+                    // Enter selection mode on long click
+                    adapter.selectionMode = true
+                    adapter.toggleSelection(product.id)
+                    showSelectionPanel()
+                }
+            },
+            getCategoryName = { categoryId -> categoryNameFor(categoryId) },
+            getCategoryIcon = { categoryId -> categoryIconFor(categoryId) }
         )
         
-        binding.productsRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@ProductsListFragment.adapter
-        }
+        binding.productsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.productsRecyclerView.adapter = adapter
     }
 
-    private fun setupClickListeners() {
-        binding.addProductFab.setOnClickListener {
-            if (adapter.selectionMode) {
-                exitSelectionMode()
-            } else {
-                findNavController().navigate(R.id.action_products_to_add_product)
-            }
+    private fun setupActions() {
+        binding.addProductFab.setOnClickListener { 
+            toggleFabMenu()
+        }
+        binding.emptyAddButton.setOnClickListener { 
+            openAddProduct()
         }
         
-        binding.emptyAddButton.setOnClickListener {
-            findNavController().navigate(R.id.action_products_to_add_product)
+        // Overlay closes menu
+        binding.fabMenuOverlay.setOnClickListener {
+            closeFabMenu()
         }
-
-        binding.statsButton.setOnClickListener {
-            showCategoryStatisticsDialog()
+        
+        // Card actions
+        binding.singleAddCard.setOnClickListener {
+            closeFabMenu()
+            openAddProduct()
         }
-
+        
+        binding.bulkAddCard.setOnClickListener {
+            closeFabMenu()
+            openTemplatesList()
+        }
+        
+        // Selection panel actions
         binding.selectAllButton.setOnClickListener {
-            val totalCount = adapter.itemCount
-            val selectedCount = adapter.getSelectedCount()
-            
-            if (selectedCount == totalCount) {
-                adapter.deselectAll()
-            } else {
-                adapter.selectAll(adapter.currentList)
-            }
-            updateSelectionUI()
+            adapter.selectAll()
+            updateSelectionPanel()
         }
-
+        
         binding.deleteSelectedButton.setOnClickListener {
-            if (adapter.getSelectedCount() > 0) {
-                showDeleteConfirmationDialog()
-            }
+            confirmBulkDelete()
         }
     }
-
-    private fun updateSelectionUI() {
-        if (adapter.selectionMode) {
-            val count = adapter.getSelectedCount()
-            val totalCount = adapter.itemCount
-            
-            // Show selection panel
-            binding.selectionPanel.visibility = View.VISIBLE
-            binding.selectionCountText.text = "$count selected"
-            
-            // Update Select All button text
-            binding.selectAllButton.text = if (count == totalCount) "Deselect All" else "Select All"
-            
-            // Change FAB to cancel icon
-            binding.addProductFab.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-            
-            // Move FAB up to avoid overlapping with selection panel
-            binding.addProductFab.animate()
-                .translationY(-binding.selectionPanel.height.toFloat() - fabOffset)
-                .setDuration(200)
-                .start()
+    
+    private fun toggleFabMenu() {
+        if (isFabMenuOpen) {
+            closeFabMenu()
         } else {
-            // Hide selection panel
-            binding.selectionPanel.visibility = View.GONE
-            
-            // Restore FAB to add icon
-            binding.addProductFab.setImageResource(android.R.drawable.ic_input_add)
-            
-            // Move FAB back to original position
-            binding.addProductFab.animate()
-                .translationY(0f)
-                .setDuration(200)
-                .start()
+            openFabMenu()
         }
     }
-
-    private fun showDeleteConfirmationDialog() {
-        val count = adapter.getSelectedCount()
+    
+    private fun openFabMenu() {
+        isFabMenuOpen = true
         
-        AlertDialog.Builder(requireContext())
-            .setTitle("Delete Products")
-            .setMessage("Are you sure you want to delete $count selected product(s)?")
-            .setPositiveButton("Delete") { _, _ ->
-                deleteSelectedProducts()
+        // Show overlay
+        binding.fabMenuOverlay.visibility = View.VISIBLE
+        binding.fabMenuOverlay.alpha = 0f
+        binding.fabMenuOverlay.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+        
+        // Rotate main FAB
+        binding.addProductFab.animate()
+            .rotation(45f)
+            .setDuration(200)
+            .start()
+        
+        // Show cards with animation
+        showCard(binding.singleAddCard, 0)
+        showCard(binding.bulkAddCard, 50)
+    }
+    
+    private fun closeFabMenu() {
+        isFabMenuOpen = false
+        
+        // Hide overlay
+        _binding?.fabMenuOverlay?.animate()
+            ?.alpha(0f)
+            ?.setDuration(200)
+            ?.withEndAction {
+                _binding?.fabMenuOverlay?.visibility = View.GONE
             }
-            .setNegativeButton("Cancel", null)
+            ?.start()
+        
+        // Rotate main FAB back
+        _binding?.addProductFab?.animate()
+            ?.rotation(0f)
+            ?.setDuration(200)
+            ?.start()
+        
+        // Hide cards
+        _binding?.let {
+            hideCard(it.singleAddCard)
+            hideCard(it.bulkAddCard)
+        }
+    }
+    
+    private fun showCard(card: View, delay: Long) {
+        card.visibility = View.VISIBLE
+        card.alpha = 0f
+        card.translationY = 20f
+        card.scaleX = 0.8f
+        card.scaleY = 0.8f
+        
+        card.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(200)
+            .setStartDelay(delay)
+            .start()
+    }
+    
+    private fun hideCard(card: View) {
+        card.animate()
+            .alpha(0f)
+            .translationY(20f)
+            .scaleX(0.8f)
+            .scaleY(0.8f)
+            .setDuration(150)
+            .withEndAction {
+                card.visibility = View.GONE
+            }
+            .start()
+    }
+    
+    private fun showAddOptionsDialog() {
+        val options = arrayOf("Dodaj jeden produkt", "Masowe dodawanie według wzoru")
+        AlertDialog.Builder(requireContext())
+            .setTitle("Wybierz opcję")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> openAddProduct()
+                    1 -> openTemplatesList()
+                }
+            }
             .show()
     }
 
-    private fun deleteSelectedProducts() {
-        val selectedIds = adapter.getSelectedProducts()
-        viewLifecycleOwner.lifecycleScope.launch {
-            selectedIds.forEach { productId ->
-                viewModel.deleteProduct(productId)
-            }
-            Toast.makeText(
-                requireContext(),
-                "Deleted ${selectedIds.size} product(s)",
-                Toast.LENGTH_SHORT
-            ).show()
-            exitSelectionMode()
+    private fun setupFilters() {
+        binding.statsButton.setOnClickListener {
+            openStatsDialog()
         }
-    }
-
-    private fun exitSelectionMode() {
-        adapter.clearSelection()
-        updateSelectionUI()
-    }
-
-    private fun setupSearchBar() {
-        binding.searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.setSearchQuery(s?.toString() ?: "")
-            }
-            
-            override fun afterTextChanged(s: Editable?) {}
-        })
-    }
-    
-    private fun setupFilterAndSort() {
         binding.filterButton.setOnClickListener {
-            showCategoryFilterDialog()
+            openCategoryFilter()
         }
-        
         binding.statusFilterButton.setOnClickListener {
-            showPackageStatusFilterDialog()
+            openStatusFilter()
         }
-        
         binding.sortButton.setOnClickListener {
-            showSortDialog()
+            openSortDialog()
         }
     }
     
-    private fun showCategoryFilterDialog() {
-        val categories = CategoryHelper.getAllCategories()
-        val categoryNames = categories.map { "${it.icon} ${it.name}" }.toTypedArray()
-        val selectedCategoryIds = viewModel.selectedCategoryIds.value.toMutableSet()
-        val checkedItems = BooleanArray(categories.size) { index ->
-            categories[index].id in selectedCategoryIds
+    private fun setupSearch() {
+        // Scanner or manual search
+        binding.searchEditText.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || 
+                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
+                performSearch(binding.searchEditText.text.toString().trim())
+                true
+            } else {
+                false
+            }
         }
         
-        AlertDialog.Builder(requireContext())
-            .setTitle("Filter by Categories")
-            .setMultiChoiceItems(categoryNames, checkedItems) { _, which, isChecked ->
-                val categoryId = categories[which].id
-                if (isChecked) {
-                    selectedCategoryIds.add(categoryId)
-                } else {
-                    selectedCategoryIds.remove(categoryId)
+        // Enter key handling for scanner
+        binding.searchEditText.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
+                performSearch(binding.searchEditText.text.toString().trim())
+                true
+            } else {
+                false
+            }
+        }
+    }
+    
+    private fun performSearch(query: String) {
+        searchQuery = query
+        applyFilters()
+    }
+    
+    private fun loadProducts() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                productRepository.getAllProducts().collect { products ->
+                    allProducts = products
+                    applyFilters()
                 }
             }
-            .setPositiveButton("Apply") { _, _ ->
-                viewModel.setCategoryFilters(selectedCategoryIds)
-            }
-            .setNeutralButton("Clear") { _, _ ->
-                viewModel.setCategoryFilters(emptySet())
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-    
-    private fun showPackageStatusFilterDialog() {
-        val statuses = CategoryHelper.PackageStatus.FILTER_STATUSES.toList()
-        val statusNames = statuses.map { status ->
-            CategoryHelper.PackageStatus.getDisplayName(status)
-        }.toTypedArray()
-        
-        val selectedStatuses = viewModel.selectedPackageStatuses.value.toMutableSet()
-        val checkedItems = BooleanArray(statuses.size) { index ->
-            statuses[index] in selectedStatuses
         }
-        
-        AlertDialog.Builder(requireContext())
-            .setTitle("Filter by Package Status")
-            .setMultiChoiceItems(statusNames, checkedItems) { _, which, isChecked ->
-                val status = statuses[which]
-                if (isChecked) {
-                    selectedStatuses.add(status)
-                } else {
-                    selectedStatuses.remove(status)
+    }
+
+    private fun observeCategories() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                categoryRepository.getAllCategories().collect { list ->
+                    categories = list
+                    updateFilterLabels()
                 }
             }
-            .setPositiveButton("Apply") { _, _ ->
-                viewModel.setPackageStatusFilters(selectedStatuses)
-            }
-            .setNeutralButton("Clear") { _, _ ->
-                viewModel.setPackageStatusFilters(emptySet())
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
     }
-    
-    private fun showSortDialog() {
-        val sortOptions = arrayOf(
-            "Name (A-Z)",
-            "Name (Z-A)",
-            "Newest First",
-            "Oldest First",
-            "By Category"
+
+    private fun applyFilters() {
+        var filtered = allProducts
+
+        selectedCategoryId?.let { id ->
+            filtered = filtered.filter { it.categoryId == id }
+        }
+
+        selectedStatus?.let { status ->
+            filtered = filtered.filter { it.status == status }
+        }
+
+        if (searchQuery.isNotEmpty()) {
+            val query = searchQuery.lowercase(Locale.getDefault())
+            filtered = filtered.filter { product ->
+                product.name.lowercase(Locale.getDefault()).contains(query) ||
+                        product.serialNumber.lowercase(Locale.getDefault()).contains(query)
+            }
+        }
+
+        val sorted = sortProducts(filtered)
+        adapter.submitList(sorted)
+        updateEmptyState(sorted.isEmpty())
+        updateFilterLabels()
+    }
+
+    private fun sortProducts(list: List<ProductEntity>): List<ProductEntity> {
+        return when (sortOption) {
+            SortOption.NEWEST -> list.sortedByDescending { it.createdAt }
+            SortOption.NAME_ASC -> list.sortedBy { it.name.lowercase(Locale.getDefault()) }
+            SortOption.NAME_DESC -> list.sortedByDescending { it.name.lowercase(Locale.getDefault()) }
+            SortOption.STATUS -> list.sortedWith(
+                compareBy<ProductEntity> { it.status.ordinal }
+                    .thenBy { it.name.lowercase(Locale.getDefault()) }
+            )
+            SortOption.SERIAL -> list.sortedBy { it.serialNumber.lowercase(Locale.getDefault()) }
+        }
+    }
+
+    private fun openStatsDialog() {
+        val total = allProducts.size
+        val inStock = allProducts.count { it.status == ProductStatus.IN_STOCK }
+        val assigned = allProducts.count { it.status == ProductStatus.ASSIGNED }
+        val inRepair = allProducts.count { it.status == ProductStatus.IN_REPAIR }
+        val retired = allProducts.count { it.status == ProductStatus.RETIRED }
+        val lost = allProducts.count { it.status == ProductStatus.LOST }
+
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetStatsBinding.inflate(layoutInflater)
+        
+        sheetBinding.totalProductsText.text = total.toString()
+        sheetBinding.inStockText.text = inStock.toString()
+        sheetBinding.assignedText.text = assigned.toString()
+        sheetBinding.inRepairText.text = inRepair.toString()
+        sheetBinding.retiredText.text = retired.toString()
+        sheetBinding.lostText.text = lost.toString()
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+
+    private fun openCategoryFilter() {
+        if (categories.isEmpty()) {
+            AlertDialog.Builder(requireContext())
+                .setMessage("Brak kategorii do filtrowania")
+                .setPositiveButton("OK", null)
+                .show()
+            return
+        }
+
+        val options = mutableListOf(
+            FilterOption("all", "Wszystkie kategorie", "📦", selectedCategoryId == null)
         )
         
-        val currentSortOrder = viewModel.sortOrder.value
-        val currentSelection = when (currentSortOrder) {
-            ProductSortOrder.NAME_ASC -> 0
-            ProductSortOrder.NAME_DESC -> 1
-            ProductSortOrder.DATE_NEWEST -> 2
-            ProductSortOrder.DATE_OLDEST -> 3
-            ProductSortOrder.CATEGORY -> 4
+        categories.forEach { category ->
+            options.add(
+                FilterOption(
+                    category.id.toString(),
+                    category.name,
+                    category.icon ?: "📦",
+                    selectedCategoryId == category.id
+                )
+            )
+        }
+
+        showFilterBottomSheet("🗂️ Filtruj po kategorii", options) { option ->
+            selectedCategoryId = if (option.id == "all") null else option.id.toLong()
+            applyFilters()
+        }
+    }
+
+    private fun openStatusFilter() {
+        val options = listOf(
+            FilterOption("all", "Wszystkie statusy", "🔄", selectedStatus == null),
+            FilterOption(
+                ProductStatus.IN_STOCK.name,
+                "Magazyn",
+                "✅",
+                selectedStatus == ProductStatus.IN_STOCK
+            ),
+            FilterOption(
+                ProductStatus.ASSIGNED.name,
+                "Przypisane",
+                "👤",
+                selectedStatus == ProductStatus.ASSIGNED
+            ),
+            FilterOption(
+                ProductStatus.IN_REPAIR.name,
+                "Serwis",
+                "🔧",
+                selectedStatus == ProductStatus.IN_REPAIR
+            ),
+            FilterOption(
+                ProductStatus.RETIRED.name,
+                "Wycofane",
+                "📁",
+                selectedStatus == ProductStatus.RETIRED
+            ),
+            FilterOption(
+                ProductStatus.LOST.name,
+                "Zaginione",
+                "❓",
+                selectedStatus == ProductStatus.LOST
+            )
+        )
+
+        showFilterBottomSheet("🏷️ Filtruj po statusie", options) { option ->
+            selectedStatus = if (option.id == "all") {
+                null
+            } else {
+                ProductStatus.valueOf(option.id)
+            }
+            applyFilters()
+        }
+    }
+
+    private fun openSortDialog() {
+        val options = listOf(
+            FilterOption("NEWEST", "Najnowsze", "🆕", sortOption == SortOption.NEWEST),
+            FilterOption("NAME_ASC", "Nazwa A-Z", "🔤", sortOption == SortOption.NAME_ASC),
+            FilterOption("NAME_DESC", "Nazwa Z-A", "🔡", sortOption == SortOption.NAME_DESC),
+            FilterOption("STATUS", "Status", "🏷️", sortOption == SortOption.STATUS),
+            FilterOption("SERIAL", "Numer seryjny", "🔢", sortOption == SortOption.SERIAL)
+        )
+
+        showFilterBottomSheet("↕️ Sortuj", options) { option ->
+            sortOption = SortOption.valueOf(option.id)
+            applyFilters()
+        }
+    }
+    
+    private fun showFilterBottomSheet(
+        title: String,
+        options: List<FilterOption>,
+        onOptionSelected: (FilterOption) -> Unit
+    ) {
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetFilterBinding.inflate(layoutInflater)
+        
+        sheetBinding.sheetTitle.text = title
+        
+        val adapter = FilterOptionsAdapter(options) { selectedOption ->
+            bottomSheet.dismiss()
+            onOptionSelected(selectedOption)
         }
         
-        AlertDialog.Builder(requireContext())
-            .setTitle("Sort Products")
-            .setSingleChoiceItems(sortOptions, currentSelection) { dialog, which ->
-                val selectedSortOrder = when (which) {
-                    0 -> ProductSortOrder.NAME_ASC
-                    1 -> ProductSortOrder.NAME_DESC
-                    2 -> ProductSortOrder.DATE_NEWEST
-                    3 -> ProductSortOrder.DATE_OLDEST
-                    4 -> ProductSortOrder.CATEGORY
-                    else -> ProductSortOrder.NAME_ASC
-                }
-                viewModel.setSortOrder(selectedSortOrder)
-                dialog.dismiss()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+        sheetBinding.optionsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        sheetBinding.optionsRecyclerView.adapter = adapter
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
     }
 
-    private fun observeProducts() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.products.collect { products ->
-                if (products.isEmpty()) {
-                    binding.emptyStateLayout.visibility = View.VISIBLE
-                    binding.productsRecyclerView.visibility = View.GONE
-                } else {
-                    binding.emptyStateLayout.visibility = View.GONE
-                    binding.productsRecyclerView.visibility = View.VISIBLE
-                    adapter.submitList(products)
-                }
-            }
+    private fun statusLabel(status: ProductStatus): String {
+        return when (status) {
+            ProductStatus.IN_STOCK -> "Magazyn"
+            ProductStatus.ASSIGNED -> "Przypisane"
+            ProductStatus.IN_REPAIR -> "Serwis"
+            ProductStatus.RETIRED -> "Wycofane"
+            ProductStatus.LOST -> "Zaginione"
         }
     }
 
-    private fun showCategoryStatisticsDialog() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val statistics = viewModel.getCategoryStatistics()
-                
-                val dialogView = layoutInflater.inflate(R.layout.dialog_category_statistics, null)
-                val dialog = AlertDialog.Builder(requireContext())
-                    .setView(dialogView)
-                    .create()
-                
-                val recyclerView = dialogView.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.categoryStatsRecyclerView)
-                val totalCountText = dialogView.findViewById<android.widget.TextView>(R.id.totalCountText)
-                val closeButton = dialogView.findViewById<android.widget.Button>(R.id.closeButton)
-                
-                val statsAdapter = CategoryStatisticsAdapter()
-                recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
-                recyclerView.adapter = statsAdapter
-                statsAdapter.submitList(statistics)
-                
-                val totalCount = statistics.sumOf { it.count }
-                totalCountText.text = totalCount.toString()
-                
-                closeButton.setOnClickListener {
-                    dialog.dismiss()
-                }
-                
-                dialog.show()
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Error loading statistics: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+    private fun updateFilterLabels() {
+        val categoryText = selectedCategoryId?.let { id ->
+            categories.firstOrNull { it.id == id }?.name
+        } ?: "Kategoria"
+        binding.filterButton.text = categoryText
+
+        val statusText = selectedStatus?.let { statusLabel(it) } ?: "Status"
+        binding.statusFilterButton.text = statusText
+
+        val sortDescription = when (sortOption) {
+            SortOption.NEWEST -> "Najnowsze"
+            SortOption.NAME_ASC -> "Nazwa A-Z"
+            SortOption.NAME_DESC -> "Nazwa Z-A"
+            SortOption.STATUS -> "Status"
+            SortOption.SERIAL -> "Nr seryjny"
+        }
+        binding.sortButton.contentDescription = "Sortowanie: $sortDescription"
+        TooltipCompat.setTooltipText(binding.sortButton, sortDescription)
+    }
+    
+    private fun categoryNameFor(categoryId: Long?): String {
+        if (categoryId == null) return "-"
+        return categories.firstOrNull { it.id == categoryId }?.name ?: "-"
+    }
+    
+    private fun categoryIconFor(categoryId: Long?): String {
+        if (categoryId == null) return "📦"
+        return categories.firstOrNull { it.id == categoryId }?.icon ?: "📦"
+    }
+    
+    private fun openDetails(productId: Long) {
+        findNavController().navigate(
+            ProductsListFragmentDirections.actionProductsToDetails(productId)
+        )
+    }
+
+    private fun openAddProduct() {
+        findNavController().navigate(
+            ProductsListFragmentDirections.actionProductsToAdd()
+        )
+    }
+    
+    private fun openTemplatesList() {
+        findNavController().navigate(
+            ProductsListFragmentDirections.actionProductsToTemplates()
+        )
+    }
+
+    private fun updateEmptyState(isEmpty: Boolean) {
+        if (isEmpty) {
+            binding.emptyStateLayout.visibility = View.VISIBLE
+            binding.productsRecyclerView.visibility = View.GONE
+        } else {
+            binding.emptyStateLayout.visibility = View.GONE
+            binding.productsRecyclerView.visibility = View.VISIBLE
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Anuluj wszystkie animacje
+        _binding?.apply {
+            fabMenuOverlay.animate().cancel()
+            addProductFab.animate().cancel()
+            singleAddCard.animate().cancel()
+            bulkAddCard.animate().cancel()
+        }
         _binding = null
+    }
+    
+    private fun showSelectionPanel() {
+        binding.selectionPanel.visibility = View.VISIBLE
+        binding.selectionPanel.alpha = 0f
+        binding.selectionPanel.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+        updateSelectionPanel()
+    }
+    
+    private fun hideSelectionPanel() {
+        binding.selectionPanel.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                binding.selectionPanel.visibility = View.GONE
+            }
+            .start()
+        adapter.selectionMode = false
+        adapter.clearSelection()
+    }
+    
+    private fun updateSelectionPanel() {
+        val selectedCount = adapter.getSelectedCount()
+        binding.selectionCountText.text = "Zaznaczono: $selectedCount"
+        
+        if (selectedCount == 0) {
+            hideSelectionPanel()
+        }
+    }
+    
+    private fun confirmBulkDelete() {
+        val selectedIds = adapter.getSelectedItems()
+        val count = selectedIds.size
+        
+        if (count == 0) return
+        
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
+        
+        sheetBinding.productNameText.text = "$count ${pluralForm(count, "produkt", "produkty", "produktów")}"
+        
+        sheetBinding.cancelButton.setOnClickListener {
+            bottomSheet.dismiss()
+        }
+        
+        sheetBinding.deleteButton.setOnClickListener {
+            bottomSheet.dismiss()
+            deleteBulkProducts(selectedIds)
+        }
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+    
+    private fun pluralForm(count: Int, singular: String, few: String, many: String): String {
+        return when {
+            count == 1 -> singular
+            count % 10 in 2..4 && count % 100 !in 12..14 -> few
+            else -> many
+        }
+    }
+    
+    private fun deleteBulkProducts(productIds: Set<Long>) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                productIds.forEach { id ->
+                    productRepository.deleteProductById(id)
+                }
+                hideSelectionPanel()
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
     }
 }

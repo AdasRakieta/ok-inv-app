@@ -1,21 +1,17 @@
 package com.example.inventoryapp.data.local.entities
 
 import androidx.room.Entity
+import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
-import androidx.room.PrimaryKey
 
-/**
- * Entity representing a scanned product in an inventory count session.
- * Each scan is recorded as a separate item (allows multiple scans of same product).
- */
 @Entity(
     tableName = "inventory_count_items",
     foreignKeys = [
         ForeignKey(
-            entity = InventoryCountSessionEntity::class,
+            entity = InventoryCountEntity::class,
             parentColumns = ["id"],
-            childColumns = ["sessionId"],
+            childColumns = ["countId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
@@ -26,23 +22,31 @@ import androidx.room.PrimaryKey
         )
     ],
     indices = [
-        Index("sessionId"),
-        Index("productId")
+        Index(value = ["countId"]),
+        Index(value = ["productId"]),
+        Index(value = ["countId", "productId"], unique = true)
     ]
 )
 data class InventoryCountItemEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     
-    /** ID of the inventory count session */
-    val sessionId: Long,
-    
-    /** ID of the scanned product */
+    val countId: Long,
     val productId: Long,
     
-    /** Timestamp when product was scanned */
-    val scannedAt: Long = System.currentTimeMillis(),
+    val expectedQuantity: Int = 1,
+    val actualQuantity: Int = 0,
+    val variance: Int = 0,
     
-    /** Sequence number of this scan in the session (1, 2, 3, ...) */
-    val sequenceNumber: Int
+    val scannedAt: Long? = null,
+    val notes: String? = null,
+    
+    val status: ItemCountStatus = ItemCountStatus.NOT_COUNTED
 )
+
+enum class ItemCountStatus {
+    NOT_COUNTED,
+    COUNTED,
+    MISSING,
+    EXTRA
+}
