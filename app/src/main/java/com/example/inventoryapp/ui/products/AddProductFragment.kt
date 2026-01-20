@@ -108,6 +108,7 @@ class AddProductFragment : Fragment() {
                 binding.titleText.text = "Edytuj produkt"
                 binding.saveButton.text = "Zapisz zmiany"
                 binding.productNameInput.setText(product.name)
+                binding.productIdInput.setText(product.customId ?: "")
                 binding.serialNumberInput.setText(product.serialNumber)
                 binding.manufacturerInput.setText(product.manufacturer ?: "")
                 binding.modelInput.setText(product.model ?: "")
@@ -129,6 +130,7 @@ class AddProductFragment : Fragment() {
     
     private fun saveProduct() {
         val name = binding.productNameInput.text.toString().trim()
+        val customId = binding.productIdInput.text.toString().trim().ifEmpty { null }
         val serialNumber = binding.serialNumberInput.text.toString().trim()
         val categoryName = binding.categoryInput.text.toString().trim()
         val categoryId = categories.firstOrNull { it.name == categoryName }?.id
@@ -168,6 +170,7 @@ class AddProductFragment : Fragment() {
         val product = if (existing == null) {
             ProductEntity(
                 name = name,
+                customId = customId,
                 serialNumber = serialNumber,
                 categoryId = categoryId,
                 status = selectedStatus,
@@ -181,6 +184,7 @@ class AddProductFragment : Fragment() {
         } else {
             existing.copy(
                 name = name,
+                customId = customId,
                 serialNumber = serialNumber,
                 categoryId = categoryId,
                 status = selectedStatus,
@@ -202,6 +206,15 @@ class AddProductFragment : Fragment() {
                     Toast.makeText(requireContext(), "Zapisano zmiany", Toast.LENGTH_SHORT).show()
                 }
                 findNavController().navigateUp()
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                // Check if it's a customId conflict
+                if (e.message?.contains("customId") == true) {
+                    binding.productIdInput.error = "To ID jest już w użyciu"
+                } else if (e.message?.contains("serialNumber") == true) {
+                    binding.serialNumberInput.error = "Ten numer seryjny już istnieje"
+                } else {
+                    Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
             }

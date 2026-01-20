@@ -18,6 +18,7 @@ import java.util.Date
     ],
     indices = [
         Index(value = ["serialNumber"], unique = true),
+        Index(value = ["customId"], unique = true),
         Index(value = ["categoryId"]),
         Index(value = ["warehouseLocationId"])
     ]
@@ -27,6 +28,7 @@ data class ProductEntity(
     val id: Long = 0,
     
     val name: String,
+    val customId: String? = null,  // Custom ID like "LapOK10"
     val serialNumber: String,
     val categoryId: Long? = null,
     

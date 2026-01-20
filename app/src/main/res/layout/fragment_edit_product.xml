@@ -43,6 +43,28 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Product ID Field -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/productIdLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Product ID (e.g. LapOK10)"
+            app:boxBackgroundColor="@color/surface"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
+            app:endIconMode="clear_text"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/productIdInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:inputType="textCapCharacters"
+                android:fontFamily="monospace" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
         <!-- Category Selection -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/categoryLayout"
@@ -127,13 +149,15 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/cancelButton"
-                style="@style/Widget.App.Button.Outlined"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Cancel"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#EF4444"
                 android:textAllCaps="false"
-                android:layout_marginEnd="8dp" />
+                android:layout_marginEnd="8dp"
+                app:cornerRadius="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveButton"

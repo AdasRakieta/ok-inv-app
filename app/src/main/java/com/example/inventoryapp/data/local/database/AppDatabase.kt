@@ -38,7 +38,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 27,
+    version = 28,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -316,6 +316,16 @@ abstract class AppDatabase : RoomDatabase() {
                 database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_products_serialNumber ON products(serialNumber)")
             }
         }
+        
+        // Migration 27 -> 28: Add customId field to products table
+        private val MIGRATION_27_28 = object : Migration(27, 28) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add customId column (nullable, unique)
+                database.execSQL("ALTER TABLE products ADD COLUMN customId TEXT")
+                // Create unique index for customId (excluding NULL values)
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_products_customId ON products(customId) WHERE customId IS NOT NULL")
+            }
+        }
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -324,7 +334,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "inventory_database"
                 )
-                    .addMigrations(MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27)
+                    .addMigrations(MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

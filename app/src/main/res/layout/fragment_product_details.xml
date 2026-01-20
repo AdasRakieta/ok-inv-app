@@ -11,14 +11,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="12dp">
 
-        <!-- Product Icon and Name -->
+        <!-- Compact Header with Icon, Name and Category -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.App.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:cardBackgroundColor="#FFFFFF"
             app:strokeColor="#E5E7EB"
             app:strokeWidth="1dp"
@@ -27,58 +27,58 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:gravity="center_vertical">
 
                 <TextView
                     android:id="@+id/productIconText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:text="📦"
-                    android:textSize="64sp"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="16dp" />
-
-                <TextView
-                    android:id="@+id/productNameText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Nazwa produktu"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
+                    android:textSize="40sp"
                     android:gravity="center"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginEnd="12dp" />
 
-                <TextView
-                    android:id="@+id/productCategoryText"
-                    android:layout_width="match_parent"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Kategoria"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    android:gravity="center"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/productNameText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Nazwa produktu"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:maxLines="2"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:id="@+id/productCategoryText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Kategoria"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:layout_marginTop="2dp" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Details Section -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Szczegóły"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp" />
-
+        <!-- Compact Details + Serial Number Combined -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:cardBackgroundColor="#FFFFFF"
             app:strokeColor="#E5E7EB"
             app:strokeWidth="1dp"
@@ -88,20 +88,58 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="12dp">
 
+                <!-- Section Title -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📋 Szczegóły"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- ID Row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="ID"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/productIdValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace" />
+
+                </LinearLayout>
+
+                <!-- Compact Info Rows -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="6dp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Producent"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -109,8 +147,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="-"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_primary" />
+                        android:textSize="13sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
@@ -118,14 +157,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="6dp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Model"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -133,8 +172,36 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="-"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_primary" />
+                        android:textSize="13sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="6dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Opis"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/descriptionValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_primary"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
@@ -148,31 +215,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Opis"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:id="@+id/descriptionValue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="-"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_primary" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:text="Lokacja"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -180,40 +224,28 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="-"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_primary" />
+                        android:textSize="13sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
-            </LinearLayout>
+                <!-- Separator -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E5E7EB"
+                    android:layout_marginVertical="8dp" />
 
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Serial Number Section -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Numer seryjny"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp" />
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.App.Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:strokeColor="#E5E7EB"
-            app:strokeWidth="1dp"
-            app:cardElevation="2dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                <!-- Serial Number Section -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🔢 Numer seryjny"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
 
                 <LinearLayout
                     android:id="@+id/serialNumberAssignedLayout"
@@ -221,7 +253,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:visibility="gone">
+                    android:visibility="gone"
+                    android:layout_marginBottom="8dp">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -233,16 +266,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="SN:"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             android:textColor="@color/text_secondary"
-                            android:layout_marginBottom="4dp" />
+                            android:layout_marginBottom="2dp" />
 
                         <TextView
                             android:id="@+id/serialNumberText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="ABC-123-XYZ"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textColor="@color/success"
                             android:fontFamily="monospace"
                             android:textStyle="bold" />
@@ -259,62 +292,38 @@
 
                 </LinearLayout>
 
-                <LinearLayout
+                <TextView
                     android:id="@+id/serialNumberNotAssignedLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="visible">
+                    android:text="Brak przypisanego numeru"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_tertiary"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="visible" />
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                            android:text="Brak przypisanego numeru"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_tertiary"
-                        android:layout_marginBottom="12dp" />
-
-                </LinearLayout>
-
-                <!-- Action Buttons -->
-                <LinearLayout
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/editSerialButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="8dp">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/editSerialButton"
-                        style="@style/Widget.App.Button.Outlined"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Edytuj numer"
-                        android:textAllCaps="false" />
-
-                </LinearLayout>
+                    android:layout_height="44dp"
+                    android:text="✏️ Edytuj numer seryjny"
+                    android:textSize="13sp"
+                    android:textAllCaps="false"
+                    app:strokeColor="@color/primary"
+                    app:strokeWidth="1dp" />
 
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Quantity Section (for Other category) -->
-        <TextView
-            android:id="@+id/quantitySectionLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Ilość"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"
-            android:visibility="gone" />
-
+        <!-- Quantity Section (for Other category) - Compact -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/quantityCard"
             style="@style/Widget.App.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             android:visibility="gone"
             app:cardBackgroundColor="#FFFFFF"
             app:strokeColor="#E5E7EB"
@@ -325,7 +334,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/quantitySectionLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🔢 Ilość"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -336,10 +355,10 @@
                     <Button
                         android:id="@+id/decreaseQuantityButton"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
                         android:text="-"
-                        android:textSize="24sp"
+                        android:textSize="20sp"
                         android:insetLeft="0dp"
                         android:insetTop="0dp"
                         android:insetRight="0dp"
@@ -352,19 +371,19 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="1"
-                        android:textSize="32sp"
+                        android:textSize="24sp"
                         android:textStyle="bold"
                         android:textColor="@color/primary"
                         android:gravity="center"
-                        android:layout_marginHorizontal="16dp" />
+                        android:layout_marginHorizontal="12dp" />
 
                     <Button
                         android:id="@+id/increaseQuantityButton"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
                         android:text="+"
-                        android:textSize="24sp"
+                        android:textSize="20sp"
                         android:insetLeft="0dp"
                         android:insetTop="0dp"
                         android:insetRight="0dp"
@@ -373,34 +392,16 @@
 
                 </LinearLayout>
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Kliknij +/- aby zmienić ilość"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
-                        android:gravity="center"
-                        android:layout_marginTop="8dp" />
-
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Metadata Section -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Informacje"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp" />
-
+        <!-- Compact Metadata + Movement History Combined -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.App.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:cardBackgroundColor="#FFFFFF"
             app:strokeColor="#E5E7EB"
             app:strokeWidth="1dp"
@@ -410,21 +411,30 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="12dp">
 
-                <!-- Created At -->
+                <!-- Info Section -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ℹ️ Informacje"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="6dp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Utworzono:"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -432,23 +442,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Jan 1, 2024"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_primary" />
+                        android:textSize="13sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
-                <!-- Updated At -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="6dp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Zaktualizowano:"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -456,24 +467,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Jan 1, 2024"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_primary" />
+                        android:textSize="13sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
-                <!-- Movement History (summary row inside Information card) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginTop="12dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Historia ruchów:"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
@@ -481,57 +492,43 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="No movements"
-                        android:textSize="14sp"
-                        android:textColor="@color/text_primary" />
+                        android:textSize="13sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
-            </LinearLayout>
+                <!-- Separator -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E5E7EB"
+                    android:layout_marginVertical="8dp" />
 
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Action Buttons -->
-        <TextView
-            android:id="@+id/movementsLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Historia ruchów"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp" />
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.App.Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#FFFFFF"
-            app:strokeColor="#E5E7EB"
-            app:strokeWidth="1dp"
-            app:cardElevation="2dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                <!-- Movement History List -->
+                <TextView
+                    android:id="@+id/movementsLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📜 Ostatnie ruchy"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/movementsRecyclerView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false"
-                    android:overScrollMode="never"
-                    android:layout_marginBottom="12dp" />
+                    android:overScrollMode="never" />
 
                 <TextView
                     android:id="@+id/movementsEmptyText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Brak ruchów"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textColor="@color/text_secondary"
                     android:gravity="center"
                     android:padding="8dp"
@@ -541,28 +538,39 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/editProductButton"
-            style="@style/Widget.App.Button"
+        <!-- Compact Action Buttons -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Edytuj produkt"
-            android:textAllCaps="false"
-            android:layout_marginBottom="8dp" />
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/deleteProductButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Usuń produkt"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#EF4444"
-            android:textAllCaps="false"
-            app:cornerRadius="8dp"
-            app:elevation="2dp"
-            app:icon="@android:drawable/ic_menu_delete"
-            app:iconTint="#FFFFFF"
-            app:iconGravity="textStart" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/editProductButton"
+                style="@style/Widget.App.Button"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Edytuj"
+                android:textSize="14sp"
+                android:textAllCaps="false"
+                android:layout_marginEnd="6dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/deleteProductButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Usuń"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#EF4444"
+                android:textAllCaps="false"
+                android:layout_marginStart="6dp"
+                app:cornerRadius="8dp"
+                app:elevation="2dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

@@ -81,6 +81,7 @@ class ProductDetailsFragment : Fragment() {
                             productNameText.text = it.name
                             productCategoryText.text = categoryNameFor(it.categoryId)
                             productIconText.text = categoryIconFor(it.categoryId)
+                            productIdValue.text = it.customId ?: "-"
                             manufacturerValue.text = it.manufacturer ?: "-"
                             modelValue.text = it.model ?: "-"
                             descriptionValue.text = it.description ?: "-"
