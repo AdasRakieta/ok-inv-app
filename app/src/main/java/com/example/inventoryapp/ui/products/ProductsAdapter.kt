@@ -15,9 +15,44 @@ import java.util.*
 
 class ProductsAdapter(
     private val onItemClick: (ProductEntity) -> Unit,
+    private val onItemLongClick: (ProductEntity) -> Unit = {},
     private val getCategoryName: (Long?) -> String = { _ -> "-" },
     private val getCategoryIcon: (Long?) -> String = { _ -> "📦" }
 ) : ListAdapter<ProductEntity, ProductsAdapter.ViewHolder>(DiffCallback()) {
+
+    private val selectedItems = mutableSetOf<Long>()
+    var selectionMode = false
+        set(value) {
+            if (!value) {
+                selectedItems.clear()
+            }
+            field = value
+            notifyDataSetChanged()
+        }
+    
+    fun getSelectedItems(): Set<Long> = selectedItems.toSet()
+    
+    fun getSelectedCount(): Int = selectedItems.size
+    
+    fun selectAll() {
+        currentList.forEach { selectedItems.add(it.id) }
+        notifyDataSetChanged()
+    }
+    
+    fun clearSelection() {
+        selectedItems.clear()
+        selectionMode = false
+        notifyDataSetChanged()
+    }
+    
+    fun toggleSelection(productId: Long) {
+        if (selectedItems.contains(productId)) {
+            selectedItems.remove(productId)
+        } else {
+            selectedItems.add(productId)
+        }
+        notifyDataSetChanged()
+    }
 
     companion object {
         private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
@@ -29,26 +64,42 @@ class ProductsAdapter(
             parent,
             false
         )
-        return ViewHolder(binding, onItemClick, getCategoryName, getCategoryIcon)
+        return ViewHolder(binding, onItemClick, onItemLongClick, getCategoryName, getCategoryIcon)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val product = getItem(position)
+        val isSelected = selectedItems.contains(product.id)
+        holder.bind(product, selectionMode, isSelected)
     }
 
     class ViewHolder(
         private val binding: ItemProductBinding,
         private val onItemClick: (ProductEntity) -> Unit,
+        private val onItemLongClick: (ProductEntity) -> Unit,
         private val getCategoryName: (Long?) -> String,
         private val getCategoryIcon: (Long?) -> String
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(product: ProductEntity) {
+        fun bind(product: ProductEntity, selectionMode: Boolean, isSelected: Boolean) {
             binding.apply {
                 productName.text = product.name
                 productSerialNumber.text = product.serialNumber
                 productCategory.text = getCategoryName(product.categoryId)
                 categoryIcon.text = getCategoryIcon(product.categoryId)
+                
+                // Selection mode UI
+                selectionCheckbox.visibility = if (selectionMode) android.view.View.VISIBLE else android.view.View.GONE
+                selectionCheckbox.isChecked = isSelected
+                
+                // Highlight selected items
+                if (selectionMode && isSelected) {
+                    productCard.strokeColor = Color.parseColor("#3B82F6")
+                    productCard.strokeWidth = 4
+                } else {
+                    productCard.strokeColor = Color.parseColor("#E5E7EB")
+                    productCard.strokeWidth = 2
+                }
                 
                 // Set status with Polish label and color
                 val (statusLabel, statusColor) = when (product.status) {
@@ -74,8 +125,17 @@ class ProductsAdapter(
                     productCreatedDate.visibility = android.view.View.GONE
                 }
                 
+                // Handle clicks
                 root.setOnClickListener {
+                    if (selectionMode) {
+                        selectionCheckbox.isChecked = !selectionCheckbox.isChecked
+                    }
                     onItemClick(product)
+                }
+                
+                root.setOnLongClickListener {
+                    onItemLongClick(product)
+                    true
                 }
             }
         }

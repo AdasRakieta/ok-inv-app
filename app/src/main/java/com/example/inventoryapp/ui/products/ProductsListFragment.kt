@@ -88,7 +88,22 @@ class ProductsListFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = ProductsAdapter(
             onItemClick = { product ->
-                openDetails(product.id)
+                if (adapter.selectionMode) {
+                    // Toggle selection in selection mode
+                    adapter.toggleSelection(product.id)
+                    updateSelectionPanel()
+                } else {
+                    // Normal click opens details
+                    openDetails(product.id)
+                }
+            },
+            onItemLongClick = { product ->
+                if (!adapter.selectionMode) {
+                    // Enter selection mode on long click
+                    adapter.selectionMode = true
+                    adapter.toggleSelection(product.id)
+                    showSelectionPanel()
+                }
             },
             getCategoryName = { categoryId -> categoryNameFor(categoryId) },
             getCategoryIcon = { categoryId -> categoryIconFor(categoryId) }
@@ -120,6 +135,16 @@ class ProductsListFragment : Fragment() {
         binding.bulkAddCard.setOnClickListener {
             closeFabMenu()
             openTemplatesList()
+        }
+        
+        // Selection panel actions
+        binding.selectAllButton.setOnClickListener {
+            adapter.selectAll()
+            updateSelectionPanel()
+        }
+        
+        binding.deleteSelectedButton.setOnClickListener {
+            confirmBulkDelete()
         }
     }
     
@@ -536,5 +561,81 @@ class ProductsListFragment : Fragment() {
             bulkAddCard.animate().cancel()
         }
         _binding = null
+    }
+    
+    private fun showSelectionPanel() {
+        binding.selectionPanel.visibility = View.VISIBLE
+        binding.selectionPanel.alpha = 0f
+        binding.selectionPanel.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+        updateSelectionPanel()
+    }
+    
+    private fun hideSelectionPanel() {
+        binding.selectionPanel.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                binding.selectionPanel.visibility = View.GONE
+            }
+            .start()
+        adapter.selectionMode = false
+        adapter.clearSelection()
+    }
+    
+    private fun updateSelectionPanel() {
+        val selectedCount = adapter.getSelectedCount()
+        binding.selectionCountText.text = "Zaznaczono: $selectedCount"
+        
+        if (selectedCount == 0) {
+            hideSelectionPanel()
+        }
+    }
+    
+    private fun confirmBulkDelete() {
+        val selectedIds = adapter.getSelectedItems()
+        val count = selectedIds.size
+        
+        if (count == 0) return
+        
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
+        
+        sheetBinding.productNameText.text = "$count ${pluralForm(count, "produkt", "produkty", "produktów")}"
+        
+        sheetBinding.cancelButton.setOnClickListener {
+            bottomSheet.dismiss()
+        }
+        
+        sheetBinding.deleteButton.setOnClickListener {
+            bottomSheet.dismiss()
+            deleteBulkProducts(selectedIds)
+        }
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+    
+    private fun pluralForm(count: Int, singular: String, few: String, many: String): String {
+        return when {
+            count == 1 -> singular
+            count % 10 in 2..4 && count % 100 !in 12..14 -> few
+            else -> many
+        }
+    }
+    
+    private fun deleteBulkProducts(productIds: Set<Long>) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                productIds.forEach { id ->
+                    productRepository.deleteProductById(id)
+                }
+                hideSelectionPanel()
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
     }
 }

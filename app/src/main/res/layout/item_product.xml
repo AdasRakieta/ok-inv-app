@@ -2,6 +2,7 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/productCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
@@ -29,6 +30,15 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
+            <!-- Selection Checkbox -->
+            <CheckBox
+                android:id="@+id/selectionCheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_marginEnd="12dp"
+                android:buttonTint="@color/primary" />
+
             <TextView
                 android:id="@+id/categoryIcon"
                 android:layout_width="40dp"
@@ -36,7 +46,6 @@
                 android:text="\uD83D\uDCE6"
                 android:textSize="28sp"
                 android:gravity="center"
-
                 android:layout_marginEnd="12dp" />
 
             <LinearLayout
