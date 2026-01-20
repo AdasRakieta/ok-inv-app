@@ -24,6 +24,7 @@ class AddLocationFragment : Fragment() {
     private val productRepository by lazy {
         (requireActivity().application as InventoryApplication).productRepository
     }
+    private val locationStorage by lazy { LocationStorage(requireContext()) }
 
     private var isEditMode = false
     private var currentLocationName: String? = null
@@ -88,6 +89,7 @@ class AddLocationFragment : Fragment() {
     }
     
     private fun createLocation(locationName: String) {
+        locationStorage.addLocation(locationName)
         // Navigate to location details - lokalizacja zostanie "utworzona" gdy przypiszemy do niej pierwszy produkt
         val action = AddLocationFragmentDirections.actionAddLocationToLocationDetails(locationName)
         findNavController().navigate(action)
@@ -121,6 +123,8 @@ class AddLocationFragment : Fragment() {
                     )
                     productRepository.updateProduct(updatedProduct)
                 }
+                val newLocationName = newShelf + (if (newBin.isNotEmpty()) " / $newBin" else "")
+                locationStorage.renameLocation(oldLocationName, newLocationName)
                 
                 Toast.makeText(
                     requireContext(),

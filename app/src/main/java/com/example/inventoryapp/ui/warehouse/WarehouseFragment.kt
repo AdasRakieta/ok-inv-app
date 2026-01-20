@@ -28,6 +28,7 @@ class WarehouseFragment : Fragment() {
     private val categoryRepository by lazy {
         (requireActivity().application as InventoryApplication).categoryRepository
     }
+    private val locationStorage by lazy { LocationStorage(requireContext()) }
 
     private lateinit var locationsAdapter: WarehouseLocationsListAdapter
 
@@ -74,16 +75,17 @@ class WarehouseFragment : Fragment() {
                 productRepository.getAllProducts().collect { products ->
                     val inStockProducts = products.filter { it.status == ProductStatus.IN_STOCK }
 
-                    // Group by location
+                    // Group by location from products
                     val locationGroups = inStockProducts.groupBy { product ->
                         val shelf = product.shelf ?: "Magazyn"
                         val bin = product.bin ?: ""
                         shelf + (if (bin.isNotBlank()) " / $bin" else "")
                     }
+                    val storedLocations = locationStorage.getLocations()
 
                     categoryRepository.getAllCategories().collect { categories ->
-                        // Build location cards
-                        val locationCards = locationGroups.map { (locationName, productsInLocation) ->
+                        // Build location cards from product groups
+                        val productCards = locationGroups.map { (locationName, productsInLocation) ->
                             val categoryIds = productsInLocation.map { it.categoryId }.distinct()
                             val categoryNames = categories.filter { it.id in categoryIds }
                                 .joinToString(", ") { it.name }
@@ -95,6 +97,20 @@ class WarehouseFragment : Fragment() {
                                 description = ""
                             )
                         }
+
+                        // Add stored locations with zero products
+                        val cardsFromStorage = storedLocations
+                            .filter { stored -> productCards.none { it.name == stored } }
+                            .map { storedName ->
+                                WarehouseLocationCard(
+                                    name = storedName,
+                                    productCount = 0,
+                                    categories = "",
+                                    description = ""
+                                )
+                            }
+
+                        val locationCards = (productCards + cardsFromStorage).sortedBy { it.name }
 
                         locationsAdapter.submitList(locationCards)
                         updateEmptyState(locationCards.isEmpty())

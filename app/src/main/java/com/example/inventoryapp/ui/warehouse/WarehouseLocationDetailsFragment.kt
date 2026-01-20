@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.ui.warehouse.LocationStorage
 import com.example.inventoryapp.databinding.FragmentWarehouseLocationDetailsBinding
 import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -33,6 +34,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
     private val categoryRepository by lazy {
         (requireActivity().application as InventoryApplication).categoryRepository
     }
+    private val locationStorage by lazy { LocationStorage(requireContext()) }
 
     private lateinit var assignedProductsAdapter: AssignedProductsAdapter
 
@@ -86,10 +88,15 @@ class WarehouseLocationDetailsFragment : Fragment() {
     private fun loadLocationDetails() {
         val locationName = args.locationName
 
+        // Update header immediately
+        binding.locationName.text = locationName
+        binding.locationShelf.text = locationName.substringBefore("/").trim()
+        binding.locationBin.text = locationName.substringAfter("/", "").trim().takeIf { it.isNotEmpty() } ?: "-"
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                 productRepository.getAllProducts().collect { allProducts ->
-                    // Get products in this location
+                    // Get products in this location - MUST match the format used in WarehouseFragment
                     val productsInLocation = allProducts.filter { product ->
                         val shelf = product.shelf ?: "Magazyn"
                         val bin = product.bin ?: ""
@@ -97,20 +104,14 @@ class WarehouseLocationDetailsFragment : Fragment() {
                         productLocation == locationName
                     }
 
-                    // Update header
-                    binding.locationName.text = locationName
-                    binding.locationShelf.text = locationName.substringBefore("/").trim()
-                    binding.locationBin.text = locationName.substringAfter("/").trim().takeIf { it.isNotEmpty() } ?: "-"
-
-                    // Get unique categories
-                    categoryRepository.getAllCategories().collect { categories ->
-                        val categoriesInLocation = productsInLocation.map { it.categoryId }.distinct()
-                        val categoryNames = categories.filter { it.id in categoriesInLocation }.joinToString(", ") { it.name }
-                        binding.locationCategories.text = "${categoriesInLocation.size}"
-                        binding.locationDescription.text = categoryNames.takeIf { it.isNotEmpty() }?.let { "Kategorie: $it" } ?: ""
-                        if (binding.locationDescription.text.isNotEmpty()) {
-                            binding.locationDescription.visibility = View.VISIBLE
-                        }
+                    // Get categories
+                    val categories = categoryRepository.getAllCategories().firstOrNull() ?: emptyList()
+                    val categoriesInLocation = productsInLocation.mapNotNull { it.categoryId }.distinct()
+                    val categoryNames = categories.filter { it.id in categoriesInLocation }.joinToString(", ") { it.name }
+                    binding.locationCategories.text = "${categoriesInLocation.size}"
+                    binding.locationDescription.text = categoryNames.takeIf { it.isNotEmpty() }?.let { "Kategorie: $it" } ?: ""
+                    if (binding.locationDescription.text.isNotEmpty()) {
+                        binding.locationDescription.visibility = View.VISIBLE
                     }
 
                     // Update products list
@@ -156,6 +157,8 @@ class WarehouseLocationDetailsFragment : Fragment() {
                     "Przypisano ${products.size} produktów do ${locationName}",
                     Toast.LENGTH_SHORT
                 ).show()
+
+                locationStorage.addLocation(locationName)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
             }
@@ -253,7 +256,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
                     "Usunięto lokalizację ${locationName}",
                     Toast.LENGTH_SHORT
                 ).show()
-                
+                locationStorage.removeLocation(locationName)
                 findNavController().navigateUp()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()

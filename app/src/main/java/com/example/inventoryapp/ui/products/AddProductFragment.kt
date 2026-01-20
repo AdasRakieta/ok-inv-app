@@ -15,6 +15,7 @@ import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.databinding.FragmentAddProductBinding
+import com.example.inventoryapp.ui.warehouse.LocationStorage
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -31,6 +32,7 @@ class AddProductFragment : Fragment() {
     private val categoryRepository by lazy {
         (requireActivity().application as InventoryApplication).categoryRepository
     }
+    private val locationStorage by lazy { LocationStorage(requireContext()) }
 
     private var categories: List<CategoryEntity> = emptyList()
     private var currentProduct: ProductEntity? = null
@@ -102,12 +104,14 @@ class AddProductFragment : Fragment() {
     private fun setupLocationsDropdown() {
         lifecycleScope.launch {
             productRepository.getAllProducts().collect { products ->
-                val locations = products
+                val fromProducts = products
                     .mapNotNull { it.shelf }
                     .filter { it.isNotBlank() }
                     .distinct()
-                    .sorted()
-                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, locations)
+                val fromStorage = locationStorage.getLocations()
+                val locations = (fromProducts + fromStorage.toList()).distinct().sorted()
+
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, locations.toList())
                 binding.locationInput.setAdapter(adapter)
                 
                 // Prefill current product location if editing
