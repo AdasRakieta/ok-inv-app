@@ -121,49 +121,8 @@ class WarehouseFragment : Fragment() {
     }
 
     private fun showAddLocationDialog() {
-        val shelfInput = EditText(requireContext()).apply {
-            hint = "Półka (np. A1)"
-            setPadding(32, 16, 32, 16)
-        }
-        
-        val binInput = EditText(requireContext()).apply {
-            hint = "Bin (opcjonalnie)"
-            setPadding(32, 16, 32, 16)
-        }
-        
-        val layout = android.widget.LinearLayout(requireContext()).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(48, 24, 48, 24)
-            addView(shelfInput)
-            addView(binInput)
-        }
-        
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Dodaj nową lokalizację")
-            .setMessage("Podaj szczegóły lokalizacji. Po utworzeniu będziesz mógł przypisać do niej produkty.")
-            .setView(layout)
-            .setPositiveButton("Dodaj") { _, _ ->
-                val shelf = shelfInput.text.toString().trim()
-                val bin = binInput.text.toString().trim()
-                
-                if (shelf.isNotBlank()) {
-                    val locationName = shelf + (if (bin.isNotBlank()) " / $bin" else "")
-                    
-                    // Navigate to location details
-                    val action = WarehouseFragmentDirections.actionWarehouseToLocationDetails(locationName)
-                    findNavController().navigate(action)
-                    
-                    Toast.makeText(
-                        requireContext(), 
-                        "Lokalizacja $locationName utworzona. Przypisz produkty aby była widoczna na liście.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    Toast.makeText(requireContext(), "Nazwa półki jest wymagana", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Anuluj", null)
-            .show()
+        val action = WarehouseFragmentDirections.actionWarehouseToAddLocation(null)
+        findNavController().navigate(action)
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {

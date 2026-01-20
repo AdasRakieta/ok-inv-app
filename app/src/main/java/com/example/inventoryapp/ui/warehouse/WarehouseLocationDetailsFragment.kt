@@ -15,7 +15,7 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentWarehouseLocationDetailsBinding
-import com.example.inventoryapp.ui.products.ProductsAdapter
+import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -34,7 +34,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
         (requireActivity().application as InventoryApplication).categoryRepository
     }
 
-    private lateinit var productsAdapter: ProductsAdapter
+    private lateinit var assignedProductsAdapter: AssignedProductsAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,24 +54,18 @@ class WarehouseLocationDetailsFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        productsAdapter = ProductsAdapter(
-            onItemClick = { product ->
-                // Navigate to product details
+        assignedProductsAdapter = AssignedProductsAdapter(
+            onProductClick = { product ->
+                // Navigate to product details if needed
             },
-            onItemLongClick = { product ->
-                false
-            },
-            getCategoryName = { categoryId ->
-                ""
-            },
-            getCategoryIcon = { categoryId ->
-                "📦"
+            onUnassignClick = { product ->
+                showUnassignConfirmation(product)
             }
         )
 
         binding.assignedProductsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = productsAdapter
+            adapter = assignedProductsAdapter
         }
     }
 
@@ -120,7 +114,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
                     }
 
                     // Update products list
-                    productsAdapter.submitList(productsInLocation)
+                    assignedProductsAdapter.submitList(productsInLocation)
 
                     // Update empty state
                     val isEmpty = productsInLocation.isEmpty()
@@ -169,82 +163,8 @@ class WarehouseLocationDetailsFragment : Fragment() {
     }
 
     private fun showEditLocationDialog() {
-        val locationName = args.locationName
-        val currentShelf = locationName.substringBefore("/").trim()
-        val currentBin = locationName.substringAfter("/", "").trim()
-        
-        val shelfInput = android.widget.EditText(requireContext()).apply {
-            setText(currentShelf)
-            hint = "Półka (np. A1)"
-            setPadding(32, 16, 32, 16)
-        }
-        
-        val binInput = android.widget.EditText(requireContext()).apply {
-            setText(currentBin)
-            hint = "Bin (opcjonalnie)"
-            setPadding(32, 16, 32, 16)
-        }
-        
-        val layout = android.widget.LinearLayout(requireContext()).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(48, 24, 48, 24)
-            addView(shelfInput)
-            addView(binInput)
-        }
-        
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Edytuj lokalizację")
-            .setMessage("Zmiana lokalizacji automatycznie zaktualizuje wszystkie produkty w tej lokalizacji.")
-            .setView(layout)
-            .setPositiveButton("Zapisz") { _, _ ->
-                val newShelf = shelfInput.text.toString().trim()
-                val newBin = binInput.text.toString().trim()
-                
-                if (newShelf.isNotEmpty()) {
-                    updateLocation(locationName, newShelf, newBin)
-                } else {
-                    Toast.makeText(requireContext(), "Nazwa półki jest wymagana", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Anuluj", null)
-            .show()
-    }
-    
-    private fun updateLocation(oldLocationName: String, newShelf: String, newBin: String) {
-        lifecycleScope.launch {
-            try {
-                val allProducts = productRepository.getAllProducts().firstOrNull() ?: return@launch
-                
-                // Find products in old location
-                val productsToUpdate = allProducts.filter { product ->
-                    val shelf = product.shelf ?: "Magazyn"
-                    val bin = product.bin ?: ""
-                    val productLocation = shelf + (if (bin.isNotBlank()) " / $bin" else "")
-                    productLocation == oldLocationName
-                }
-                
-                // Update all products to new location
-                productsToUpdate.forEach { product ->
-                    val updatedProduct = product.copy(
-                        shelf = newShelf,
-                        bin = newBin.takeIf { it.isNotEmpty() },
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    productRepository.updateProduct(updatedProduct)
-                }
-                
-                Toast.makeText(
-                    requireContext(),
-                    "Zaktualizowano lokalizację dla ${productsToUpdate.size} produktów",
-                    Toast.LENGTH_SHORT
-                ).show()
-                
-                // Navigate back to warehouse
-                findNavController().navigateUp()
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
+        val action = WarehouseLocationDetailsFragmentDirections.actionLocationDetailsToEdit(args.locationName)
+        findNavController().navigate(action)
     }
 
     private fun showDeleteConfirmation() {
@@ -260,19 +180,57 @@ class WarehouseLocationDetailsFragment : Fragment() {
             }
             
             val message = if (productsInLocation.isEmpty()) {
-                "Czy na pewno chcesz usunąć lokalizację: ${locationName}?"
+                "Czy na pewno chcesz usunąć tę lokalizację?"
             } else {
-                "Lokalizacja zawiera ${productsInLocation.size} produktów. Usunięcie lokalizacji usunie przypisanie tych produktów.\n\nCzy na pewno kontynuować?"
+                "Czy na pewno chcesz usunąć ten produkt?\n\n• Produkt zostanie trwale usunięty\n• Historii ruchu nie można cofnąć\n• Tej operacji nie można cofnąć"
+            }
+            
+            // Create custom view for warning box
+            val warningBox = android.widget.LinearLayout(requireContext()).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(48, 24, 48, 24)
+                setBackgroundColor(android.graphics.Color.parseColor("#FEF2F2"))
+                
+                addView(android.widget.TextView(requireContext()).apply {
+                    text = "⚠️"
+                    textSize = 48f
+                    gravity = android.view.Gravity.CENTER
+                    setPadding(0, 16, 0, 16)
+                })
+                
+                addView(android.widget.TextView(requireContext()).apply {
+                    text = "Usuń lokalizację"
+                    textSize = 20f
+                    setTextColor(android.graphics.Color.parseColor("#991B1B"))
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    gravity = android.view.Gravity.CENTER
+                    setPadding(0, 0, 0, 16)
+                })
+                
+                addView(android.widget.TextView(requireContext()).apply {
+                    text = locationName
+                    textSize = 16f
+                    setTextColor(android.graphics.Color.parseColor("#374151"))
+                    gravity = android.view.Gravity.CENTER
+                    setPadding(0, 0, 0, 24)
+                })
+                
+                if (productsInLocation.isNotEmpty()) {
+                    addView(android.widget.TextView(requireContext()).apply {
+                        text = "Czy na pewno chcesz usunąć tę lokalizację?\n\n• Przypisanie ${productsInLocation.size} produktów zostanie usunięte\n• Produkty zostaną odpięte od lokalizacji\n• Tej operacji nie można cofnąć"
+                        textSize = 14f
+                        setTextColor(android.graphics.Color.parseColor("#991B1B"))
+                        setPadding(0, 0, 0, 0)
+                    })
+                }
             }
             
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Usuń lokalizację")
-                .setMessage(message)
-                .setPositiveButton("Usuń") { _, _ ->
+                .setView(warningBox)
+                .setPositiveButton("Usuń lokalizację") { _, _ ->
                     deleteLocation(locationName, productsInLocation)
                 }
                 .setNegativeButton("Anuluj", null)
-                .setIcon(android.R.drawable.ic_dialog_alert)
                 .show()
         }
     }
@@ -297,6 +255,34 @@ class WarehouseLocationDetailsFragment : Fragment() {
                 ).show()
                 
                 findNavController().navigateUp()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun showUnassignConfirmation(product: ProductEntity) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Usuń przypisanie produktu")
+            .setMessage("Czy na pewno chcesz usunąć przypisanie?\n\n${product.name}\nS/N: ${product.serialNumber}")
+            .setPositiveButton("Usuń przypisanie") { _, _ ->
+                unassignProduct(product)
+            }
+            .setNegativeButton("Anuluj", null)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show()
+    }
+    
+    private fun unassignProduct(product: ProductEntity) {
+        lifecycleScope.launch {
+            try {
+                val updatedProduct = product.copy(
+                    shelf = null,
+                    bin = null,
+                    updatedAt = System.currentTimeMillis()
+                )
+                productRepository.updateProduct(updatedProduct)
+                Toast.makeText(requireContext(), "Usunięto przypisanie", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
             }

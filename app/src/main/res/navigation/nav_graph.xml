@@ -153,6 +153,10 @@
         <action
             android:id="@+id/action_warehouse_to_locationDetails"
             app:destination="@id/warehouseLocationDetailsFragment" />
+        
+        <action
+            android:id="@+id/action_warehouse_to_addLocation"
+            app:destination="@id/addLocationFragment" />
     </fragment>
 
     <fragment
@@ -163,6 +167,26 @@
         <argument
             android:name="locationName"
             app:argType="string" />
+        
+        <action
+            android:id="@+id/action_locationDetails_to_edit"
+            app:destination="@id/addLocationFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/addLocationFragment"
+        android:name="com.example.inventoryapp.ui.warehouse.AddLocationFragment"
+        android:label="Dodaj lokalizację">
+        
+        <argument
+            android:name="locationName"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        
+        <action
+            android:id="@+id/action_addLocation_to_locationDetails"
+            app:destination="@id/warehouseLocationDetailsFragment" />
     </fragment>
 
 </navigation>
