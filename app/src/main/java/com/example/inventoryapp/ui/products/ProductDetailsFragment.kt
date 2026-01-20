@@ -37,6 +37,9 @@ class ProductDetailsFragment : Fragment() {
     private val categoryRepository by lazy {
         (requireActivity().application as InventoryApplication).categoryRepository
     }
+    private val employeeRepository by lazy {
+        (requireActivity().application as InventoryApplication).employeeRepository
+    }
 
     private var currentProduct: ProductEntity? = null
     private var categories: List<CategoryEntity> = emptyList()
@@ -86,9 +89,27 @@ class ProductDetailsFragment : Fragment() {
                             modelValue.text = it.model ?: "-"
                             descriptionValue.text = it.description ?: "-"
                             locationValue.text = it.shelf ?: "-"
+                            
+                            // Warehouse location
+                            val warehouseLocation = if (it.shelf != null) {
+                                it.shelf + (if (!it.bin.isNullOrBlank()) " / ${it.bin}" else "")
+                            } else {
+                                "Nie przypisano"
+                            }
+                            warehouseLocationValue.text = warehouseLocation
 
                             createdAtText.text = formatDate(it.createdAt)
                             updatedAtText.text = formatDate(it.updatedAt)
+
+                            // Assignment info
+                            if (it.assignedToEmployeeId != null) {
+                                assignedEmployeeLayout.visibility = View.VISIBLE
+                                loadEmployeeInfo(it.assignedToEmployeeId)
+                                buildMovementHistory(it)
+                            } else {
+                                assignedEmployeeLayout.visibility = View.GONE
+                                movementHistoryText.text = "Magazyn"
+                            }
 
                             // Serial number visibility
                             if (it.serialNumber.isNotBlank()) {
@@ -239,6 +260,38 @@ class ProductDetailsFragment : Fragment() {
     private fun categoryIconFor(id: Long?): String {
         if (id == null) return "📦"
         return categories.firstOrNull { it.id == id }?.icon ?: "📦"
+    }
+
+    private fun loadEmployeeInfo(employeeId: Long) {
+        lifecycleScope.launch {
+            val employee = employeeRepository.getEmployeeById(employeeId)
+            binding.assignedEmployeeValue.text = employee?.fullName ?: "Nieznany"
+        }
+    }
+
+    private fun buildMovementHistory(product: ProductEntity) {
+        val history = mutableListOf<String>()
+        
+        // Start with warehouse
+        history.add("Magazyn")
+        
+        // Add assignment if exists
+        if (product.assignedToEmployeeId != null) {
+            lifecycleScope.launch {
+                val employee = employeeRepository.getEmployeeById(product.assignedToEmployeeId)
+                val employeeName = employee?.fullName ?: "Nieznany"
+                val assignmentInfo = if (product.assignmentDate != null) {
+                    "$employeeName (${formatDate(product.assignmentDate)})"
+                } else {
+                    employeeName
+                }
+                
+                val fullHistory = "Magazyn → $assignmentInfo"
+                binding.movementHistoryText.text = fullHistory
+            }
+        } else {
+            binding.movementHistoryText.text = "Magazyn"
+        }
     }
 
     override fun onDestroyView() {

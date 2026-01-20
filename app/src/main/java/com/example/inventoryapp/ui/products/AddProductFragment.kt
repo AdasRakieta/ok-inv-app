@@ -57,6 +57,7 @@ class AddProductFragment : Fragment() {
 
         setupCategories()
         setupStatusDropdown()
+        setupLocationsDropdown()
         loadProductIfEditing()
     }
 
@@ -96,6 +97,26 @@ class AddProductFragment : Fragment() {
         val currentStatus = currentProduct?.status ?: ProductStatus.IN_STOCK
         val currentLabel = statusLabels[currentStatus] ?: "Magazyn"
         binding.statusInput.setText(currentLabel, false)
+    }
+
+    private fun setupLocationsDropdown() {
+        lifecycleScope.launch {
+            productRepository.getAllProducts().collect { products ->
+                val locations = products
+                    .mapNotNull { it.shelf }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .sorted()
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, locations)
+                binding.locationInput.setAdapter(adapter)
+                
+                // Prefill current product location if editing
+                val currentLocation = currentProduct?.shelf
+                if (currentLocation != null && locations.contains(currentLocation)) {
+                    binding.locationInput.setText(currentLocation, false)
+                }
+            }
+        }
     }
 
     private fun loadProductIfEditing() {

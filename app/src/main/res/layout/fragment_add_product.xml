@@ -162,6 +162,7 @@
         <!-- Lokacja -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/locationLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Lokacja"
@@ -170,12 +171,12 @@
             app:hintTextColor="@color/text_secondary"
             android:layout_marginBottom="16dp">
 
-            <com.google.android.material.textfield.TextInputEditText
+            <AutoCompleteTextView
                 android:id="@+id/locationInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"
-                android:inputType="text" />
+                android:inputType="none" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
