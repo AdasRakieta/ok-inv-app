@@ -268,7 +268,7 @@
         android:id="@+id/fabMenuOverlay"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="#80000000"
+        android:background="#88000000"
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true"

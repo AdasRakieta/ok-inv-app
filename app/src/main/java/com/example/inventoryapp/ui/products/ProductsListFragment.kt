@@ -13,11 +13,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.core.content.ContextCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentProductsListBinding
+import com.example.inventoryapp.databinding.BottomSheetStatsBinding
+import com.example.inventoryapp.databinding.BottomSheetFilterBinding
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -62,6 +67,15 @@ class ProductsListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Improve status/navigation bar readability
+        val window = requireActivity().window
+        window.statusBarColor = ContextCompat.getColor(requireContext(), com.example.inventoryapp.R.color.background)
+        window.navigationBarColor = ContextCompat.getColor(requireContext(), com.example.inventoryapp.R.color.background)
+        WindowInsetsControllerCompat(window, view).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
         
         setupRecyclerView()
         setupSearch()
@@ -318,20 +332,18 @@ class ProductsListFragment : Fragment() {
         val retired = allProducts.count { it.status == ProductStatus.RETIRED }
         val lost = allProducts.count { it.status == ProductStatus.LOST }
 
-        val message = """
-            Łącznie produktów: $total
-            W magazynie: $inStock
-            Przypisane: $assigned
-            W serwisie: $inRepair
-            Wycofane: $retired
-            Zaginione: $lost
-        """.trimIndent()
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Statystyki produktów")
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .show()
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetStatsBinding.inflate(layoutInflater)
+        
+        sheetBinding.totalProductsText.text = total.toString()
+        sheetBinding.inStockText.text = inStock.toString()
+        sheetBinding.assignedText.text = assigned.toString()
+        sheetBinding.inRepairText.text = inRepair.toString()
+        sheetBinding.retiredText.text = retired.toString()
+        sheetBinding.lostText.text = lost.toString()
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
     }
 
     private fun openCategoryFilter() {
@@ -343,56 +355,107 @@ class ProductsListFragment : Fragment() {
             return
         }
 
-        val labels = mutableListOf("Wszystkie kategorie")
-        val ids = mutableListOf<Long?>(null)
+        val options = mutableListOf(
+            FilterOption("all", "Wszystkie kategorie", "📦", selectedCategoryId == null)
+        )
+        
         categories.forEach { category ->
-            labels.add(category.name)
-            ids.add(category.id)
+            options.add(
+                FilterOption(
+                    category.id.toString(),
+                    category.name,
+                    category.icon ?: "📦",
+                    selectedCategoryId == category.id
+                )
+            )
         }
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Filtruj po kategorii")
-            .setItems(labels.toTypedArray()) { _, index ->
-                selectedCategoryId = ids[index]
-                applyFilters()
-            }
-            .show()
+        showFilterBottomSheet("🗂️ Filtruj po kategorii", options) { option ->
+            selectedCategoryId = if (option.id == "all") null else option.id.toLong()
+            applyFilters()
+        }
     }
 
     private fun openStatusFilter() {
-        val statuses = listOf<ProductStatus?>(null) + ProductStatus.values().toList()
-        val labels = statuses.map { status ->
-            status?.let { statusLabel(it) } ?: "Wszystkie statusy"
-        }.toTypedArray()
+        val options = listOf(
+            FilterOption("all", "Wszystkie statusy", "🔄", selectedStatus == null),
+            FilterOption(
+                ProductStatus.IN_STOCK.name,
+                "Magazyn",
+                "✅",
+                selectedStatus == ProductStatus.IN_STOCK
+            ),
+            FilterOption(
+                ProductStatus.ASSIGNED.name,
+                "Przypisane",
+                "👤",
+                selectedStatus == ProductStatus.ASSIGNED
+            ),
+            FilterOption(
+                ProductStatus.IN_REPAIR.name,
+                "Serwis",
+                "🔧",
+                selectedStatus == ProductStatus.IN_REPAIR
+            ),
+            FilterOption(
+                ProductStatus.RETIRED.name,
+                "Wycofane",
+                "📁",
+                selectedStatus == ProductStatus.RETIRED
+            ),
+            FilterOption(
+                ProductStatus.LOST.name,
+                "Zaginione",
+                "❓",
+                selectedStatus == ProductStatus.LOST
+            )
+        )
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Filtruj po statusie")
-            .setItems(labels) { _, index ->
-                selectedStatus = statuses[index]
-                applyFilters()
+        showFilterBottomSheet("🏷️ Filtruj po statusie", options) { option ->
+            selectedStatus = if (option.id == "all") {
+                null
+            } else {
+                ProductStatus.valueOf(option.id)
             }
-            .show()
+            applyFilters()
+        }
     }
 
     private fun openSortDialog() {
-        val options = SortOption.values()
-        val labels = arrayOf(
-            "Najnowsze",
-            "Nazwa A-Z",
-            "Nazwa Z-A",
-            "Status",
-            "Numer seryjny"
+        val options = listOf(
+            FilterOption("NEWEST", "Najnowsze", "🆕", sortOption == SortOption.NEWEST),
+            FilterOption("NAME_ASC", "Nazwa A-Z", "🔤", sortOption == SortOption.NAME_ASC),
+            FilterOption("NAME_DESC", "Nazwa Z-A", "🔡", sortOption == SortOption.NAME_DESC),
+            FilterOption("STATUS", "Status", "🏷️", sortOption == SortOption.STATUS),
+            FilterOption("SERIAL", "Numer seryjny", "🔢", sortOption == SortOption.SERIAL)
         )
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Sortuj")
-            .setSingleChoiceItems(labels, options.indexOf(sortOption)) { dialog, which ->
-                sortOption = options[which]
-                applyFilters()
-                dialog.dismiss()
-            }
-            .setNegativeButton("Anuluj", null)
-            .show()
+        showFilterBottomSheet("↕️ Sortuj", options) { option ->
+            sortOption = SortOption.valueOf(option.id)
+            applyFilters()
+        }
+    }
+    
+    private fun showFilterBottomSheet(
+        title: String,
+        options: List<FilterOption>,
+        onOptionSelected: (FilterOption) -> Unit
+    ) {
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetFilterBinding.inflate(layoutInflater)
+        
+        sheetBinding.sheetTitle.text = title
+        
+        val adapter = FilterOptionsAdapter(options) { selectedOption ->
+            bottomSheet.dismiss()
+            onOptionSelected(selectedOption)
+        }
+        
+        sheetBinding.optionsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        sheetBinding.optionsRecyclerView.adapter = adapter
+        
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
     }
 
     private fun statusLabel(status: ProductStatus): String {
