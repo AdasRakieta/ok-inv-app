@@ -87,6 +87,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
 
     private fun loadLocationDetails() {
         val locationName = args.locationName
+        val normalizedLocationName = normalizeLocationName(locationName)
 
         // Update header immediately
         binding.locationName.text = locationName
@@ -98,10 +99,13 @@ class WarehouseLocationDetailsFragment : Fragment() {
                 productRepository.getAllProducts().collect { allProducts ->
                     // Get products in this location - MUST match the format used in WarehouseFragment
                     val productsInLocation = allProducts.filter { product ->
+                        if (product.status != ProductStatus.IN_STOCK) return@filter false
                         val shelf = product.shelf ?: "Magazyn"
                         val bin = product.bin ?: ""
-                        val productLocation = shelf + (if (bin.isNotBlank()) " / $bin" else "")
-                        productLocation == locationName
+                        val productLocation = normalizeLocationName(
+                            shelf + (if (bin.isNotBlank()) " / $bin" else "")
+                        )
+                        productLocation == normalizedLocationName
                     }
 
                     // Get categories
@@ -282,6 +286,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
                 val updatedProduct = product.copy(
                     shelf = null,
                     bin = null,
+                    status = ProductStatus.ASSIGNED,
                     updatedAt = System.currentTimeMillis()
                 )
                 productRepository.updateProduct(updatedProduct)
@@ -290,6 +295,13 @@ class WarehouseLocationDetailsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun normalizeLocationName(raw: String): String {
+        return raw.split("/")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .joinToString(" / ")
     }
 
     private fun pluralForm(count: Int, singular: String, plural2_4: String, plural5: String): String {
