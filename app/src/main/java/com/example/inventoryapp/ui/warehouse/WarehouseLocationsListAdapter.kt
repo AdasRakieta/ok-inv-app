@@ -2,6 +2,7 @@ package com.example.inventoryapp.ui.warehouse
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -15,7 +16,9 @@ data class WarehouseLocationCard(
 )
 
 class WarehouseLocationsListAdapter(
-    private val onLocationClick: (String) -> Unit
+    private val onLocationClick: (WarehouseLocationCard) -> Unit,
+    private val onLocationLongClick: (WarehouseLocationCard) -> Boolean = { false },
+    private val onSelectionChanged: () -> Unit = {}
 ) : ListAdapter<WarehouseLocationCard, WarehouseLocationsListAdapter.LocationViewHolder>(
     object : DiffUtil.ItemCallback<WarehouseLocationCard>() {
         override fun areItemsTheSame(oldItem: WarehouseLocationCard, newItem: WarehouseLocationCard) =
@@ -25,6 +28,14 @@ class WarehouseLocationsListAdapter(
             oldItem == newItem
     }
 ) {
+
+    var selectionMode = false
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
+
+    private val selectedItems = mutableSetOf<String>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LocationViewHolder {
         val binding = ItemWarehouseLocationCardBinding.inflate(
@@ -39,6 +50,32 @@ class WarehouseLocationsListAdapter(
         holder.bind(getItem(position))
     }
 
+    fun toggleSelection(locationName: String) {
+        if (selectedItems.contains(locationName)) {
+            selectedItems.remove(locationName)
+        } else {
+            selectedItems.add(locationName)
+        }
+        notifyDataSetChanged()
+        onSelectionChanged()
+    }
+
+    fun selectAll() {
+        selectedItems.clear()
+        selectedItems.addAll(currentList.map { it.name })
+        notifyDataSetChanged()
+    }
+
+    fun clearSelection() {
+        selectedItems.clear()
+        selectionMode = false
+        notifyDataSetChanged()
+    }
+
+    fun getSelectedNames(): List<String> = selectedItems.toList()
+
+    fun getSelectedCount(): Int = selectedItems.size
+
     inner class LocationViewHolder(private val binding: ItemWarehouseLocationCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -47,6 +84,9 @@ class WarehouseLocationsListAdapter(
             binding.productCount.text = "${location.productCount} szt."
             binding.locationCategories.text = location.categories
             binding.locationDescription.text = location.description.takeIf { it.isNotEmpty() } ?: "Brak opisu"
+
+            binding.locationCheckbox.isVisible = selectionMode
+            binding.locationCheckbox.isChecked = selectedItems.contains(location.name)
 
             // Set product count color and background
             val color = when {
@@ -59,7 +99,19 @@ class WarehouseLocationsListAdapter(
 
             // Click listener
             binding.root.setOnClickListener {
-                onLocationClick(location.name)
+                if (selectionMode) {
+                    toggleSelection(location.name)
+                } else {
+                    onLocationClick(location)
+                }
+            }
+
+            binding.root.setOnLongClickListener {
+                if (!selectionMode) {
+                    onLocationLongClick(location)
+                } else {
+                    false
+                }
             }
         }
     }

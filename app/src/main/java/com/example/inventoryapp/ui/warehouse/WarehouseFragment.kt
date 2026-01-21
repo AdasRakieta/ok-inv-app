@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -20,7 +21,9 @@ import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentWarehouseBinding
+import com.example.inventoryapp.databinding.BottomSheetDeleteLocationConfirmBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class WarehouseFragment : Fragment() {
@@ -59,9 +62,22 @@ class WarehouseFragment : Fragment() {
 
     private fun setupRecyclerView() {
         locationsAdapter = WarehouseLocationsListAdapter(
-            onLocationClick = { locationName ->
-                val action = WarehouseFragmentDirections.actionWarehouseToLocationDetails(locationName)
+            onLocationClick = { location ->
+                val action = WarehouseFragmentDirections.actionWarehouseToLocationDetails(location.name)
                 findNavController().navigate(action)
+            },
+            onLocationLongClick = { location ->
+                if (!locationsAdapter.selectionMode) {
+                    locationsAdapter.selectionMode = true
+                    locationsAdapter.toggleSelection(location.name)
+                    updateSelectionPanel()
+                    true
+                } else {
+                    false
+                }
+            },
+            onSelectionChanged = {
+                updateSelectionPanel()
             }
         )
 
@@ -74,6 +90,15 @@ class WarehouseFragment : Fragment() {
     private fun setupActions() {
         binding.addLocationFab.setOnClickListener {
             showAddLocationDialog()
+        }
+
+        binding.selectAllButton.setOnClickListener {
+            locationsAdapter.selectAll()
+            updateSelectionPanel()
+        }
+
+        binding.deleteSelectedButton.setOnClickListener {
+            showDeleteSelectedConfirmation()
         }
     }
 
@@ -125,6 +150,10 @@ class WarehouseFragment : Fragment() {
                         locationsAdapter.submitList(locationCards)
                         updateEmptyState(locationCards.isEmpty())
 
+                        if (locationsAdapter.selectionMode) {
+                            updateSelectionPanel()
+                        }
+
                         // Check for low stock alerts
                         checkLowStockAlerts(categories, inStockProducts)
                     }
@@ -158,6 +187,102 @@ class WarehouseFragment : Fragment() {
         BottomSheetDialog(requireContext()).apply {
             setContentView(dialogView)
             show()
+        }
+    }
+
+    private fun updateSelectionPanel() {
+        val selectedCount = locationsAdapter.getSelectedCount()
+        binding.selectionPanel.isVisible = locationsAdapter.selectionMode
+        binding.selectionCountText.text = "Zaznaczono: $selectedCount"
+
+        if (selectedCount == 0 && locationsAdapter.selectionMode) {
+            locationsAdapter.clearSelection()
+            binding.selectionPanel.isVisible = false
+        }
+    }
+
+    private fun showDeleteSelectedConfirmation() {
+        val selectedNames = locationsAdapter.getSelectedNames()
+        val selectedCount = selectedNames.size
+        if (selectedCount == 0) return
+
+        lifecycleScope.launch {
+            val allProducts = productRepository.getAllProducts().firstOrNull() ?: emptyList()
+            val selectedSet = selectedNames.toSet()
+            val productsToUnassign = allProducts.filter { product ->
+                val shelf = product.shelf ?: "Magazyn"
+                val bin = product.bin ?: ""
+                val productLocation = shelf + (if (bin.isNotBlank()) " / $bin" else "")
+                productLocation in selectedSet
+            }
+
+            val bottomSheet = BottomSheetDialog(requireContext())
+            val sheetBinding = BottomSheetDeleteLocationConfirmBinding.inflate(layoutInflater)
+
+            sheetBinding.titleText.text = "Usuń lokalizacje"
+            sheetBinding.locationNameText.text = "$selectedCount ${pluralForm(selectedCount, "lokalizację", "lokalizacje", "lokalizacji")}" 
+
+            sheetBinding.warningTitleText.text = "Czy na pewno chcesz usunąć wybrane lokalizacje?"
+            sheetBinding.warningDetailsText.text = buildString {
+                append("• Usuniętych lokalizacji: $selectedCount\n")
+                if (productsToUnassign.isNotEmpty()) {
+                    append("• Odpiętych produktów: ${productsToUnassign.size}\n")
+                }
+                append("• Tej operacji nie można cofnąć")
+            }
+
+            sheetBinding.deleteButton.text = "Usuń lokalizacje"
+            sheetBinding.cancelButton.setOnClickListener { bottomSheet.dismiss() }
+            sheetBinding.deleteButton.setOnClickListener {
+                bottomSheet.dismiss()
+                deleteSelectedLocations(selectedNames)
+            }
+
+            bottomSheet.setContentView(sheetBinding.root)
+            bottomSheet.show()
+        }
+    }
+
+    private fun deleteSelectedLocations(locationNames: List<String>) {
+        lifecycleScope.launch {
+            try {
+                val selectedSet = locationNames.toSet()
+                val allProducts = productRepository.getAllProducts().firstOrNull() ?: emptyList()
+
+                allProducts.forEach { product ->
+                    val shelf = product.shelf ?: "Magazyn"
+                    val bin = product.bin ?: ""
+                    val productLocation = shelf + (if (bin.isNotBlank()) " / $bin" else "")
+
+                    if (productLocation in selectedSet) {
+                        val updatedProduct = product.copy(
+                            shelf = null,
+                            bin = null,
+                            status = ProductStatus.UNASSIGNED,
+                            updatedAt = System.currentTimeMillis()
+                        )
+                        productRepository.updateProduct(updatedProduct)
+                    }
+                }
+
+                locationNames.forEach { locationStorage.removeLocation(it) }
+
+                val updatedList = locationsAdapter.currentList.filter { it.name !in selectedSet }
+                locationsAdapter.submitList(updatedList)
+
+                locationsAdapter.clearSelection()
+                Toast.makeText(requireContext(), "Usunięto lokalizacje", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun pluralForm(count: Int, singular: String, few: String, many: String): String {
+        return when {
+            count == 1 -> singular
+            count % 10 in 2..4 && count % 100 !in 12..14 -> few
+            else -> many
         }
     }
 

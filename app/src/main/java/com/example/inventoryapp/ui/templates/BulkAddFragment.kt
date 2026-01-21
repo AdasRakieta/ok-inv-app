@@ -109,18 +109,20 @@ class BulkAddFragment : Fragment() {
         val statusLabels = mapOf(
             ProductStatus.IN_STOCK to "Magazyn",
             ProductStatus.ASSIGNED to "Przypisane",
+            ProductStatus.UNASSIGNED to "Brak przypisania",
             ProductStatus.IN_REPAIR to "Serwis",
             ProductStatus.RETIRED to "Wycofane",
             ProductStatus.LOST to "Zaginione"
         )
-        val statusNames = statusLabels.values.toList()
+        val selectableStatusLabels = statusLabels.filterKeys { it != ProductStatus.UNASSIGNED }
+        val statusNames = selectableStatusLabels.values.toList()
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, statusNames)
         binding.bulkStatusInput.setAdapter(adapter)
         binding.bulkStatusInput.setText(statusLabels[selectedStatus] ?: "Magazyn", false)
 
         binding.bulkStatusInput.setOnItemClickListener { _, _, position, _ ->
             val label = statusNames[position]
-            selectedStatus = statusLabels.entries.firstOrNull { it.value == label }?.key ?: ProductStatus.IN_STOCK
+            selectedStatus = selectableStatusLabels.entries.firstOrNull { it.value == label }?.key ?: ProductStatus.IN_STOCK
             toggleEmployeeVisibility()
         }
 

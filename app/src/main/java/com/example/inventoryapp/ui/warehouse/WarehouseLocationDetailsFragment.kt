@@ -15,8 +15,10 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.ui.warehouse.LocationStorage
+import com.example.inventoryapp.databinding.BottomSheetDeleteLocationConfirmBinding
 import com.example.inventoryapp.databinding.FragmentWarehouseLocationDetailsBinding
 import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -198,59 +200,30 @@ class WarehouseLocationDetailsFragment : Fragment() {
                 productLocation == locationName
             }
             
-            val message = if (productsInLocation.isEmpty()) {
-                "Czy na pewno chcesz usunąć tę lokalizację?"
+            val bottomSheet = BottomSheetDialog(requireContext())
+            val sheetBinding = BottomSheetDeleteLocationConfirmBinding.inflate(layoutInflater)
+
+            sheetBinding.titleText.text = "Usuń lokalizację"
+            sheetBinding.locationNameText.text = locationName
+
+            sheetBinding.warningTitleText.text = "Czy na pewno chcesz usunąć tę lokalizację?"
+            sheetBinding.warningDetailsText.text = if (productsInLocation.isEmpty()) {
+                "• Lokalizacja zostanie usunięta\n• Tej operacji nie można cofnąć"
             } else {
-                "Czy na pewno chcesz usunąć ten produkt?\n\n• Produkt zostanie trwale usunięty\n• Historii ruchu nie można cofnąć\n• Tej operacji nie można cofnąć"
+                "• Przypisanie ${productsInLocation.size} produktów zostanie usunięte\n• Produkty zostaną odpięte od lokalizacji\n• Tej operacji nie można cofnąć"
             }
-            
-            // Create custom view for warning box
-            val warningBox = android.widget.LinearLayout(requireContext()).apply {
-                orientation = android.widget.LinearLayout.VERTICAL
-                setPadding(48, 24, 48, 24)
-                setBackgroundColor(android.graphics.Color.parseColor("#FEF2F2"))
-                
-                addView(android.widget.TextView(requireContext()).apply {
-                    text = "⚠️"
-                    textSize = 48f
-                    gravity = android.view.Gravity.CENTER
-                    setPadding(0, 16, 0, 16)
-                })
-                
-                addView(android.widget.TextView(requireContext()).apply {
-                    text = "Usuń lokalizację"
-                    textSize = 20f
-                    setTextColor(android.graphics.Color.parseColor("#991B1B"))
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                    gravity = android.view.Gravity.CENTER
-                    setPadding(0, 0, 0, 16)
-                })
-                
-                addView(android.widget.TextView(requireContext()).apply {
-                    text = locationName
-                    textSize = 16f
-                    setTextColor(android.graphics.Color.parseColor("#374151"))
-                    gravity = android.view.Gravity.CENTER
-                    setPadding(0, 0, 0, 24)
-                })
-                
-                if (productsInLocation.isNotEmpty()) {
-                    addView(android.widget.TextView(requireContext()).apply {
-                        text = "Czy na pewno chcesz usunąć tę lokalizację?\n\n• Przypisanie ${productsInLocation.size} produktów zostanie usunięte\n• Produkty zostaną odpięte od lokalizacji\n• Tej operacji nie można cofnąć"
-                        textSize = 14f
-                        setTextColor(android.graphics.Color.parseColor("#991B1B"))
-                        setPadding(0, 0, 0, 0)
-                    })
-                }
+
+            sheetBinding.cancelButton.setOnClickListener {
+                bottomSheet.dismiss()
             }
-            
-            MaterialAlertDialogBuilder(requireContext())
-                .setView(warningBox)
-                .setPositiveButton("Usuń lokalizację") { _, _ ->
-                    deleteLocation(locationName, productsInLocation)
-                }
-                .setNegativeButton("Anuluj", null)
-                .show()
+
+            sheetBinding.deleteButton.setOnClickListener {
+                bottomSheet.dismiss()
+                deleteLocation(locationName, productsInLocation)
+            }
+
+            bottomSheet.setContentView(sheetBinding.root)
+            bottomSheet.show()
         }
     }
     
@@ -262,6 +235,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
                     val updatedProduct = product.copy(
                         shelf = null,
                         bin = null,
+                        status = ProductStatus.UNASSIGNED,
                         updatedAt = System.currentTimeMillis()
                     )
                     productRepository.updateProduct(updatedProduct)
@@ -298,7 +272,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
                 val updatedProduct = product.copy(
                     shelf = null,
                     bin = null,
-                    status = ProductStatus.ASSIGNED,
+                    status = ProductStatus.UNASSIGNED,
                     updatedAt = System.currentTimeMillis()
                 )
                 productRepository.updateProduct(updatedProduct)

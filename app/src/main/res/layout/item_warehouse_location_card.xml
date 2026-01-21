@@ -31,6 +31,14 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
+            <CheckBox
+                android:id="@+id/locationCheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_marginEnd="12dp"
+                android:buttonTint="@color/primary" />
+
             <TextView
                 android:id="@+id/locationIcon"
                 android:layout_width="40dp"

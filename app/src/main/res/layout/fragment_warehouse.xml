@@ -26,7 +26,8 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:padding="12dp" />
+            android:padding="12dp"
+            android:paddingBottom="88dp" />
 
         <!-- Empty State -->
         <LinearLayout
@@ -74,5 +75,61 @@
         android:contentDescription="Dodaj lokalizację"
         app:srcCompat="@android:drawable/ic_input_add"
         app:backgroundTint="@color/warehouse_accent" />
+
+    <!-- Selection Panel -->
+    <LinearLayout
+        android:id="@+id/selectionPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingVertical="8dp"
+        android:paddingHorizontal="12dp"
+        android:background="@color/surface"
+        android:elevation="8dp"
+        android:layout_gravity="bottom"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/selectionCountText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Zaznaczono: 0"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/selectAllButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="Wszystkie"
+            android:textSize="13sp"
+            android:textAllCaps="false"
+            android:contentDescription="Zaznacz wszystko"
+            android:paddingHorizontal="8dp"
+            android:minWidth="0dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteSelectedButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:text="🗑️"
+            android:textSize="24sp"
+            android:contentDescription="Usuń zaznaczone"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp" />
+
+    </LinearLayout>
 
 </FrameLayout>

@@ -95,11 +95,13 @@ class AddProductFragment : Fragment() {
         val statusLabels = mapOf(
             ProductStatus.IN_STOCK to "Magazyn",
             ProductStatus.ASSIGNED to "Przypisane",
+            ProductStatus.UNASSIGNED to "Brak przypisania",
             ProductStatus.IN_REPAIR to "Serwis",
             ProductStatus.RETIRED to "Wycofane",
             ProductStatus.LOST to "Zaginione"
         )
-        val statusNames = statusLabels.values.toList()
+        val selectableStatusLabels = statusLabels.filterKeys { it != ProductStatus.UNASSIGNED }
+        val statusNames = selectableStatusLabels.values.toList()
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, statusNames)
         binding.statusInput.setAdapter(adapter)
 
@@ -108,7 +110,7 @@ class AddProductFragment : Fragment() {
 
         binding.statusInput.setOnItemClickListener { _, _, position, _ ->
             val label = statusNames[position]
-            selectedStatus = statusLabels.entries.firstOrNull { it.value == label }?.key ?: ProductStatus.IN_STOCK
+            selectedStatus = selectableStatusLabels.entries.firstOrNull { it.value == label }?.key ?: ProductStatus.IN_STOCK
             toggleEmployeeField()
         }
 
@@ -229,6 +231,7 @@ class AddProductFragment : Fragment() {
         selectedStatus = when (statusLabel) {
             "Magazyn" -> ProductStatus.IN_STOCK
             "Przypisane" -> ProductStatus.ASSIGNED
+            "Brak przypisania" -> ProductStatus.UNASSIGNED
             "Serwis" -> ProductStatus.IN_REPAIR
             "Wycofane" -> ProductStatus.RETIRED
             "Zaginione" -> ProductStatus.LOST

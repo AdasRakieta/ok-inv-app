@@ -59,6 +59,6 @@ class ProductRepository(private val productDao: ProductDao) {
     
     suspend fun unassignFromEmployee(productId: Long) {
         val now = System.currentTimeMillis()
-        productDao.unassignFromEmployee(productId, ProductStatus.IN_STOCK, now)
+        productDao.unassignFromEmployee(productId, ProductStatus.UNASSIGNED, now)
     }
 }

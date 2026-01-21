@@ -105,6 +105,7 @@ class ProductsAdapter(
                 val (statusLabel, statusColor) = when (product.status) {
                     ProductStatus.IN_STOCK -> "Magazyn" to "#10B981"
                     ProductStatus.ASSIGNED -> "Przypisane" to "#3B82F6"
+                    ProductStatus.UNASSIGNED -> "Brak przypisania" to "#6B7280"
                     ProductStatus.IN_REPAIR -> "Serwis" to "#F59E0B"
                     ProductStatus.RETIRED -> "Wycofane" to "#6B7280"
                     ProductStatus.LOST -> "Zaginione" to "#EF4444"

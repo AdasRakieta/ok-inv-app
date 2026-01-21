@@ -259,6 +259,12 @@ class EmployeesListFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val selectedIds = adapter.getSelectedIds()
+                selectedIds.forEach { employeeId ->
+                    val assignedProducts = productRepository.getProductsAssignedToEmployee(employeeId).first()
+                    assignedProducts.forEach { product ->
+                        productRepository.unassignFromEmployee(product.id)
+                    }
+                }
                 employeeRepository.deleteEmployees(selectedIds)
                 adapter.clearSelection()
                 Toast.makeText(requireContext(), "Usunięto pracowników", Toast.LENGTH_SHORT).show()
