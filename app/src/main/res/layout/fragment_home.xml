@@ -197,70 +197,42 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Magazyn"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="4dp" />
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
 
-                        <LinearLayout
+                        <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="vertical">
+                            android:text="Magazyn"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary"
+                            android:layout_marginBottom="8dp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Lokalizacje"
-                                android:textSize="11sp"
-                                android:textColor="@color/text_secondary" />
-
-                            <TextView
-                                android:id="@+id/warehouseCountText"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/warehouse_accent" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Kategorie"
-                                android:textSize="11sp"
-                                android:textColor="@color/text_secondary" />
-
-                            <TextView
-                                android:id="@+id/warehouseCategoriesText"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/warehouse_accent" />
-
-                        </LinearLayout>
+                        <ImageButton
+                            android:id="@+id/warehouseInfoButton"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="6dp"
+                            android:contentDescription="Informacje o kategoriach"
+                            android:src="@android:drawable/ic_dialog_info"
+                            android:tint="@color/text_secondary" />
 
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/warehouseTopCategoriesLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Kliknij ikonę (i), aby zobaczyć wszystkie kategorie w magazynie"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="4dp" />
 
                 </LinearLayout>
 

@@ -87,14 +87,16 @@ class WarehouseFragment : Fragment() {
                         // Build location cards from product groups
                         val productCards = locationGroups.map { (locationName, productsInLocation) ->
                             val categoryIds = productsInLocation.map { it.categoryId }.distinct()
-                            val categoryNames = categories.filter { it.id in categoryIds }
-                                .joinToString(", ") { it.name }
+                            val categoryEmojis = categories.filter { it.id in categoryIds }
+                                .mapNotNull { it.icon ?: getCategoryEmoji(it.name) }
+                                .distinct()
+                                .joinToString(" ")
 
                             WarehouseLocationCard(
                                 name = locationName,
                                 productCount = productsInLocation.size,
-                                categories = categoryNames,
-                                description = ""
+                                   categories = categoryEmojis,
+                                   description = locationStorage.getLocationDescription(locationName)
                             )
                         }
 
@@ -106,7 +108,7 @@ class WarehouseFragment : Fragment() {
                                     name = storedName,
                                     productCount = 0,
                                     categories = "",
-                                    description = ""
+                                       description = locationStorage.getLocationDescription(storedName)
                                 )
                             }
 
@@ -133,6 +135,34 @@ class WarehouseFragment : Fragment() {
                     .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
                     .show()
             }
+        }
+    }
+
+    private fun getCategoryEmoji(categoryName: String): String {
+        return when (categoryName.lowercase()) {
+            "laptop" -> "💻"
+            "drukarka" -> "🖨️"
+            "monitor" -> "🖥️"
+            "klawiatura" -> "⌨️"
+            "mysz" -> "🖱️"
+            "myszka" -> "🖱️"
+            "słuchawki" -> "🎧"
+            "headphones" -> "🎧"
+            "router" -> "📡"
+            "modem" -> "📡"
+            "hub" -> "🔌"
+            "kabel" -> "🔌"
+            "zasilacz" -> "🔌"
+            "dysk" -> "💾"
+            "pamięć" -> "💾"
+            "ram" -> "💾"
+            "procesor" -> "🖲️"
+            "cpu" -> "🖲️"
+            "telefon" -> "☎️"
+            "smartphone" -> "📱"
+            "tablet" -> "📱"
+            "inne" -> "📦"
+            else -> "📦"
         }
     }
 

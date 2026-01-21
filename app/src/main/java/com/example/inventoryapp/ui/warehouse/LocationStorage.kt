@@ -7,14 +7,26 @@ class LocationStorage(context: Context) {
 
     fun getLocations(): Set<String> = prefs.getStringSet(KEY_LOCATIONS, emptySet()) ?: emptySet()
 
-    fun addLocation(name: String) {
+    fun getLocationDescription(name: String): String = prefs.getString("desc_$name", "") ?: ""
+
+    fun addLocation(name: String, description: String = "") {
         val updated = getLocations().toMutableSet().apply { add(name) }
-        prefs.edit().putStringSet(KEY_LOCATIONS, updated).apply()
+        prefs.edit().apply {
+            putStringSet(KEY_LOCATIONS, updated)
+            if (description.isNotEmpty()) {
+                putString("desc_$name", description)
+            }
+            apply()
+        }
     }
 
     fun removeLocation(name: String) {
         val updated = getLocations().toMutableSet().apply { remove(name) }
-        prefs.edit().putStringSet(KEY_LOCATIONS, updated).apply()
+        prefs.edit().apply {
+            putStringSet(KEY_LOCATIONS, updated)
+            remove("desc_$name")
+            apply()
+        }
     }
 
     fun renameLocation(oldName: String, newName: String) {
@@ -22,7 +34,26 @@ class LocationStorage(context: Context) {
             remove(oldName)
             add(newName)
         }
-        prefs.edit().putStringSet(KEY_LOCATIONS, updated).apply()
+        val oldDescription = getLocationDescription(oldName)
+        prefs.edit().apply {
+            putStringSet(KEY_LOCATIONS, updated)
+            if (oldDescription.isNotEmpty()) {
+                remove("desc_$oldName")
+                putString("desc_$newName", oldDescription)
+            }
+            apply()
+        }
+    }
+
+    fun updateLocationDescription(name: String, description: String) {
+        prefs.edit().apply {
+            if (description.isNotEmpty()) {
+                putString("desc_$name", description)
+            } else {
+                remove("desc_$name")
+            }
+            apply()
+        }
     }
 
     companion object {

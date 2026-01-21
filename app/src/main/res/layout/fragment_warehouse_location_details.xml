@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#F9FAFB">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
@@ -153,6 +153,30 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Opis:"
+                            android:textSize="14sp"
+                            android:textColor="#6B7280" />
+
+                        <TextView
+                            android:id="@+id/locationDescriptionText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#111827"
+                            tools:text="Główny magazyn" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
                         <TextView
@@ -217,6 +241,23 @@
 
                     </LinearLayout>
 
+                    <!-- Search Products -->
+                    <EditText
+                        android:id="@+id/searchProductsEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="8dp"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="8dp"
+                        android:background="@drawable/search_background"
+                        android:hint="Szukaj produktu (nazwa, S/N)..."
+                        android:textColorHint="#9CA3AF"
+                        android:textColor="#111827"
+                        android:textSize="14sp"
+                        android:singleLine="true"
+                        android:inputType="text" />
+
                     <!-- Product Count -->
                     <TextView
                         android:id="@+id/assignedCountText"
@@ -233,7 +274,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:nestedScrollingEnabled="false"
+                        android:nestedScrollingEnabled="true"
                         tools:itemCount="3"
                         tools:listitem="@layout/item_assigned_product" />
 
@@ -287,6 +328,6 @@
             </LinearLayout>
 
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -68,6 +68,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
         binding.assignedProductsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = assignedProductsAdapter
+            setHasFixedSize(false)
         }
     }
 
@@ -83,6 +84,14 @@ class WarehouseLocationDetailsFragment : Fragment() {
         binding.deleteButton.setOnClickListener {
             showDeleteConfirmation()
         }
+
+        binding.searchProductsEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                assignedProductsAdapter.filterByQuery(s?.toString() ?: "")
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
     }
 
     private fun loadLocationDetails() {
@@ -111,15 +120,18 @@ class WarehouseLocationDetailsFragment : Fragment() {
                     // Get categories
                     val categories = categoryRepository.getAllCategories().firstOrNull() ?: emptyList()
                     val categoriesInLocation = productsInLocation.mapNotNull { it.categoryId }.distinct()
-                    val categoryNames = categories.filter { it.id in categoriesInLocation }.joinToString(", ") { it.name }
-                    binding.locationCategories.text = "${categoriesInLocation.size}"
-                    binding.locationDescription.text = categoryNames.takeIf { it.isNotEmpty() }?.let { "Kategorie: $it" } ?: ""
-                    if (binding.locationDescription.text.isNotEmpty()) {
-                        binding.locationDescription.visibility = View.VISIBLE
-                    }
+                    val categoryEmojis = categories.filter { it.id in categoriesInLocation }
+                        .mapNotNull { it.icon ?: getCategoryEmoji(it.name) }
+                        .distinct()
+                        .joinToString(" ")
+                    binding.locationCategories.text = categoryEmojis.takeIf { it.isNotEmpty() } ?: "-"
+
+                    // Get and display description
+                    val locationDescription = locationStorage.getLocationDescription(locationName)
+                    binding.locationDescriptionText.text = locationDescription.takeIf { it.isNotEmpty() } ?: "Brak opisu"
 
                     // Update products list
-                    assignedProductsAdapter.submitList(productsInLocation)
+                    assignedProductsAdapter.setFullList(productsInLocation)
 
                     // Update empty state
                     val isEmpty = productsInLocation.isEmpty()
@@ -302,6 +314,34 @@ class WarehouseLocationDetailsFragment : Fragment() {
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .joinToString(" / ")
+    }
+
+    private fun getCategoryEmoji(categoryName: String): String {
+        return when (categoryName.lowercase()) {
+            "laptop" -> "💻"
+            "drukarka" -> "🖨️"
+            "monitor" -> "🖥️"
+            "klawiatura" -> "⌨️"
+            "mysz" -> "🖱️"
+            "myszka" -> "🖱️"
+            "słuchawki" -> "🎧"
+            "headphones" -> "🎧"
+            "router" -> "📡"
+            "modem" -> "📡"
+            "hub" -> "🔌"
+            "kabel" -> "🔌"
+            "zasilacz" -> "🔌"
+            "dysk" -> "💾"
+            "pamięć" -> "💾"
+            "ram" -> "💾"
+            "procesor" -> "🖲️"
+            "cpu" -> "🖲️"
+            "telefon" -> "☎️"
+            "smartphone" -> "📱"
+            "tablet" -> "📱"
+            "inne" -> "📦"
+            else -> "📦"
+        }
     }
 
     private fun pluralForm(count: Int, singular: String, plural2_4: String, plural5: String): String {

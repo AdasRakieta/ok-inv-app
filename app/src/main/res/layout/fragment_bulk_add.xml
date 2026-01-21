@@ -65,6 +65,118 @@
 
             </LinearLayout>
 
+            <!-- Batch Settings -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/surface"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ustawienia dodawania"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Status dropdown -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/bulkStatusLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Status"
+                        app:boxBackgroundColor="@color/surface"
+                        app:boxStrokeColor="@color/primary"
+                        app:hintTextColor="@color/text_secondary"
+                        android:layout_marginBottom="12dp">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/bulkStatusInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_primary"
+                            android:inputType="none" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Location dropdown (visible only for Magazyn) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/bulkLocationLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Lokalizacja (dla statusu Magazyn)"
+                        app:boxBackgroundColor="@color/surface"
+                        app:boxStrokeColor="@color/primary"
+                        app:hintTextColor="@color/text_secondary"
+                        android:layout_marginBottom="12dp"
+                        android:visibility="visible">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/bulkLocationInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_primary"
+                            android:inputType="none" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Employee dropdown (visible only for Assigned) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/bulkEmployeeLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Pracownik (dla statusu Przypisane)"
+                        app:boxBackgroundColor="@color/surface"
+                        app:boxStrokeColor="@color/primary"
+                        app:hintTextColor="@color/text_secondary"
+                        android:layout_marginBottom="4dp"
+                        android:visibility="gone">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/bulkEmployeeInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_primary"
+                            android:inputType="none" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:id="@+id/bulkLocationHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Status 'Magazyn' wymaga wyboru lokalizacji"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_tertiary"
+                        android:visibility="visible"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/bulkEmployeeHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Status 'Przypisane' wymaga wyboru pracownika"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_tertiary"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Scan Input Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

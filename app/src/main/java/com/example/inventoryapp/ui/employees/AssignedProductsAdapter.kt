@@ -13,6 +13,9 @@ class AssignedProductsAdapter(
     private val onUnassignClick: (ProductEntity) -> Unit
 ) : ListAdapter<ProductEntity, AssignedProductsAdapter.ProductViewHolder>(ProductDiffCallback()) {
 
+    private var fullList: List<ProductEntity> = emptyList()
+    private var filteredList: List<ProductEntity> = emptyList()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val binding = ItemAssignedProductBinding.inflate(
             LayoutInflater.from(parent.context),
@@ -24,6 +27,26 @@ class AssignedProductsAdapter(
 
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
         holder.bind(getItem(position))
+    }
+
+    fun setFullList(list: List<ProductEntity>) {
+        fullList = list
+        filteredList = list
+        submitList(list.toList()) {
+            // Callback when list update is complete
+        }
+    }
+
+    fun filterByQuery(query: String) {
+        filteredList = if (query.isBlank()) {
+            fullList
+        } else {
+            fullList.filter { product ->
+                product.name.contains(query, ignoreCase = true) ||
+                product.serialNumber.contains(query, ignoreCase = true)
+            }
+        }
+        submitList(filteredList.toList())
     }
 
     inner class ProductViewHolder(

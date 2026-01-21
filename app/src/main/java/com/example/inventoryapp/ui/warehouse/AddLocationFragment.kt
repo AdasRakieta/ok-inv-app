@@ -84,12 +84,12 @@ class AddLocationFragment : Fragment() {
         if (isEditMode) {
             updateLocation(currentLocationName!!, shelf, bin, description)
         } else {
-            createLocation(newLocationName)
+            createLocation(newLocationName, description)
         }
     }
     
-    private fun createLocation(locationName: String) {
-        locationStorage.addLocation(locationName)
+    private fun createLocation(locationName: String, description: String = "") {
+        locationStorage.addLocation(locationName, description)
         // Navigate to location details - lokalizacja zostanie "utworzona" gdy przypiszemy do niej pierwszy produkt
         val action = AddLocationFragmentDirections.actionAddLocationToLocationDetails(locationName)
         findNavController().navigate(action)
@@ -125,6 +125,7 @@ class AddLocationFragment : Fragment() {
                 }
                 val newLocationName = newShelf + (if (newBin.isNotEmpty()) " / $newBin" else "")
                 locationStorage.renameLocation(oldLocationName, newLocationName)
+                locationStorage.updateLocationDescription(newLocationName, description)
                 
                 Toast.makeText(
                     requireContext(),

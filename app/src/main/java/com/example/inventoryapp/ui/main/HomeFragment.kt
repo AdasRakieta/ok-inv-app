@@ -4,14 +4,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.inventoryapp.BuildConfig
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
-import com.example.inventoryapp.databinding.FragmentHomeBinding
+import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.databinding.FragmentHomeBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -22,6 +28,13 @@ class HomeFragment : Fragment() {
     private val productRepository by lazy {
         (requireActivity().application as InventoryApplication).productRepository
     }
+    private val categoryRepository by lazy {
+        (requireActivity().application as InventoryApplication).categoryRepository
+    }
+
+    private var cachedCategoryCounts: List<CategoryCount> = emptyList()
+
+    private data class CategoryCount(val category: CategoryEntity, val count: Int)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,16 +61,12 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             productRepository.getAllProducts().collect { products ->
                 val inStockProducts = products.filter { it.status == ProductStatus.IN_STOCK }
-                val locations = inStockProducts
-                    .groupBy { (it.shelf ?: "Magazyn") + (if (it.bin?.isNotBlank() == true) " / ${it.bin}" else "") }
-                    .size
-                
-                // Get unique categories in stock
-                val categories = inStockProducts.map { it.categoryId }.distinct().size
-                
-                // Update UI
-                binding.warehouseCountText.text = "$locations"
-                binding.warehouseCategoriesText.text = "$categories kategor" + if (categories == 1) "ii" else if (categories in 2..4) "ie" else "ii"
+                val categoryCountsMap = inStockProducts.groupingBy { it.categoryId }.eachCount()
+                val categories = categoryRepository.getAllCategories().first()
+
+                cachedCategoryCounts = categories
+                    .map { cat -> CategoryCount(cat, categoryCountsMap[cat.id] ?: 0) }
+                    .sortedBy { it.count }
             }
         }
     }
@@ -76,6 +85,84 @@ class HomeFragment : Fragment() {
         // Warehouse module - navigate to warehouse
         binding.warehouseCard.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_warehouse)
+        }
+
+        binding.warehouseInfoButton.setOnClickListener {
+            showCategoriesDialog()
+        }
+    }
+
+    private fun showCategoriesDialog() {
+        val context = requireContext()
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24, 8, 24, 0)
+        }
+
+        if (cachedCategoryCounts.isEmpty()) {
+            val placeholder = TextView(context).apply {
+                text = "Brak danych magazynowych"
+                textSize = 13f
+                setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+            }
+            container.addView(placeholder)
+        } else {
+            cachedCategoryCounts.forEach { item ->
+                val row = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    setPadding(0, 6, 0, 6)
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                }
+
+                val nameView = TextView(context).apply {
+                    text = "${getCategoryEmoji(item.category.name)} ${item.category.name}"
+                    textSize = 14f
+                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                }
+
+                val countView = TextView(context).apply {
+                    text = "${item.count} szt."
+                    textSize = 14f
+                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
+                }
+
+                val warningView = TextView(context).apply {
+                    val (icon, colorRes) = when {
+                        item.count <= 2 -> "❗" to android.R.color.holo_red_dark
+                        item.count <= 5 -> "❗" to android.R.color.holo_orange_dark
+                        else -> "" to android.R.color.transparent
+                    }
+                    text = icon
+                    textSize = 14f
+                    setTextColor(ContextCompat.getColor(context, colorRes))
+                    setPadding(12, 0, 0, 0)
+                }
+
+                row.addView(nameView)
+                row.addView(countView)
+                row.addView(warningView)
+
+                container.addView(row)
+            }
+        }
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle("Kategorie w magazynie")
+            .setView(container)
+            .setPositiveButton("Zamknij", null)
+            .show()
+    }
+
+    private fun getCategoryEmoji(name: String?): String {
+        return when (name?.lowercase()?.trim()) {
+            "laptop", "laptopy" -> "💻"
+            "tablet", "tablety" -> "📱"
+            "telefon", "telefony" -> "📱"
+            "drukarka", "drukarki" -> "🖨️"
+            "monitor", "monitory" -> "🖥️"
+            "akcesoria", "accessories" -> "🎒"
+            else -> "📦"
         }
     }
 

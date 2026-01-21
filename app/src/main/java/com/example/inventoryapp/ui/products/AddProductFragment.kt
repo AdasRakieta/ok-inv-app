@@ -11,9 +11,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.inventoryapp.InventoryApplication
+import com.example.inventoryapp.data.local.entities.CategoryEntity
+import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
-import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.databinding.FragmentAddProductBinding
 import com.example.inventoryapp.ui.warehouse.LocationStorage
 import kotlinx.coroutines.flow.firstOrNull
@@ -32,10 +33,16 @@ class AddProductFragment : Fragment() {
     private val categoryRepository by lazy {
         (requireActivity().application as InventoryApplication).categoryRepository
     }
+    private val employeeRepository by lazy {
+        (requireActivity().application as InventoryApplication).employeeRepository
+    }
     private val locationStorage by lazy { LocationStorage(requireContext()) }
 
     private var categories: List<CategoryEntity> = emptyList()
+    private var employees: List<EmployeeEntity> = emptyList()
     private var currentProduct: ProductEntity? = null
+    private var selectedEmployeeId: Long? = null
+    private var selectedStatus: ProductStatus = ProductStatus.IN_STOCK
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,7 +66,8 @@ class AddProductFragment : Fragment() {
 
         setupCategories()
         setupStatusDropdown()
-        setupLocationsDropdown()
+        setupEmployeesDropdown()
+        setupWarehouseLocationsDropdown()
         loadProductIfEditing()
     }
 
@@ -94,30 +102,77 @@ class AddProductFragment : Fragment() {
         val statusNames = statusLabels.values.toList()
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, statusNames)
         binding.statusInput.setAdapter(adapter)
-        
-        // Set default to "Magazyn" for new products
-        val currentStatus = currentProduct?.status ?: ProductStatus.IN_STOCK
-        val currentLabel = statusLabels[currentStatus] ?: "Magazyn"
+
+        val currentLabel = statusLabels[selectedStatus] ?: "Magazyn"
         binding.statusInput.setText(currentLabel, false)
+
+        binding.statusInput.setOnItemClickListener { _, _, position, _ ->
+            val label = statusNames[position]
+            selectedStatus = statusLabels.entries.firstOrNull { it.value == label }?.key ?: ProductStatus.IN_STOCK
+            toggleEmployeeField()
+        }
+
+        toggleEmployeeField()
     }
 
-    private fun setupLocationsDropdown() {
+    private fun setupEmployeesDropdown() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            employeeRepository.getAllEmployeesFlow().collect { list ->
+                employees = list
+                val names = list.map { it.fullName }
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, names)
+                binding.assignedEmployeeInput.setAdapter(adapter)
+
+                selectedEmployeeId?.let { id ->
+                    val idx = employees.indexOfFirst { it.id == id }
+                    if (idx >= 0) {
+                        binding.assignedEmployeeInput.setText(employees[idx].fullName, false)
+                    }
+                }
+
+                binding.assignedEmployeeInput.setOnItemClickListener { _, _, position, _ ->
+                    selectedEmployeeId = employees.getOrNull(position)?.id
+                }
+            }
+        }
+    }
+
+    private fun toggleEmployeeField() {
+        val showEmployee = selectedStatus == ProductStatus.ASSIGNED
+        binding.assignedEmployeeLayout.visibility = if (showEmployee) View.VISIBLE else View.GONE
+        if (!showEmployee) {
+            selectedEmployeeId = null
+            binding.assignedEmployeeInput.setText("")
+        }
+        
+        val showLocation = selectedStatus == ProductStatus.IN_STOCK
+        binding.warehouseLocationLayout.visibility = if (showLocation) View.VISIBLE else View.GONE
+        if (!showLocation) {
+            binding.warehouseLocationInput.setText("")
+        }
+    }
+
+    private fun setupWarehouseLocationsDropdown() {
         lifecycleScope.launch {
             productRepository.getAllProducts().collect { products ->
+                // Get locations from products (format: "Shelf / Bin")
                 val fromProducts = products
-                    .mapNotNull { it.shelf }
-                    .filter { it.isNotBlank() }
+                    .filter { !it.shelf.isNullOrBlank() && !it.bin.isNullOrBlank() }
+                    .map { "${it.shelf} / ${it.bin}" }
                     .distinct()
                 val fromStorage = locationStorage.getLocations()
                 val locations = (fromProducts + fromStorage.toList()).distinct().sorted()
 
                 val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, locations.toList())
-                binding.locationInput.setAdapter(adapter)
+                binding.warehouseLocationInput.setAdapter(adapter)
                 
                 // Prefill current product location if editing
-                val currentLocation = currentProduct?.shelf
-                if (currentLocation != null && locations.contains(currentLocation)) {
-                    binding.locationInput.setText(currentLocation, false)
+                val product = currentProduct
+                if (product != null && !product.shelf.isNullOrBlank() && !product.bin.isNullOrBlank()) {
+                    val currentLocation = "${product.shelf} / ${product.bin}"
+                    if (locations.contains(currentLocation)) {
+                        binding.warehouseLocationInput.setText(currentLocation, false)
+                    }
                 }
             }
         }
@@ -138,13 +193,14 @@ class AddProductFragment : Fragment() {
                 binding.manufacturerInput.setText(product.manufacturer ?: "")
                 binding.modelInput.setText(product.model ?: "")
                 binding.descriptionInput.setText(product.description ?: "")
-                binding.locationInput.setText(product.shelf ?: "")
+
+                selectedStatus = product.status
+                selectedEmployeeId = product.assignedToEmployeeId
 
                 // Set category text when categories already loaded
                 val targetCategory = categories.firstOrNull { it.id == product.categoryId }
                 targetCategory?.name?.let { binding.categoryInput.setText(it, false) }
-                
-                // Set status
+
                 setupStatusDropdown()
             } else {
                 Toast.makeText(requireContext(), "Nie znaleziono produktu", Toast.LENGTH_SHORT).show()
@@ -162,17 +218,32 @@ class AddProductFragment : Fragment() {
         val manufacturer = binding.manufacturerInput.text.toString().trim().ifEmpty { null }
         val model = binding.modelInput.text.toString().trim().ifEmpty { null }
         val description = binding.descriptionInput.text.toString().trim().ifEmpty { null }
-        val location = binding.locationInput.text.toString().trim().ifEmpty { null }
+        val warehouseLocation = binding.warehouseLocationInput.text.toString().trim().ifEmpty { null }
+        
+        // Parse shelf and bin from warehouse location (format: "Shelf / Bin")
+        val shelf = warehouseLocation?.substringBefore("/")?.trim()
+        val bin = warehouseLocation?.substringAfter("/", "")?.trim()?.takeIf { it.isNotEmpty() }
         
         // Get selected status
         val statusLabel = binding.statusInput.text.toString().trim()
-        val selectedStatus = when (statusLabel) {
+        selectedStatus = when (statusLabel) {
             "Magazyn" -> ProductStatus.IN_STOCK
             "Przypisane" -> ProductStatus.ASSIGNED
             "Serwis" -> ProductStatus.IN_REPAIR
             "Wycofane" -> ProductStatus.RETIRED
             "Zaginione" -> ProductStatus.LOST
             else -> ProductStatus.IN_STOCK
+        }
+
+        if (selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId == null) {
+            Toast.makeText(requireContext(), "Wybierz pracownika dla statusu Przypisane", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (selectedStatus == ProductStatus.IN_STOCK && warehouseLocation.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Wybierz lokalizację dla statusu Magazyn", Toast.LENGTH_SHORT).show()
+            binding.warehouseLocationInput.error = "Wymagana lokalizacja"
+            return
         }
         
         if (name.isEmpty()) {
@@ -192,6 +263,15 @@ class AddProductFragment : Fragment() {
         
         val existing = currentProduct
         val now = System.currentTimeMillis()
+        val assignmentDate = if (selectedStatus == ProductStatus.ASSIGNED) {
+            if (existing?.assignedToEmployeeId == selectedEmployeeId && existing?.assignmentDate != null) {
+                existing.assignmentDate
+            } else {
+                now
+            }
+        } else {
+            null
+        }
         val product = if (existing == null) {
             ProductEntity(
                 name = name,
@@ -202,7 +282,10 @@ class AddProductFragment : Fragment() {
                 manufacturer = manufacturer,
                 model = model,
                 description = description,
-                shelf = location,
+                shelf = if (selectedStatus == ProductStatus.IN_STOCK) shelf else null,
+                bin = if (selectedStatus == ProductStatus.IN_STOCK) bin else null,
+                assignedToEmployeeId = if (selectedStatus == ProductStatus.ASSIGNED) selectedEmployeeId else null,
+                assignmentDate = assignmentDate,
                 createdAt = now,
                 updatedAt = now
             )
@@ -216,7 +299,10 @@ class AddProductFragment : Fragment() {
                 manufacturer = manufacturer,
                 model = model,
                 description = description,
-                shelf = location,
+                shelf = if (selectedStatus == ProductStatus.IN_STOCK) shelf else null,
+                bin = if (selectedStatus == ProductStatus.IN_STOCK) bin else null,
+                assignedToEmployeeId = if (selectedStatus == ProductStatus.ASSIGNED) selectedEmployeeId else null,
+                assignmentDate = assignmentDate,
                 updatedAt = now
             )
         }

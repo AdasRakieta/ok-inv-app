@@ -88,7 +88,6 @@ class ProductDetailsFragment : Fragment() {
                             manufacturerValue.text = it.manufacturer ?: "-"
                             modelValue.text = it.model ?: "-"
                             descriptionValue.text = it.description ?: "-"
-                            locationValue.text = it.shelf ?: "-"
                             
                             // Warehouse location
                             val warehouseLocation = if (it.shelf != null) {
@@ -273,7 +272,13 @@ class ProductDetailsFragment : Fragment() {
         val history = mutableListOf<String>()
         
         // Start with warehouse
-        history.add("Magazyn")
+        // Build warehouse location string
+        val warehouseLocation = if (product.shelf != null) {
+            "Magazyn (${product.shelf}${if (!product.bin.isNullOrBlank()) " / ${product.bin}" else ""})"
+        } else {
+            "Magazyn"
+        }
+        history.add(warehouseLocation)
         
         // Add assignment if exists
         if (product.assignedToEmployeeId != null) {
@@ -286,11 +291,11 @@ class ProductDetailsFragment : Fragment() {
                     employeeName
                 }
                 
-                val fullHistory = "Magazyn → $assignmentInfo"
+                val fullHistory = "$warehouseLocation → $assignmentInfo"
                 binding.movementHistoryText.text = fullHistory
             }
         } else {
-            binding.movementHistoryText.text = "Magazyn"
+            binding.movementHistoryText.text = warehouseLocation
         }
     }
 
