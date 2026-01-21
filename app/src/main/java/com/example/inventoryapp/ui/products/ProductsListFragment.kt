@@ -417,6 +417,12 @@ class ProductsListFragment : Fragment() {
                 selectedStatus == ProductStatus.ASSIGNED
             ),
             FilterOption(
+                ProductStatus.UNASSIGNED.name,
+                "Brak przypisania",
+                "❓",
+                selectedStatus == ProductStatus.UNASSIGNED
+            ),
+            FilterOption(
                 ProductStatus.IN_REPAIR.name,
                 "Serwis",
                 "🔧",
@@ -487,6 +493,7 @@ class ProductsListFragment : Fragment() {
         return when (status) {
             ProductStatus.IN_STOCK -> "Magazyn"
             ProductStatus.ASSIGNED -> "Przypisane"
+            ProductStatus.UNASSIGNED -> "Brak przypisania"
             ProductStatus.IN_REPAIR -> "Serwis"
             ProductStatus.RETIRED -> "Wycofane"
             ProductStatus.LOST -> "Zaginione"

@@ -23,6 +23,9 @@ class ProductRepository(private val productDao: ProductDao) {
     fun getProductsAssignedToEmployee(employeeId: Long): Flow<List<ProductEntity>> = 
         productDao.getProductsAssignedToEmployee(employeeId)
     
+    suspend fun getAssignedProductsCount(employeeId: Long): Int = 
+        productDao.getAssignedProductsCount(employeeId)
+    
     fun getProductsByStatus(status: ProductStatus): Flow<List<ProductEntity>> = 
         productDao.getProductsByStatus(status)
     
@@ -56,6 +59,6 @@ class ProductRepository(private val productDao: ProductDao) {
     
     suspend fun unassignFromEmployee(productId: Long) {
         val now = System.currentTimeMillis()
-        productDao.unassignFromEmployee(productId, ProductStatus.IN_STOCK, now)
+        productDao.unassignFromEmployee(productId, ProductStatus.UNASSIGNED, now)
     }
 }

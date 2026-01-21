@@ -25,6 +25,9 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE assignedToEmployeeId = :employeeId")
     fun getProductsAssignedToEmployee(employeeId: Long): Flow<List<ProductEntity>>
     
+    @Query("SELECT COUNT(*) FROM products WHERE assignedToEmployeeId = :employeeId")
+    suspend fun getAssignedProductsCount(employeeId: Long): Int
+    
     @Query("SELECT * FROM products WHERE status = :status ORDER BY createdAt DESC")
     fun getProductsByStatus(status: ProductStatus): Flow<List<ProductEntity>>
     

@@ -2,6 +2,8 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/locationCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
@@ -21,7 +23,7 @@
         android:padding="16dp"
         android:background="#FFFFFF">
 
-        <!-- Product Header -->
+        <!-- Location Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -29,17 +31,16 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
-            <!-- Selection Checkbox -->
             <CheckBox
-                android:id="@+id/productCheckbox"
+                android:id="@+id/locationCheckbox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:layout_marginEnd="12dp"
                 android:buttonTint="@color/primary" />
 
-            <!-- Category Icon -->
             <TextView
-                android:id="@+id/categoryIcon"
+                android:id="@+id/locationIcon"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:text="📦"
@@ -54,10 +55,10 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/productName"
+                    android:id="@+id/locationName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Nazwa produktu"
+                    android:text="Location Name"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="#111827"
@@ -72,10 +73,10 @@
                     android:gravity="center_vertical">
 
                     <TextView
-                        android:id="@+id/productCategory"
+                        android:id="@+id/locationCategories"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Kategoria"
+                        android:text="Kategorie"
                         android:textSize="15sp"
                         android:textColor="#0EA5E9"
                         android:maxLines="1"
@@ -90,7 +91,7 @@
                         android:paddingHorizontal="4dp" />
 
                     <TextView
-                        android:id="@+id/productStatus"
+                        android:id="@+id/productCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Magazyn"
@@ -107,48 +108,18 @@
 
         </LinearLayout>
 
-        <!-- Serial Number Badge -->
-        <LinearLayout
-            android:id="@+id/serialNumberContainer"
+        <!-- Description -->
+        <TextView
+            android:id="@+id/locationDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="#F3F4F6"
-            android:padding="10dp"
-            android:layout_marginTop="8dp"
-            android:visibility="visible">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="SN:"
-                android:textSize="13sp"
-                android:textColor="#374151"
-                android:textStyle="bold"
-                android:layout_marginEnd="6dp" />
-
-            <TextView
-                android:id="@+id/productSerialNumber"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="ABC-123-XYZ"
-                android:textSize="14sp"
-                android:textColor="#059669"
-                android:textStyle="bold"
-                android:fontFamily="monospace"
-                android:maxLines="1"
-                android:ellipsize="end" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="✓"
-                android:textSize="16sp"
-                android:textColor="#059669" />
-
-        </LinearLayout>
+            android:text="Description"
+            android:textSize="13sp"
+            android:textColor="#6B7280"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            tools:text="Brak opisu" />
 
     </LinearLayout>
 

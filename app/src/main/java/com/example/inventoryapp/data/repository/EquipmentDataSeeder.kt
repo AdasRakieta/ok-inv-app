@@ -30,28 +30,40 @@ object EquipmentDataSeeder {
         // Seed employees
         val employees = listOf(
             EmployeeEntity(
-                name = "Jan Kowalski",
+                firstName = "Jan",
+                lastName = "Kowalski",
                 email = "jan.kowalski@firma.pl",
+                phone = "+48 123 456 789",
                 department = "IT",
-                position = "Developer"
+                position = "Developer",
+                notes = null
             ),
             EmployeeEntity(
-                name = "Anna Nowak",
+                firstName = "Anna",
+                lastName = "Nowak",
                 email = "anna.nowak@firma.pl",
+                phone = "+48 234 567 890",
                 department = "Magazyn",
-                position = "Magazynier"
+                position = "Magazynier",
+                notes = null
             ),
             EmployeeEntity(
-                name = "Piotr Wiśniewski",
+                firstName = "Piotr",
+                lastName = "Wiśniewski",
                 email = "piotr.wisniewski@firma.pl",
+                phone = "+48 345 678 901",
                 department = "Logistyka",
-                position = "Kierownik"
+                position = "Kierownik",
+                notes = null
             ),
             EmployeeEntity(
-                name = "Maria Wójcik",
+                firstName = "Maria",
+                lastName = "Wójcik",
                 email = "maria.wojcik@firma.pl",
+                phone = "+48 456 789 012",
                 department = "IT",
-                position = "Administrator"
+                position = "Administrator",
+                notes = null
             )
         )
         

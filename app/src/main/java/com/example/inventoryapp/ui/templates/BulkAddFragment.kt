@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -20,11 +21,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
+import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.data.local.entities.ProductTemplateEntity
 import com.example.inventoryapp.data.local.entities.ScanType
 import com.example.inventoryapp.databinding.FragmentBulkAddBinding
+import com.example.inventoryapp.ui.warehouse.LocationStorage
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.flow.firstOrNull
@@ -56,8 +59,18 @@ class BulkAddFragment : Fragment() {
     private val scanHistoryRepository by lazy {
         (requireActivity().application as InventoryApplication).scanHistoryRepository
     }
+
+    private val employeeRepository by lazy {
+        (requireActivity().application as InventoryApplication).employeeRepository
+    }
+    
+    private val locationStorage by lazy { LocationStorage(requireContext()) }
     
     private var selectedTemplate: ProductTemplateEntity? = null
+    private var selectedStatus: ProductStatus = ProductStatus.IN_STOCK
+    private var selectedEmployeeId: Long? = null
+    private var selectedLocation: String? = null
+    private var employees: List<EmployeeEntity> = emptyList()
     private val scannedProducts = mutableListOf<ProductEntity>()
     private val scannedSerials = mutableSetOf<String>()
     private var currentInputField: TextInputEditText? = null
@@ -75,6 +88,9 @@ class BulkAddFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         setupScanInput()
+        setupStatusDropdown()
+        setupLocationsDropdown()
+        observeEmployees()
         
         // Load template from arguments if provided
         if (args.templateId != 0L) {
@@ -87,6 +103,96 @@ class BulkAddFragment : Fragment() {
         addProductInputField()
         
         updateUI()
+    }
+
+    private fun setupStatusDropdown() {
+        val statusLabels = mapOf(
+            ProductStatus.IN_STOCK to "Magazyn",
+            ProductStatus.ASSIGNED to "Przypisane",
+            ProductStatus.UNASSIGNED to "Brak przypisania",
+            ProductStatus.IN_REPAIR to "Serwis",
+            ProductStatus.RETIRED to "Wycofane",
+            ProductStatus.LOST to "Zaginione"
+        )
+        val selectableStatusLabels = statusLabels.filterKeys { it != ProductStatus.UNASSIGNED }
+        val statusNames = selectableStatusLabels.values.toList()
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, statusNames)
+        binding.bulkStatusInput.setAdapter(adapter)
+        binding.bulkStatusInput.setText(statusLabels[selectedStatus] ?: "Magazyn", false)
+
+        binding.bulkStatusInput.setOnItemClickListener { _, _, position, _ ->
+            val label = statusNames[position]
+            selectedStatus = selectableStatusLabels.entries.firstOrNull { it.value == label }?.key ?: ProductStatus.IN_STOCK
+            toggleEmployeeVisibility()
+        }
+
+        toggleEmployeeVisibility()
+    }
+
+    private fun observeEmployees() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            employeeRepository.getAllEmployeesFlow().collect { list ->
+                employees = list
+                val names = list.map { it.fullName }
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, names)
+                binding.bulkEmployeeInput.setAdapter(adapter)
+
+                // Preselect if we already have an id
+                selectedEmployeeId?.let { id ->
+                    val index = employees.indexOfFirst { it.id == id }
+                    if (index >= 0) {
+                        binding.bulkEmployeeInput.setText(employees[index].fullName, false)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setupLocationsDropdown() {
+        lifecycleScope.launch {
+            productRepository.getAllProducts().collect { products ->
+                val fromProducts = products
+                    .mapNotNull { it.shelf }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                val fromStorage = locationStorage.getLocations()
+                val locations = (fromProducts + fromStorage.toList()).distinct().sorted()
+
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, locations.toList())
+                binding.bulkLocationInput.setAdapter(adapter)
+
+                binding.bulkLocationInput.setOnItemClickListener { _, _, position, _ ->
+                    selectedLocation = locations.toList().getOrNull(position)
+                }
+            }
+        }
+    }
+
+    private fun toggleEmployeeVisibility() {
+        val showEmployee = selectedStatus == ProductStatus.ASSIGNED
+        val showLocation = selectedStatus == ProductStatus.IN_STOCK
+        
+        binding.bulkEmployeeLayout.visibility = if (showEmployee) View.VISIBLE else View.GONE
+        binding.bulkEmployeeHint.visibility = if (showEmployee) View.VISIBLE else View.GONE
+        binding.bulkLocationLayout.visibility = if (showLocation) View.VISIBLE else View.GONE
+        binding.bulkLocationHint.visibility = if (showLocation) View.VISIBLE else View.GONE
+        
+        if (!showEmployee) {
+            selectedEmployeeId = null
+            binding.bulkEmployeeInput.setText("")
+        }
+        if (!showLocation) {
+            selectedLocation = null
+            binding.bulkLocationInput.setText("")
+        }
+
+        if (showEmployee) {
+            binding.bulkEmployeeInput.setOnItemClickListener { _, _, position, _ ->
+                selectedEmployeeId = employees.getOrNull(position)?.id
+            }
+        } else {
+            binding.bulkEmployeeInput.onItemClickListener = null
+        }
     }
     
     private fun setupScanInput() {
@@ -262,6 +368,22 @@ class BulkAddFragment : Fragment() {
             currentInputField?.setText("")
             return
         }
+
+        if (selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId == null) {
+            Toast.makeText(requireContext(), "Wybierz pracownika dla statusu Przypisane", Toast.LENGTH_SHORT).show()
+            binding.bulkEmployeeLayout.error = "Wymagany pracownik"
+            return
+        } else {
+            binding.bulkEmployeeLayout.error = null
+        }
+
+        if (selectedStatus == ProductStatus.IN_STOCK && selectedLocation.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Wybierz lokalizację dla statusu Magazyn", Toast.LENGTH_SHORT).show()
+            binding.bulkLocationLayout.error = "Wymagana lokalizacja"
+            return
+        } else {
+            binding.bulkLocationLayout.error = null
+        }
         
         lifecycleScope.launch {
             try {
@@ -282,7 +404,9 @@ class BulkAddFragment : Fragment() {
                 
                 // Create product from template
                 val template = selectedTemplate!!
-                
+                val now = System.currentTimeMillis()
+                val shelf = if (selectedStatus == ProductStatus.IN_STOCK) selectedLocation?.substringBefore("/")?.trim() else null
+                val bin = if (selectedStatus == ProductStatus.IN_STOCK) selectedLocation?.substringAfter("/", "")?.trim()?.takeIf { it.isNotEmpty() } else null
                 val newProduct = ProductEntity(
                     name = "${template.name} - $scannedValue",
                     serialNumber = scannedValue,
@@ -290,7 +414,11 @@ class BulkAddFragment : Fragment() {
                     manufacturer = template.defaultManufacturer,
                     model = template.defaultModel,
                     description = template.defaultDescription,
-                    status = ProductStatus.IN_STOCK
+                    status = selectedStatus,
+                    shelf = shelf,
+                    bin = bin,
+                    assignedToEmployeeId = if (selectedStatus == ProductStatus.ASSIGNED) selectedEmployeeId else null,
+                    assignmentDate = if (selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId != null) now else null
                 )
                 
                 // Add to list

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Form Header -->
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Dodaj nową lokalizację"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Shelf Field -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/shelfLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Półka"
+            app:boxBackgroundColor="@color/surface"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
+            app:helperText="Wymagane (np. A1, B2, C3)"
+            app:helperTextTextColor="@color/text_secondary"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/shelfInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:inputType="textCapCharacters" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Bin Field -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/binLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Box/Pojemnik"
+            app:boxBackgroundColor="@color/surface"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
+            app:helperText="Opcjonalne (np. LARGE, SMALL, 1, 2)"
+            app:helperTextTextColor="@color/text_secondary"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/binInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:inputType="textCapCharacters" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Description Field -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/descriptionLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Opis lokalizacji"
+            app:boxBackgroundColor="@color/surface"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
+            app:helperText="Opcjonalne"
+            app:helperTextTextColor="@color/text_secondary"
+            android:layout_marginBottom="24dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/descriptionInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:inputType="textMultiLine"
+                android:minLines="3"
+                android:gravity="top|start" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Info Box -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            app:cardBackgroundColor="#EFF6FF"
+            app:cardElevation="0dp"
+            app:cardCornerRadius="8dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#BFDBFE">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ℹ️"
+                    android:textSize="20sp"
+                    android:layout_marginEnd="12dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Po utworzeniu lokalizacji możesz przypisać do niej produkty w szczegółach lokalizacji."
+                    android:textSize="13sp"
+                    android:textColor="#1E40AF" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Anuluj"
+                android:textAllCaps="false"
+                android:textColor="#374151"
+                android:textSize="16sp"
+                android:layout_marginEnd="8dp"
+                app:strokeColor="#D1D5DB"
+                app:strokeWidth="1dp"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/saveButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Zapisz"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:backgroundTint="@color/primary"
+                android:layout_marginStart="8dp"
+                app:cornerRadius="8dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

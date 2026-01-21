@@ -89,20 +89,6 @@
                         android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wkrótce"
-                        android:textSize="11sp"
-                        android:textColor="@color/warning"
-                        android:textStyle="bold"
-                        android:background="@color/background_secondary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="2dp"
-                        android:layout_marginTop="6dp" />
-
                 </LinearLayout>
 
             </LinearLayout>
@@ -116,8 +102,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:clickable="false"
-            android:focusable="false"
+            android:clickable="true"
+            android:focusable="true"
             app:cardBackgroundColor="@color/surface"
             app:cardElevation="2dp"
             app:cardCornerRadius="12dp">
@@ -161,23 +147,9 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Zarządzaj danymi pracowników"
+                        android:text="Zarządzaj pracownikami i przypisaniami sprzętu"
                         android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wkrótce"
-                        android:textSize="11sp"
-                        android:textColor="@color/warning"
-                        android:textStyle="bold"
-                        android:background="@color/background_secondary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="2dp"
-                        android:layout_marginTop="6dp" />
 
                 </LinearLayout>
 
@@ -192,8 +164,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:clickable="false"
-            android:focusable="false"
+            android:clickable="true"
+            android:focusable="true"
             app:cardBackgroundColor="@color/surface"
             app:cardElevation="2dp"
             app:cardCornerRadius="12dp">
@@ -225,35 +197,42 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Magazyn"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Magazyn"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary"
+                            android:layout_marginBottom="8dp" />
+
+                        <ImageButton
+                            android:id="@+id/warehouseInfoButton"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="6dp"
+                            android:contentDescription="Informacje o kategoriach"
+                            android:src="@android:drawable/ic_dialog_info"
+                            android:tint="@color/text_secondary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/warehouseTopCategoriesLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Kliknij ikonę (i), aby zobaczyć wszystkie kategorie w magazynie"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary"
                         android:layout_marginBottom="4dp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Zarządzaj stanami magazynowymi"
-                        android:textSize="13sp"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wkrótce"
-                        android:textSize="11sp"
-                        android:textColor="@color/warning"
-                        android:textStyle="bold"
-                        android:background="@color/background_secondary"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:paddingTop="2dp"
-                        android:paddingBottom="2dp"
-                        android:layout_marginTop="6dp" />
 
                 </LinearLayout>
 
@@ -418,7 +397,7 @@
             android:id="@+id/appVersionText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Version 0.2.0"
+            android:text="Version 1.2.0"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:gravity="center"

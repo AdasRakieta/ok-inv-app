@@ -12,6 +12,14 @@
         <action
             android:id="@+id/action_home_to_products"
             app:destination="@id/productsListFragment" />
+        
+        <action
+            android:id="@+id/action_home_to_employees"
+            app:destination="@id/employeesListFragment" />
+
+        <action
+            android:id="@+id/action_home_to_warehouse"
+            app:destination="@id/warehouseFragment" />
     </fragment>
 
     <fragment
@@ -90,6 +98,95 @@
         <argument
             android:name="templateId"
             app:argType="long" />
+    </fragment>
+
+    <!-- Employees -->
+    <fragment
+        android:id="@+id/employeesListFragment"
+        android:name="com.example.inventoryapp.ui.employees.EmployeesListFragment"
+        android:label="Pracownicy">
+        
+        <action
+            android:id="@+id/action_employeesList_to_employeeDetails"
+            app:destination="@id/employeeDetailsFragment" />
+        
+        <action
+            android:id="@+id/action_employeesList_to_addEmployee"
+            app:destination="@id/addEmployeeFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/employeeDetailsFragment"
+        android:name="com.example.inventoryapp.ui.employees.EmployeeDetailsFragment"
+        android:label="Szczegóły pracownika">
+        
+        <argument
+            android:name="employeeId"
+            app:argType="long" />
+        
+        <action
+            android:id="@+id/action_employeeDetails_to_addEmployee"
+            app:destination="@id/addEmployeeFragment" />
+        
+        <action
+            android:id="@+id/action_employeeDetails_to_productDetails"
+            app:destination="@id/productDetailsFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/addEmployeeFragment"
+        android:name="com.example.inventoryapp.ui.employees.AddEmployeeFragment"
+        android:label="Dodaj pracownika">
+        
+        <argument
+            android:name="employeeId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
+
+    <!-- Warehouse -->
+    <fragment
+        android:id="@+id/warehouseFragment"
+        android:name="com.example.inventoryapp.ui.warehouse.WarehouseFragment"
+        android:label="Magazyn">
+        
+        <action
+            android:id="@+id/action_warehouse_to_locationDetails"
+            app:destination="@id/warehouseLocationDetailsFragment" />
+        
+        <action
+            android:id="@+id/action_warehouse_to_addLocation"
+            app:destination="@id/addLocationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/warehouseLocationDetailsFragment"
+        android:name="com.example.inventoryapp.ui.warehouse.WarehouseLocationDetailsFragment"
+        android:label="Szczegóły lokalizacji">
+        
+        <argument
+            android:name="locationName"
+            app:argType="string" />
+        
+        <action
+            android:id="@+id/action_locationDetails_to_edit"
+            app:destination="@id/addLocationFragment" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/addLocationFragment"
+        android:name="com.example.inventoryapp.ui.warehouse.AddLocationFragment"
+        android:label="Dodaj lokalizację">
+        
+        <argument
+            android:name="locationName"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        
+        <action
+            android:id="@+id/action_addLocation_to_locationDetails"
+            app:destination="@id/warehouseLocationDetailsFragment" />
     </fragment>
 
 </navigation>

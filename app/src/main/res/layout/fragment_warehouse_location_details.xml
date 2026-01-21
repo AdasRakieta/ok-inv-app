@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F9FAFB">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Location Header Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <!-- Location Circle with Icon -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:layout_gravity="center_horizontal"
+                        app:cardBackgroundColor="#FEF3C7"
+                        app:cardCornerRadius="40dp"
+                        app:cardElevation="0dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="📦"
+                            android:textSize="40sp" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:id="@+id/locationName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="16dp"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="#111827"
+                        tools:text="Półka A / Box 1" />
+
+                    <TextView
+                        android:id="@+id/locationDescription"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="4dp"
+                        android:textSize="14sp"
+                        android:textColor="#6B7280"
+                        android:visibility="gone"
+                        tools:text="Główny obszar magazynowy" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Info Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/infoCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ℹ️ Informacje"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#111827"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Półka:"
+                            android:textSize="14sp"
+                            android:textColor="#6B7280" />
+
+                        <TextView
+                            android:id="@+id/locationShelf"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#111827"
+                            android:textStyle="bold"
+                            tools:text="A" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Box/Pojemnik:"
+                            android:textSize="14sp"
+                            android:textColor="#6B7280" />
+
+                        <TextView
+                            android:id="@+id/locationBin"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#111827"
+                            android:textStyle="bold"
+                            tools:text="1" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Opis:"
+                            android:textSize="14sp"
+                            android:textColor="#6B7280" />
+
+                        <TextView
+                            android:id="@+id/locationDescriptionText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#111827"
+                            tools:text="Główny magazyn" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Kategorie:"
+                            android:textSize="14sp"
+                            android:textColor="#6B7280" />
+
+                        <TextView
+                            android:id="@+id/locationCategories"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#111827"
+                            android:textStyle="bold"
+                            tools:text="3" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Assigned Products Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="📦 Produkty w lokalizacji"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#111827" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/assignProductButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="+ Przypisz"
+                            android:textSize="13sp" />
+
+                    </LinearLayout>
+
+                    <!-- Search Products -->
+                    <EditText
+                        android:id="@+id/searchProductsEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="8dp"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="8dp"
+                        android:background="@drawable/search_background"
+                        android:hint="Szukaj produktu (nazwa, S/N)..."
+                        android:textColorHint="#9CA3AF"
+                        android:textColor="#111827"
+                        android:textSize="14sp"
+                        android:singleLine="true"
+                        android:inputType="text" />
+
+                    <!-- Product Count -->
+                    <TextView
+                        android:id="@+id/assignedCountText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textSize="13sp"
+                        android:textColor="#6B7280"
+                        tools:text="5 produktów w tej lokalizacji" />
+
+                    <!-- Products List -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/assignedProductsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:nestedScrollingEnabled="true"
+                        tools:itemCount="3"
+                        tools:listitem="@layout/item_assigned_product" />
+
+                    <!-- Empty State for Products -->
+                    <TextView
+                        android:id="@+id/noProductsText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:layout_gravity="center_horizontal"
+                        android:text="Brak produktów w tej lokalizacji"
+                        android:textSize="14sp"
+                        android:textColor="#9CA3AF"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Compact Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/editButton"
+                    style="@style/Widget.App.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="Edytuj"
+                    android:textSize="14sp"
+                    android:textAllCaps="false"
+                    android:layout_marginEnd="6dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/deleteButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:text="Usuń"
+                    android:textSize="14sp"
+                    android:textColor="#FFFFFF"
+                    android:backgroundTint="#EF4444"
+                    android:textAllCaps="false"
+                    android:layout_marginStart="6dp"
+                    app:cornerRadius="8dp"
+                    app:elevation="2dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

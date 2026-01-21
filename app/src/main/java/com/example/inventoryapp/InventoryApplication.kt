@@ -5,9 +5,6 @@ import android.util.Log
 import androidx.room.Room
 import com.example.inventoryapp.data.local.database.AppDatabase
 import com.example.inventoryapp.data.repository.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class InventoryApplication : Application() {
 
@@ -48,23 +45,6 @@ class InventoryApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         
-        // Initialize data on first launch
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // Initialize default categories
-                categoryRepository.initializeDefaultCategories()
-                
-                // Initialize default product templates
-                productTemplateRepository.initializeDefaultTemplates(categoryRepository)
-                
-                // Seed sample products
-                com.example.inventoryapp.data.seeder.ProductDataSeeder.seedSampleProducts(this@InventoryApplication)
-                
-                // Seed sample equipment data (legacy)
-                EquipmentDataSeeder.seedSampleData(this@InventoryApplication)
-            } catch (e: Exception) {
-                Log.e("InventoryApp", "Initialization failed", e)
-            }
-        }
+        // No automatic data seeding on install.
     }
 }

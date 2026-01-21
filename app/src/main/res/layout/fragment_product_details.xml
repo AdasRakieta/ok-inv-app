@@ -188,6 +188,31 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:text="Lokacja"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/warehouseLocationValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="Opis"
                         android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
@@ -205,27 +230,30 @@
 
                 </LinearLayout>
 
+                <!-- Assigned Employee (conditional) -->
                 <LinearLayout
+                    android:id="@+id/assignedEmployeeLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="6dp"
+                    android:visibility="gone">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Lokacja"
+                        android:text="Przypisany do:"
                         android:textSize="13sp"
                         android:textColor="@color/text_secondary" />
 
                     <TextView
-                        android:id="@+id/locationValue"
+                        android:id="@+id/assignedEmployeeValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="-"
                         android:textSize="13sp"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/primary"
                         android:textStyle="bold" />
 
                 </LinearLayout>
@@ -476,25 +504,26 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:layout_marginBottom="8dp">
 
                     <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Historia ruchów:"
-                        android:textSize="13sp"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:id="@+id/movementSummaryText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="No movements"
+                        android:text="Historia przypisań:"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/movementHistoryText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Brak historii"
                         android:textSize="13sp"
                         android:textColor="@color/text_primary"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:lineSpacingExtra="2dp" />
 
                 </LinearLayout>
 
@@ -504,35 +533,6 @@
                     android:layout_height="1dp"
                     android:background="#E5E7EB"
                     android:layout_marginVertical="8dp" />
-
-                <!-- Movement History List -->
-                <TextView
-                    android:id="@+id/movementsLabel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="📜 Ostatnie ruchy"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/movementsRecyclerView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"
-                    android:overScrollMode="never" />
-
-                <TextView
-                    android:id="@+id/movementsEmptyText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Brak ruchów"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_secondary"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:visibility="gone" />
 
             </LinearLayout>
 

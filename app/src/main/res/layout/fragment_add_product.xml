@@ -159,26 +159,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Lokacja -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/locationLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Lokacja"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/locationInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="text" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
         <!-- Opis -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/descriptionLayout"
@@ -211,10 +191,54 @@
             app:boxBackgroundColor="@color/surface"
             app:boxStrokeColor="@color/primary"
             app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="12dp">
 
             <AutoCompleteTextView
                 android:id="@+id/statusInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Lokacja magazynowa (pokazywana tylko dla statusu Magazyn) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/warehouseLocationLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Lokalizacja magazynowa"
+            app:boxBackgroundColor="@color/surface"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone">
+
+            <AutoCompleteTextView
+                android:id="@+id/warehouseLocationInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_primary"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Pracownik (pokazywany tylko dla statusu Przypisane) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/assignedEmployeeLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Pracownik"
+            app:boxBackgroundColor="@color/surface"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/text_secondary"
+            android:layout_marginBottom="24dp"
+            android:visibility="gone">
+
+            <AutoCompleteTextView
+                android:id="@+id/assignedEmployeeInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/text_primary"

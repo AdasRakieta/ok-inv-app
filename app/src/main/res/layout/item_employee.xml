@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/employeeCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
@@ -21,7 +22,7 @@
         android:padding="16dp"
         android:background="#FFFFFF">
 
-        <!-- Product Header -->
+        <!-- Employee Header with actions -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -31,21 +32,33 @@
 
             <!-- Selection Checkbox -->
             <CheckBox
-                android:id="@+id/productCheckbox"
+                android:id="@+id/employeeCheckbox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:layout_marginEnd="12dp"
                 android:buttonTint="@color/primary" />
 
-            <!-- Category Icon -->
-            <TextView
-                android:id="@+id/categoryIcon"
+            <!-- Employee Icon -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/employeeIcon"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:text="📦"
-                android:textSize="28sp"
-                android:gravity="center"
-                android:layout_marginEnd="12dp" />
+                app:cardBackgroundColor="#E3F2FD"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                android:layout_marginEnd="12dp">
+
+                <TextView
+                    android:id="@+id/employeeInitials"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textColor="#1565C0"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="JK" />
+            </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -54,10 +67,10 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/productName"
+                    android:id="@+id/employeeName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Nazwa produktu"
+                    android:text="Jan Kowalski"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="#111827"
@@ -72,10 +85,10 @@
                     android:gravity="center_vertical">
 
                     <TextView
-                        android:id="@+id/productCategory"
+                        android:id="@+id/employeeDepartment"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Kategoria"
+                        android:text="IT"
                         android:textSize="15sp"
                         android:textColor="#0EA5E9"
                         android:maxLines="1"
@@ -90,15 +103,12 @@
                         android:paddingHorizontal="4dp" />
 
                     <TextView
-                        android:id="@+id/productStatus"
+                        android:id="@+id/employeePosition"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Magazyn"
+                        android:text="Programista"
                         android:textSize="13sp"
-                        android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="3dp"
+                        android:textColor="#374151"
                         android:maxLines="1" />
 
                 </LinearLayout>
@@ -107,14 +117,14 @@
 
         </LinearLayout>
 
-        <!-- Serial Number Badge -->
+        <!-- Assigned Equipment Badge -->
         <LinearLayout
-            android:id="@+id/serialNumberContainer"
+            android:id="@+id/assignedCountContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="#F3F4F6"
+            android:background="#FFF3E0"
             android:padding="10dp"
             android:layout_marginTop="8dp"
             android:visibility="visible">
@@ -122,33 +132,34 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SN:"
+                android:text="📦"
                 android:textSize="13sp"
-                android:textColor="#374151"
-                android:textStyle="bold"
                 android:layout_marginEnd="6dp" />
 
             <TextView
-                android:id="@+id/productSerialNumber"
+                android:id="@+id/assignedCount"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="ABC-123-XYZ"
-                android:textSize="14sp"
-                android:textColor="#059669"
+                android:text="5 urządzeń"
+                android:textSize="13sp"
+                android:textColor="#E65100"
                 android:textStyle="bold"
-                android:fontFamily="monospace"
                 android:maxLines="1"
                 android:ellipsize="end" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="✓"
-                android:textSize="16sp"
-                android:textColor="#059669" />
-
         </LinearLayout>
+
+        <!-- Contact Info -->
+        <TextView
+            android:id="@+id/employeeContact"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📧 jan.kowalski@firma.pl"
+            android:textSize="12sp"
+            android:textColor="#9CA3AF"
+            android:layout_marginTop="8dp"
+            android:visibility="visible" />
 
     </LinearLayout>
 
