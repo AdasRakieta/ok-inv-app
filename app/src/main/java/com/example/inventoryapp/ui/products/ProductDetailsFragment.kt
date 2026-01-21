@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import androidx.appcompat.app.AlertDialog
+import com.example.inventoryapp.utils.MovementHistoryUtils
 
 class ProductDetailsFragment : Fragment() {
 
@@ -269,18 +270,18 @@ class ProductDetailsFragment : Fragment() {
     }
 
     private fun buildMovementHistory(product: ProductEntity) {
-        val history = mutableListOf<String>()
-        
-        // Start with warehouse
-        // Build warehouse location string
+        val storedHistory = MovementHistoryUtils.formatForDisplay(product.movementHistory)
+        if (storedHistory.isNotBlank()) {
+            binding.movementHistoryText.text = storedHistory
+            return
+        }
+
         val warehouseLocation = if (product.shelf != null) {
             "Magazyn (${product.shelf}${if (!product.bin.isNullOrBlank()) " / ${product.bin}" else ""})"
         } else {
             "Magazyn"
         }
-        history.add(warehouseLocation)
-        
-        // Add assignment if exists
+
         if (product.assignedToEmployeeId != null) {
             lifecycleScope.launch {
                 val employee = employeeRepository.getEmployeeById(product.assignedToEmployeeId)
@@ -290,9 +291,7 @@ class ProductDetailsFragment : Fragment() {
                 } else {
                     employeeName
                 }
-                
-                val fullHistory = "$warehouseLocation → $assignmentInfo"
-                binding.movementHistoryText.text = fullHistory
+                binding.movementHistoryText.text = "$warehouseLocation → $assignmentInfo"
             }
         } else {
             binding.movementHistoryText.text = warehouseLocation

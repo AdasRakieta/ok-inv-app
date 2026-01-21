@@ -15,6 +15,7 @@ import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.databinding.FragmentAddProductBinding
 import com.example.inventoryapp.ui.warehouse.LocationStorage
 import kotlinx.coroutines.flow.firstOrNull
@@ -309,14 +310,43 @@ class AddProductFragment : Fragment() {
                 updatedAt = now
             )
         }
+
+        val locationName = if (selectedStatus == ProductStatus.IN_STOCK && !shelf.isNullOrBlank()) {
+            shelf + (if (!bin.isNullOrBlank()) " / $bin" else "")
+        } else {
+            null
+        }
+
+        val employeeName = employees.firstOrNull { it.id == selectedEmployeeId }?.fullName
+
+        val historyEntry = when {
+            existing == null && selectedStatus == ProductStatus.ASSIGNED -> MovementHistoryUtils.entryForEmployee(employeeName)
+            existing == null && selectedStatus == ProductStatus.IN_STOCK -> MovementHistoryUtils.entryForLocation(locationName)
+            existing == null && selectedStatus == ProductStatus.UNASSIGNED -> MovementHistoryUtils.entryUnassigned()
+            existing != null && selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId != existing.assignedToEmployeeId ->
+                MovementHistoryUtils.entryForEmployee(employeeName)
+            existing != null && selectedStatus == ProductStatus.IN_STOCK &&
+                (existing.status != ProductStatus.IN_STOCK || existing.shelf != shelf || existing.bin != bin) ->
+                MovementHistoryUtils.entryForLocation(locationName)
+            existing != null && selectedStatus == ProductStatus.UNASSIGNED && existing.status != ProductStatus.UNASSIGNED ->
+                MovementHistoryUtils.entryUnassigned()
+            else -> null
+        }
+
+        val productWithHistory = if (historyEntry != null) {
+            val baseHistory = existing?.movementHistory
+            product.copy(movementHistory = MovementHistoryUtils.append(baseHistory, historyEntry))
+        } else {
+            product
+        }
         
         lifecycleScope.launch {
             try {
                 if (existing == null) {
-                    productRepository.insertProduct(product)
+                    productRepository.insertProduct(productWithHistory)
                     Toast.makeText(requireContext(), "Produkt dodany", Toast.LENGTH_SHORT).show()
                 } else {
-                    productRepository.updateProduct(product)
+                    productRepository.updateProduct(productWithHistory)
                     Toast.makeText(requireContext(), "Zapisano zmiany", Toast.LENGTH_SHORT).show()
                 }
                 findNavController().navigateUp()

@@ -3,6 +3,7 @@ package com.example.inventoryapp.data.repository
 import com.example.inventoryapp.data.local.dao.ProductDao
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.utils.MovementHistoryUtils
 import kotlinx.coroutines.flow.Flow
 
 class ProductRepository(private val productDao: ProductDao) {
@@ -54,11 +55,41 @@ class ProductRepository(private val productDao: ProductDao) {
     
     suspend fun assignToEmployee(productId: Long, employeeId: Long) {
         val now = System.currentTimeMillis()
-        productDao.assignToEmployee(productId, employeeId, now, ProductStatus.ASSIGNED, now)
+        val product = productDao.getProductByIdOnce(productId) ?: return
+        val updated = product.copy(
+            assignedToEmployeeId = employeeId,
+            assignmentDate = now,
+            status = ProductStatus.ASSIGNED,
+            shelf = null,
+            bin = null,
+            movementHistory = MovementHistoryUtils.append(
+                product.movementHistory,
+                MovementHistoryUtils.entryForEmployee("ID $employeeId")
+            ),
+            updatedAt = now
+        )
+        productDao.updateProduct(updated)
     }
     
     suspend fun unassignFromEmployee(productId: Long) {
         val now = System.currentTimeMillis()
-        productDao.unassignFromEmployee(productId, ProductStatus.UNASSIGNED, now)
+        val product = productDao.getProductByIdOnce(productId) ?: return
+        val updated = product.copy(
+            assignedToEmployeeId = null,
+            assignmentDate = null,
+            status = ProductStatus.UNASSIGNED,
+            movementHistory = MovementHistoryUtils.append(product.movementHistory, MovementHistoryUtils.entryUnassigned()),
+            updatedAt = now
+        )
+        productDao.updateProduct(updated)
+    }
+
+    suspend fun updateWithHistory(product: ProductEntity, historyEntry: String): ProductEntity {
+        val updated = product.copy(
+            movementHistory = MovementHistoryUtils.append(product.movementHistory, historyEntry),
+            updatedAt = System.currentTimeMillis()
+        )
+        productDao.updateProduct(updated)
+        return updated
     }
 }

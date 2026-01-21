@@ -18,6 +18,7 @@ import com.example.inventoryapp.ui.warehouse.LocationStorage
 import com.example.inventoryapp.databinding.BottomSheetDeleteLocationConfirmBinding
 import com.example.inventoryapp.databinding.FragmentWarehouseLocationDetailsBinding
 import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
+import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.firstOrNull
@@ -77,6 +78,12 @@ class WarehouseLocationDetailsFragment : Fragment() {
     private fun setupActions() {
         binding.assignProductButton.setOnClickListener {
             showAssignProductDialog()
+        }
+
+        binding.assignProductScanButton.setOnClickListener {
+            val action = WarehouseLocationDetailsFragmentDirections
+                .actionLocationDetailsToAssignByScan(employeeId = -1L, locationName = args.locationName)
+            findNavController().navigate(action)
         }
 
         binding.editButton.setOnClickListener {
@@ -167,7 +174,10 @@ class WarehouseLocationDetailsFragment : Fragment() {
                         status = ProductStatus.IN_STOCK,
                         updatedAt = System.currentTimeMillis()
                     )
-                    productRepository.updateProduct(updatedProduct)
+                    productRepository.updateWithHistory(
+                        updatedProduct,
+                        MovementHistoryUtils.entryForLocation(locationName)
+                    )
                 }
                 
                 Toast.makeText(
@@ -238,7 +248,10 @@ class WarehouseLocationDetailsFragment : Fragment() {
                         status = ProductStatus.UNASSIGNED,
                         updatedAt = System.currentTimeMillis()
                     )
-                    productRepository.updateProduct(updatedProduct)
+                    productRepository.updateWithHistory(
+                        updatedProduct,
+                        MovementHistoryUtils.entryUnassigned()
+                    )
                 }
                 
                 Toast.makeText(
@@ -275,7 +288,10 @@ class WarehouseLocationDetailsFragment : Fragment() {
                     status = ProductStatus.UNASSIGNED,
                     updatedAt = System.currentTimeMillis()
                 )
-                productRepository.updateProduct(updatedProduct)
+                productRepository.updateWithHistory(
+                    updatedProduct,
+                    MovementHistoryUtils.entryUnassigned()
+                )
                 Toast.makeText(requireContext(), "Usunięto przypisanie", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()

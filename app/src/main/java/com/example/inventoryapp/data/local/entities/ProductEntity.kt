@@ -60,6 +60,8 @@ data class ProductEntity(
     
     // Notes
     val notes: String? = null
+    ,
+    val movementHistory: String? = null
 )
 
 enum class ProductStatus {

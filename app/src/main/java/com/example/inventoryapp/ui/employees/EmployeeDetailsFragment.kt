@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,6 +16,8 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
+import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.databinding.FragmentEmployeeDetailsBinding
 import com.example.inventoryapp.databinding.BottomSheetDeleteEmployeeConfirmBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -87,6 +90,12 @@ class EmployeeDetailsFragment : Fragment() {
         binding.assignEquipmentButton.setOnClickListener {
             showAssignEquipmentDialog()
         }
+
+        binding.assignEquipmentScanButton.setOnClickListener {
+            val action = EmployeeDetailsFragmentDirections
+                .actionEmployeeDetailsToAssignByScan(employeeId = args.employeeId, locationName = null)
+            findNavController().navigate(action)
+        }
     }
 
     private fun loadEmployeeDetails() {
@@ -135,19 +144,22 @@ class EmployeeDetailsFragment : Fragment() {
     }
 
     private fun loadAssignedProducts(employeeId: Long) {
-        lifecycleScope.launch {
-            productRepository.getProductsAssignedToEmployee(employeeId).collect { products ->
-                assignedProductsAdapter.submitList(products)
-                
-                binding.assignedCountText.text = when (products.size) {
-                    0 -> "Brak przypisanych urządzeń"
-                    1 -> "1 urządzenie przypisane"
-                    in 2..4 -> "${products.size} urządzenia przypisane"
-                    else -> "${products.size} urządzeń przypisanych"
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                productRepository.getProductsAssignedToEmployee(employeeId).collect { products ->
+                    val safeBinding = _binding ?: return@collect
+                    assignedProductsAdapter.submitList(products)
+
+                    safeBinding.assignedCountText.text = when (products.size) {
+                        0 -> "Brak przypisanych urządzeń"
+                        1 -> "1 urządzenie przypisane"
+                        in 2..4 -> "${products.size} urządzenia przypisane"
+                        else -> "${products.size} urządzeń przypisanych"
+                    }
+
+                    safeBinding.assignedEquipmentRecyclerView.isVisible = products.isNotEmpty()
+                    safeBinding.noEquipmentText.isVisible = products.isEmpty()
                 }
-                
-                binding.assignedEquipmentRecyclerView.isVisible = products.isNotEmpty()
-                binding.noEquipmentText.isVisible = products.isEmpty()
             }
         }
     }
@@ -166,7 +178,17 @@ class EmployeeDetailsFragment : Fragment() {
             try {
                 currentEmployee?.let { employee ->
                     products.forEach { product ->
-                        productRepository.assignToEmployee(product.id, employee.id)
+                        val base = product.copy(
+                            assignedToEmployeeId = employee.id,
+                            assignmentDate = System.currentTimeMillis(),
+                            status = ProductStatus.ASSIGNED,
+                            shelf = null,
+                            bin = null
+                        )
+                        productRepository.updateWithHistory(
+                            base,
+                            MovementHistoryUtils.entryForEmployee(employee.fullName)
+                        )
                     }
                     Toast.makeText(
                         requireContext(),

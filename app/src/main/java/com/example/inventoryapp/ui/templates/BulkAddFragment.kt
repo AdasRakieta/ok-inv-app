@@ -28,6 +28,7 @@ import com.example.inventoryapp.data.local.entities.ProductTemplateEntity
 import com.example.inventoryapp.data.local.entities.ScanType
 import com.example.inventoryapp.databinding.FragmentBulkAddBinding
 import com.example.inventoryapp.ui.warehouse.LocationStorage
+import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.flow.firstOrNull
@@ -407,6 +408,18 @@ class BulkAddFragment : Fragment() {
                 val now = System.currentTimeMillis()
                 val shelf = if (selectedStatus == ProductStatus.IN_STOCK) selectedLocation?.substringBefore("/")?.trim() else null
                 val bin = if (selectedStatus == ProductStatus.IN_STOCK) selectedLocation?.substringAfter("/", "")?.trim()?.takeIf { it.isNotEmpty() } else null
+                val locationName = if (selectedStatus == ProductStatus.IN_STOCK) {
+                    selectedLocation
+                } else {
+                    null
+                }
+                val employeeName = employees.firstOrNull { it.id == selectedEmployeeId }?.fullName
+                val historyEntry = when (selectedStatus) {
+                    ProductStatus.ASSIGNED -> MovementHistoryUtils.entryForEmployee(employeeName)
+                    ProductStatus.IN_STOCK -> MovementHistoryUtils.entryForLocation(locationName)
+                    ProductStatus.UNASSIGNED -> MovementHistoryUtils.entryUnassigned()
+                    else -> null
+                }
                 val newProduct = ProductEntity(
                     name = "${template.name} - $scannedValue",
                     serialNumber = scannedValue,
@@ -418,7 +431,8 @@ class BulkAddFragment : Fragment() {
                     shelf = shelf,
                     bin = bin,
                     assignedToEmployeeId = if (selectedStatus == ProductStatus.ASSIGNED) selectedEmployeeId else null,
-                    assignmentDate = if (selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId != null) now else null
+                    assignmentDate = if (selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId != null) now else null,
+                    movementHistory = historyEntry?.let { MovementHistoryUtils.append(null, it) }
                 )
                 
                 // Add to list

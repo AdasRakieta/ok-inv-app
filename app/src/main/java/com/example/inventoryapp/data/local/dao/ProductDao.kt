@@ -12,6 +12,9 @@ interface ProductDao {
     
     @Query("SELECT * FROM products WHERE id = :productId")
     fun getProductById(productId: Long): Flow<ProductEntity?>
+
+    @Query("SELECT * FROM products WHERE id = :productId LIMIT 1")
+    suspend fun getProductByIdOnce(productId: Long): ProductEntity?
     
     @Query("SELECT * FROM products WHERE serialNumber = :serialNumber LIMIT 1")
     suspend fun getProductBySerialNumber(serialNumber: String): ProductEntity?

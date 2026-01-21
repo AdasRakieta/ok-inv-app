@@ -131,6 +131,10 @@
         <action
             android:id="@+id/action_employeeDetails_to_productDetails"
             app:destination="@id/productDetailsFragment" />
+
+        <action
+            android:id="@+id/action_employeeDetails_to_assignByScan"
+            app:destination="@id/assignByScanFragment" />
     </fragment>
     
     <fragment
@@ -171,6 +175,10 @@
         <action
             android:id="@+id/action_locationDetails_to_edit"
             app:destination="@id/addLocationFragment" />
+
+        <action
+            android:id="@+id/action_locationDetails_to_assignByScan"
+            app:destination="@id/assignByScanFragment" />
     </fragment>
     
     <fragment
@@ -187,6 +195,23 @@
         <action
             android:id="@+id/action_addLocation_to_locationDetails"
             app:destination="@id/warehouseLocationDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/assignByScanFragment"
+        android:name="com.example.inventoryapp.ui.assign.AssignByScanFragment"
+        android:label="Przypisz przez skan">
+
+        <argument
+            android:name="employeeId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+
+        <argument
+            android:name="locationName"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </fragment>
 
 </navigation>

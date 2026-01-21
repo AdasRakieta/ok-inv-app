@@ -23,6 +23,7 @@ import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentWarehouseBinding
 import com.example.inventoryapp.databinding.BottomSheetDeleteLocationConfirmBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.example.inventoryapp.utils.MovementHistoryUtils
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -261,7 +262,10 @@ class WarehouseFragment : Fragment() {
                             status = ProductStatus.UNASSIGNED,
                             updatedAt = System.currentTimeMillis()
                         )
-                        productRepository.updateProduct(updatedProduct)
+                        productRepository.updateWithHistory(
+                            updatedProduct,
+                            MovementHistoryUtils.entryUnassigned()
+                        )
                     }
                 }
 
