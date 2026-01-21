@@ -418,7 +418,9 @@ class BulkAddFragment : Fragment() {
                     ProductStatus.ASSIGNED -> MovementHistoryUtils.entryForEmployee(employeeName)
                     ProductStatus.IN_STOCK -> MovementHistoryUtils.entryForLocation(locationName)
                     ProductStatus.UNASSIGNED -> MovementHistoryUtils.entryUnassigned()
-                    else -> null
+                    ProductStatus.IN_REPAIR -> MovementHistoryUtils.entryForStatus("Serwis")
+                    ProductStatus.RETIRED -> MovementHistoryUtils.entryForStatus("Wycofane")
+                    ProductStatus.LOST -> MovementHistoryUtils.entryForStatus("Zaginione")
                 }
                 val newProduct = ProductEntity(
                     name = "${template.name} - $scannedValue",

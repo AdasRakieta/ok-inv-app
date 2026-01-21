@@ -105,11 +105,11 @@ class ProductDetailsFragment : Fragment() {
                             if (it.assignedToEmployeeId != null) {
                                 assignedEmployeeLayout.visibility = View.VISIBLE
                                 loadEmployeeInfo(it.assignedToEmployeeId)
-                                buildMovementHistory(it)
                             } else {
                                 assignedEmployeeLayout.visibility = View.GONE
-                                movementHistoryText.text = "Magazyn"
                             }
+
+                            buildMovementHistory(it)
 
                             // Serial number visibility
                             if (it.serialNumber.isNotBlank()) {
@@ -294,7 +294,14 @@ class ProductDetailsFragment : Fragment() {
                 binding.movementHistoryText.text = "$warehouseLocation → $assignmentInfo"
             }
         } else {
-            binding.movementHistoryText.text = warehouseLocation
+            val statusFallback = when (product.status) {
+                com.example.inventoryapp.data.local.entities.ProductStatus.IN_REPAIR -> "Serwis"
+                com.example.inventoryapp.data.local.entities.ProductStatus.RETIRED -> "Wycofane"
+                com.example.inventoryapp.data.local.entities.ProductStatus.LOST -> "Zaginione"
+                com.example.inventoryapp.data.local.entities.ProductStatus.UNASSIGNED -> "Brak przypisania"
+                else -> warehouseLocation
+            }
+            binding.movementHistoryText.text = statusFallback
         }
     }
 

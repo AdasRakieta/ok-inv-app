@@ -319,17 +319,20 @@ class AddProductFragment : Fragment() {
 
         val employeeName = employees.firstOrNull { it.id == selectedEmployeeId }?.fullName
 
+        val statusEntry = when (selectedStatus) {
+            ProductStatus.IN_STOCK -> MovementHistoryUtils.entryForLocation(locationName)
+            ProductStatus.ASSIGNED -> MovementHistoryUtils.entryForEmployee(employeeName)
+            ProductStatus.UNASSIGNED -> MovementHistoryUtils.entryUnassigned()
+            ProductStatus.IN_REPAIR -> MovementHistoryUtils.entryForStatus("Serwis")
+            ProductStatus.RETIRED -> MovementHistoryUtils.entryForStatus("Wycofane")
+            ProductStatus.LOST -> MovementHistoryUtils.entryForStatus("Zaginione")
+        }
+
         val historyEntry = when {
-            existing == null && selectedStatus == ProductStatus.ASSIGNED -> MovementHistoryUtils.entryForEmployee(employeeName)
-            existing == null && selectedStatus == ProductStatus.IN_STOCK -> MovementHistoryUtils.entryForLocation(locationName)
-            existing == null && selectedStatus == ProductStatus.UNASSIGNED -> MovementHistoryUtils.entryUnassigned()
-            existing != null && selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId != existing.assignedToEmployeeId ->
-                MovementHistoryUtils.entryForEmployee(employeeName)
-            existing != null && selectedStatus == ProductStatus.IN_STOCK &&
-                (existing.status != ProductStatus.IN_STOCK || existing.shelf != shelf || existing.bin != bin) ->
-                MovementHistoryUtils.entryForLocation(locationName)
-            existing != null && selectedStatus == ProductStatus.UNASSIGNED && existing.status != ProductStatus.UNASSIGNED ->
-                MovementHistoryUtils.entryUnassigned()
+            existing == null -> statusEntry
+            selectedStatus != existing.status -> statusEntry
+            selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId != existing.assignedToEmployeeId -> statusEntry
+            selectedStatus == ProductStatus.IN_STOCK && (existing.shelf != shelf || existing.bin != bin) -> statusEntry
             else -> null
         }
 
