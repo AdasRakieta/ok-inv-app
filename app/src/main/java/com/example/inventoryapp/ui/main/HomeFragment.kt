@@ -16,7 +16,7 @@ import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentHomeBinding
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -88,70 +88,125 @@ class HomeFragment : Fragment() {
         }
 
         binding.warehouseInfoButton.setOnClickListener {
-            showCategoriesDialog()
+            showCategoriesBottomSheet()
         }
     }
 
-    private fun showCategoriesDialog() {
+    private fun showCategoriesBottomSheet() {
         val context = requireContext()
-        val container = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24, 8, 24, 0)
-        }
+        val dialogView = layoutInflater.inflate(R.layout.dialog_warehouse_categories, null)
+        
+        val totalProductsText = dialogView.findViewById<TextView>(R.id.totalProductsText)
+        val categoriesContainer = dialogView.findViewById<LinearLayout>(R.id.categoriesContainer)
 
+        // Calculate total
+        val totalCount = cachedCategoryCounts.sumOf { it.count }
+        totalProductsText.text = totalCount.toString()
+
+        // Add category cards
         if (cachedCategoryCounts.isEmpty()) {
             val placeholder = TextView(context).apply {
                 text = "Brak danych magazynowych"
-                textSize = 13f
+                textSize = 14f
                 setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
+                setPadding(0, 16, 0, 16)
             }
-            container.addView(placeholder)
+            categoriesContainer.addView(placeholder)
         } else {
             cachedCategoryCounts.forEach { item ->
-                val row = LinearLayout(context).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    setPadding(0, 6, 0, 6)
-                    gravity = android.view.Gravity.CENTER_VERTICAL
-                }
-
-                val nameView = TextView(context).apply {
-                    text = "${getCategoryEmoji(item.category.name)} ${item.category.name}"
-                    textSize = 14f
-                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                }
-
-                val countView = TextView(context).apply {
-                    text = "${item.count} szt."
-                    textSize = 14f
-                    setTextColor(ContextCompat.getColor(context, R.color.text_primary))
-                }
-
-                val warningView = TextView(context).apply {
-                    val (icon, colorRes) = when {
-                        item.count <= 2 -> "❗" to android.R.color.holo_red_dark
-                        item.count <= 5 -> "❗" to android.R.color.holo_orange_dark
-                        else -> "" to android.R.color.transparent
-                    }
-                    text = icon
-                    textSize = 14f
-                    setTextColor(ContextCompat.getColor(context, colorRes))
-                    setPadding(12, 0, 0, 0)
-                }
-
-                row.addView(nameView)
-                row.addView(countView)
-                row.addView(warningView)
-
-                container.addView(row)
+                val card = createCategoryCard(context, item)
+                categoriesContainer.addView(card)
             }
         }
 
-        MaterialAlertDialogBuilder(context)
-            .setTitle("Kategorie w magazynie")
-            .setView(container)
-            .setPositiveButton("Zamknij", null)
-            .show()
+        BottomSheetDialog(context).apply {
+            setContentView(dialogView)
+            show()
+        }
+    }
+
+    private fun createCategoryCard(context: android.content.Context, item: CategoryCount): View {
+        val card = com.google.android.material.card.MaterialCardView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = 12
+            }
+            radius = 12f * context.resources.displayMetrics.density
+            cardElevation = 0f
+            setContentPadding(16, 16, 16, 16)
+        }
+
+        // Determine color based on count
+        val (bgColor, strokeColor, textColor) = when {
+            item.count == 0 -> Triple("#F3F4F6", "#D1D5DB", "#374151")
+            item.count <= 2 -> Triple("#FEE2E2", "#FCA5A5", "#991B1B")
+            item.count <= 5 -> Triple("#FEF3C7", "#FCD34D", "#92400E")
+            item.count <= 10 -> Triple("#DBEAFE", "#93C5FD", "#1E40AF")
+            else -> Triple("#F0FDF4", "#86EFAC", "#166534")
+        }
+
+        card.setCardBackgroundColor(android.graphics.Color.parseColor(bgColor))
+        card.strokeColor = android.graphics.Color.parseColor(strokeColor)
+        card.strokeWidth = 1
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+
+        val emojiText = TextView(context).apply {
+            text = getCategoryEmoji(item.category.name)
+            textSize = 24f
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginEnd = 16
+            }
+        }
+
+        val textContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val nameText = TextView(context).apply {
+            text = item.category.name
+            textSize = 14f
+            setTextColor(android.graphics.Color.parseColor(textColor))
+        }
+
+        val countText = TextView(context).apply {
+            text = "${item.count} szt."
+            textSize = 20f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(android.graphics.Color.parseColor(textColor))
+        }
+
+        textContainer.addView(nameText)
+        textContainer.addView(countText)
+
+        // Warning icon
+        val warningIcon = TextView(context).apply {
+            val icon = when {
+                item.count <= 2 -> "❗"
+                item.count <= 5 -> "⚠️"
+                else -> ""
+            }
+            text = icon
+            textSize = 20f
+        }
+
+        container.addView(emojiText)
+        container.addView(textContainer)
+        if (item.count <= 5) {
+            container.addView(warningIcon)
+        }
+
+        card.addView(container)
+        return card
     }
 
     private fun getCategoryEmoji(name: String?): String {
