@@ -15,7 +15,7 @@ data class PrinterConfig(
     val bluetoothAddress: String = "",
     val bluetoothName: String = "",
     val labelWidth: Int = 29,  // mm (tape width)
-    val labelHeight: Int = 50,  // mm (label length - default: Medium/Średnia)
+    val labelHeight: Int = 50,  // mm (label length - default: Large/Duża 5cm)
     val isConfigured: Boolean = false
 ) : Parcelable {
 
@@ -80,20 +80,20 @@ data class PrinterConfig(
         /**
          * Label sizes for Brother PT-P950NW
          * Format: (tape width, label length) in mm
-         * - Small: 4cm length
-         * - Medium: 5cm length (default)
-         * - Large: 7cm length
+         * - Small: 3cm length (NEW - compact)
+         * - Medium: 4cm length (previous Small)
+         * - Large: 5cm length (previous Medium) - default
          */
         val LABEL_SIZES = listOf(
-            Pair(29, 40),   // Mała (4cm)
-            Pair(29, 50),   // Średnia (5cm) - default
-            Pair(29, 70)    // Duża (7cm)
+            Pair(29, 30),   // Mała (3cm) - nowy kompaktowy
+            Pair(29, 40),   // Średnia (4cm) - poprzednia mała
+            Pair(29, 50)    // Duża (5cm) - poprzednia średnia, default
         )
         
         val LABEL_SIZE_NAMES = listOf(
-            "Mała",
-            "Średnia",
-            "Duża"
+            "Mała (3cm)",
+            "Średnia (4cm)",
+            "Duża (5cm)"
         )
     }
 }

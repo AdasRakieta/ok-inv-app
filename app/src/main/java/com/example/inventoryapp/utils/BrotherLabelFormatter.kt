@@ -26,12 +26,12 @@ object BrotherLabelFormatter {
      */
     private fun getScaleFactor(labelLengthMm: Int): Float {
         return when (labelLengthMm) {
-            40 -> 0.5f   // Mała - 50%
-            50 -> 0.75f  // Średnia - 75%
-            70 -> 1.0f   // Duża - 100%
+            30 -> 0.5f   // Mała - 50%
+            40 -> 0.75f  // Średnia - 75%
+            50 -> 1.0f   // Duża - 100%
             else -> when {
-                labelLengthMm < 45 -> 0.5f
-                labelLengthMm < 60 -> 0.75f
+                labelLengthMm < 35 -> 0.5f
+                labelLengthMm < 45 -> 0.75f
                 else -> 1.0f
             }
         }
@@ -103,37 +103,48 @@ object BrotherLabelFormatter {
         
         // Text area - enough space to prevent bottom clipping
         val textHeight = when (labelLengthMm) {
-            40 -> 28   // Mała - zwiększone dla pełnego tekstu
-            50 -> 33   // Średnia
-            else -> 40 // Duża
+            30 -> 28   // Mała (3cm) - kompaktowa
+            40 -> 28   // Średnia (4cm) - poprzednia mała
+            50 -> 33   // Duża (5cm) - poprzednia średnia
+            else -> 33 // Domyślnie jak duża
         }
         
         val barcodeHeight = heightPx - textHeight - (padding * 2)
         
-        // Center barcode vertically with slight upward shift for better alignment
-        val barcodeTopOffset = padding
-
-        // Scale barcode to fit area
+        // Use barcode at natural size - no stretching to reduce white margins
+        val barcodeWidth = barcodeBitmap.width
+        val barcodeDisplayHeight = barcodeBitmap.height
+        
+        // Scale ONLY height to fit, preserve aspect ratio for width
+        val heightScale = barcodeHeight.toFloat() / barcodeDisplayHeight
+        val scaledWidth = (barcodeWidth * heightScale).toInt()
+        val scaledHeight = barcodeHeight
+        
         val scaledBarcode = Bitmap.createScaledBitmap(
             barcodeBitmap,
-            widthPx - (padding * 2),
-            barcodeHeight,
+            scaledWidth,
+            scaledHeight,
             true
         )
 
-        // Draw barcode (centered horizontally, aligned to top with minimal padding)
+        // Center barcode horizontally (minimal white margins on sides)
+        val barcodeX = (widthPx - scaledWidth) / 2f
+        val barcodeY = padding.toFloat()
+        
+        // Draw barcode centered
         canvas.drawBitmap(
             scaledBarcode,
-            padding.toFloat(),
-            barcodeTopOffset.toFloat(),
+            barcodeX,
+            barcodeY,
             null
         )
 
         // Text size - larger relative to barcode for small labels
         val textSize = when (labelLengthMm) {
-            40 -> TEXT_SIZE_MEDIUM * 0.7f   // Mała: 70% zamiast 50% - większy tekst
-            50 -> TEXT_SIZE_MEDIUM * 0.85f  // Średnia: 85% zamiast 75%
-            else -> TEXT_SIZE_MEDIUM        // Duża: 100%
+            30 -> TEXT_SIZE_MEDIUM * 0.7f   // Mała (3cm): 70%
+            40 -> TEXT_SIZE_MEDIUM * 0.7f   // Średnia (4cm): 70% (poprzednia mała)
+            50 -> TEXT_SIZE_MEDIUM * 0.85f  // Duża (5cm): 85% (poprzednia średnia)
+            else -> TEXT_SIZE_MEDIUM        // Domyślnie: 100%
         }
         
         // Draw serial number text BELOW barcode (centered)
@@ -147,8 +158,8 @@ object BrotherLabelFormatter {
 
         // Center text horizontally and place at bottom (closer to barcode)
         val textX = widthPx / 2f
-        // Draw text with more margin - text baseline vs top issue
-        val textY = padding + barcodeHeight + padding + (textSize * 0.95f)
+        // Draw text with proper baseline positioning
+        val textY = padding + scaledHeight + padding + (textSize * 0.95f)
 
         canvas.drawText(serialNumber, textX, textY, textPaint)
 
@@ -328,3 +339,4 @@ object BrotherLabelFormatter {
         return Pair(widthPx, heightPx)
     }
 }
+

@@ -38,16 +38,16 @@ private const val TEXT_SIZE_MEDIUM = 30f  // Większy tekst
 
 ---
 
-### 3️⃣ Proporcje Skalowania Kodów (Funkcja `getScaleFactor` - Linie 28-37)
+### 3️⃣ Proporcje Skalowania Kodów (Funkcja `getScaleFactor` - Linie 28-39)
 ```kotlin
 private fun getScaleFactor(labelLengthMm: Int): Float {
     return when (labelLengthMm) {
-        40 -> 0.5f   // Mała - 50%
-        50 -> 0.75f  // Średnia - 75%
-        70 -> 1.0f   // Duża - 100%
+        30 -> 0.5f   // Mała (3cm) - 50%
+        40 -> 0.75f  // Średnia (4cm) - 75%
+        50 -> 1.0f   // Duża (5cm) - 100%
         else -> when {
-            labelLengthMm < 45 -> 0.5f
-            labelLengthMm < 60 -> 0.75f
+            labelLengthMm < 35 -> 0.5f
+            labelLengthMm < 45 -> 0.75f
             else -> 1.0f
         }
     }
@@ -55,16 +55,20 @@ private fun getScaleFactor(labelLengthMm: Int): Float {
 ```
 **Co kontroluje:** Skalowanie **kodów kreskowych** względem rozmiaru etykiety
 
-⚠️ **UWAGA:** Ta funkcja NIE jest używana w nowej wersji! Zamiast tego używane są bezpośrednie wartości poniżej.
+**Mnożniki:**
+- **30mm (Mała):** 50% bazowego rozmiaru
+- **40mm (Średnia):** 75% bazowego rozmiaru
+- **50mm (Duża):** 100% (pełny rozmiar)
 
 ---
 
-### 4️⃣ Przestrzeń na Tekst (Linie 107-111)
+### 4️⃣ Przestrzeń na Tekst (Linie 107-113)
 ```kotlin
 val textHeight = when (labelLengthMm) {
-    40 -> 28   // Mała - zwiększone dla pełnego tekstu
-    50 -> 33   // Średnia
-    else -> 40 // Duża
+    30 -> 28   // Mała (3cm) - kompaktowa
+    40 -> 28   // Średnia (4cm)
+    50 -> 33   // Duża (5cm)
+    else -> 33 // Domyślnie jak duża
 }
 ```
 **Co kontroluje:** Ile pikseli jest zarezerwowane dla tekstu pod kodem
@@ -76,20 +80,22 @@ val textHeight = when (labelLengthMm) {
 **Przykład - więcej miejsca na kod kreskowy:**
 ```kotlin
 val textHeight = when (labelLengthMm) {
-    40 -> 24   // Mała - mniejsza przestrzeń = większy kod
-    50 -> 28   // Średnia
-    else -> 35 // Duża
+    30 -> 24   // Mała - mniejsza przestrzeń = większy kod
+    40 -> 24   // Średnia
+    50 -> 28   // Duża
+    else -> 28
 }
 ```
 
 ---
 
-### 5️⃣ Rozmiar Tekstu dla Każdego Rozmiaru Etykiety (Linie 133-137)
+### 5️⃣ Rozmiar Tekstu dla Każdego Rozmiaru Etykiety (Linie 135-141)
 ```kotlin
 val textSize = when (labelLengthMm) {
-    40 -> TEXT_SIZE_MEDIUM * 0.7f   // Mała: 70% zamiast 50% - większy tekst
-    50 -> TEXT_SIZE_MEDIUM * 0.85f  // Średnia: 85% zamiast 75%
-    else -> TEXT_SIZE_MEDIUM        // Duża: 100%
+    30 -> TEXT_SIZE_MEDIUM * 0.7f   // Mała (3cm): 70%
+    40 -> TEXT_SIZE_MEDIUM * 0.7f   // Średnia (4cm): 70%
+    50 -> TEXT_SIZE_MEDIUM * 0.85f  // Duża (5cm): 85%
+    else -> TEXT_SIZE_MEDIUM        // Domyślnie: 100%
 }
 ```
 **Co kontroluje:** Wielkość tekstu dla konkretnego rozmiaru etykiety
@@ -102,17 +108,18 @@ val textSize = when (labelLengthMm) {
 **Przykład - większy tekst na małych etykietach:**
 ```kotlin
 val textSize = when (labelLengthMm) {
-    40 -> TEXT_SIZE_MEDIUM * 0.8f   // Mała: 80% (było 70%)
-    50 -> TEXT_SIZE_MEDIUM * 0.9f   // Średnia: 90% (było 85%)
-    else -> TEXT_SIZE_MEDIUM        // Duża: 100%
+    30 -> TEXT_SIZE_MEDIUM * 0.75f  // Mała: 75% (było 70%)
+    40 -> TEXT_SIZE_MEDIUM * 0.8f   // Średnia: 80% (było 70%)
+    50 -> TEXT_SIZE_MEDIUM * 0.9f   // Duża: 90% (było 85%)
+    else -> TEXT_SIZE_MEDIUM
 }
 ```
 
 ---
 
-### 6️⃣ Pozycja Tekstu (Linia 151)
+### 6️⃣ Pozycja Tekstu (Linia 158)
 ```kotlin
-val textY = padding + barcodeHeight + padding + (textSize * 0.95f)
+val textY = padding + scaledHeight + padding + (textSize * 0.95f)
 ```
 **Co kontroluje:** Gdzie tekst jest rysowany w pionie
 
@@ -122,7 +129,7 @@ val textY = padding + barcodeHeight + padding + (textSize * 0.95f)
 
 **Przykład - większy odstęp:**
 ```kotlin
-val textY = padding + barcodeHeight + padding + (textSize * 1.05f)
+val textY = padding + scaledHeight + padding + (textSize * 1.05f)
 ```
 
 ---
@@ -186,41 +193,41 @@ val baseHeightPx = ((effectivePrintHeightMm - textSpaceMm) * DOTS_PER_MM * 0.98)
 
 ## 📦 Rozmiary Etykiet (PrinterConfig.kt)
 
-### 9️⃣ Dostępne Rozmiary (Linie 83-92)
+### 9️⃣ Dostępne Rozmiary (Linie 83-99)
 ```kotlin
 val LABEL_SIZES = listOf(
-    Pair(29, 40),   // Mała (4cm)
-    Pair(29, 50),   // Średnia (5cm) - default
-    Pair(29, 70)    // Duża (7cm)
+    Pair(29, 30),   // Mała (3cm)
+    Pair(29, 40),   // Średnia (4cm)
+    Pair(29, 50)    // Duża (5cm) - default
 )
 
 val LABEL_SIZE_NAMES = listOf(
-    "Mała",
-    "Średnia",
-    "Duża"
+    "Mała (3cm)",
+    "Średnia (4cm)",
+    "Duża (5cm)"
 )
 ```
 
 **Co kontroluje:** Jakie rozmiary są dostępne do wyboru w aplikacji
 - Pierwszy numer (29) = szerokość taśmy w mm
-- Drugi numer (40/50/70) = długość etykiety w mm
+- Drugi numer (30/40/50) = długość etykiety w mm
 
 **Jak dodać nowy rozmiar:**
 ```kotlin
 val LABEL_SIZES = listOf(
-    Pair(29, 30),   // Extra Mała (3cm) - NOWA!
-    Pair(29, 40),   // Mała (4cm)
-    Pair(29, 50),   // Średnia (5cm)
-    Pair(29, 70),   // Duża (7cm)
-    Pair(29, 90)    // Extra Duża (9cm) - NOWA!
+    Pair(29, 25),   // Extra Mała (2.5cm) - NOWA!
+    Pair(29, 30),   // Mała (3cm)
+    Pair(29, 40),   // Średnia (4cm)
+    Pair(29, 50),   // Duża (5cm)
+    Pair(29, 70)    // Extra Duża (7cm) - NOWA!
 )
 
 val LABEL_SIZE_NAMES = listOf(
-    "XS (3cm)",
-    "Mała (4cm)",
-    "Średnia (5cm)",
-    "Duża (7cm)",
-    "XL (9cm)"
+    "XS (2.5cm)",
+    "Mała (3cm)",
+    "Średnia (4cm)",
+    "Duża (5cm)",
+    "XL (7cm)"
 )
 ```
 
@@ -250,13 +257,13 @@ Otwórz aplikację i przetestuj wydruk dla wszystkich rozmiarów etykiet.
 
 ## 🎨 Przykładowe Scenariusze
 
-### Scenariusz 1: Większy Tekst na Małych Etykietach
-**Problem:** Tekst na małych etykietach (4cm) jest za mały
+### Scenariusz 1: Większy Tekst na Małych Etykietach (3cm)
+**Problem:** Tekst na małych etykietach (3cm) jest za mały
 
 **Rozwiązanie:**
 ```kotlin
-// Linia 134 - zwiększ mnożnik
-40 -> TEXT_SIZE_MEDIUM * 0.8f   // Było 0.7f, teraz 0.8f (80%)
+// Linia 136 - zwiększ mnożnik
+30 -> TEXT_SIZE_MEDIUM * 0.75f   // Było 0.7f, teraz 0.75f (75%)
 ```
 
 ---
@@ -266,18 +273,20 @@ Otwórz aplikację i przetestuj wydruk dla wszystkich rozmiarów etykiet.
 
 **Rozwiązanie:**
 ```kotlin
-// Linia 107-111 - zmniejsz textHeight (mniej miejsca dla tekstu)
+// Linia 107-113 - zmniejsz textHeight (mniej miejsca dla tekstu)
 val textHeight = when (labelLengthMm) {
+    30 -> 24   // Było 28
     40 -> 24   // Było 28
     50 -> 28   // Było 33
-    else -> 35 // Było 40
+    else -> 28
 }
 
-// Linia 133-137 - zmniejsz textSize
+// Linia 135-141 - zmniejsz textSize
 val textSize = when (labelLengthMm) {
-    40 -> TEXT_SIZE_MEDIUM * 0.6f   // Było 0.7f
+    30 -> TEXT_SIZE_MEDIUM * 0.6f   // Było 0.7f
+    40 -> TEXT_SIZE_MEDIUM * 0.65f  // Było 0.7f
     50 -> TEXT_SIZE_MEDIUM * 0.75f  // Było 0.85f
-    else -> TEXT_SIZE_MEDIUM * 0.9f // Było 1.0
+    else -> TEXT_SIZE_MEDIUM * 0.9f
 }
 ```
 
@@ -320,14 +329,14 @@ val baseWidthPx = (labelLengthMm * DOTS_PER_MM * 1.0).toInt()  // Było 0.98
 | Co Chcesz Zmienić | Plik | Linia | Parametr | Zwiększ/Zmniejsz |
 |-------------------|------|-------|----------|------------------|
 | **Rozmiar tekstu (wszystkie)** | BrotherLabelFormatter.kt | 18 | `TEXT_SIZE_MEDIUM` | ↑ = większy |
-| **Rozmiar tekstu (Mała)** | BrotherLabelFormatter.kt | 134 | `0.7f` | ↑ = większy |
-| **Rozmiar tekstu (Średnia)** | BrotherLabelFormatter.kt | 135 | `0.85f` | ↑ = większy |
-| **Rozmiar tekstu (Duża)** | BrotherLabelFormatter.kt | 136 | `TEXT_SIZE_MEDIUM` | ↑ = większy |
+| **Rozmiar tekstu (Mała 3cm)** | BrotherLabelFormatter.kt | 136 | `0.7f` | ↑ = większy |
+| **Rozmiar tekstu (Średnia 4cm)** | BrotherLabelFormatter.kt | 137 | `0.7f` | ↑ = większy |
+| **Rozmiar tekstu (Duża 5cm)** | BrotherLabelFormatter.kt | 138 | `0.85f` | ↑ = większy |
 | **Wysokość kodu kreskowego** | BrotherLabelFormatter.kt | 107-111 | `textHeight` | ↓ = wyższy kod |
 | **Szerokość kodu kreskowego** | BrotherLabelFormatter.kt | 320 | `0.98` | ↑ = szerszy |
 | **Marginesy** | BrotherLabelFormatter.kt | 106 | `padding` | ↑ = więcej białej przestrzeni |
-| **Odstęp tekst-kod** | BrotherLabelFormatter.kt | 151 | `0.95f` | ↑ = większy odstęp |
-| **Rozmiary etykiet** | PrinterConfig.kt | 83-92 | `LABEL_SIZES` | Dodaj nowe pary (width, height) |
+| **Odstęp tekst-kod** | BrotherLabelFormatter.kt | 158 | `0.95f` | ↑ = większy odstęp |
+| **Rozmiary etykiet** | PrinterConfig.kt | 90-98 | `LABEL_SIZES` | Dodaj nowe pary (width, height) |
 
 ---
 
