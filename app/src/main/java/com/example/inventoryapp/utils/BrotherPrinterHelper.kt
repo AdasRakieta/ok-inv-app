@@ -177,13 +177,14 @@ object BrotherPrinterHelper {
     /**
      * Print label with serial number using WiFi
      * Generates barcode and formats label automatically
+     * Default: 5cm (50mm) label length for SN codes
      */
     suspend fun printSerialNumberLabelWifi(
         serialNumber: String,
         ipAddress: String,
         port: Int = 9100,
         tapeWidthMm: Int = 29,
-        labelLengthMm: Int = 60
+        labelLengthMm: Int = 50
     ): Result<Boolean> = withContext(Dispatchers.IO) {
         Log.d(TAG, "Printing SN label via WiFi: $serialNumber")
         
@@ -226,12 +227,13 @@ object BrotherPrinterHelper {
     /**
      * Print label with serial number using Bluetooth
      * Generates barcode and formats label automatically
+     * Default: 5cm (50mm) label length for SN codes
      */
     suspend fun printSerialNumberLabelBluetooth(
         serialNumber: String,
         device: BluetoothDevice,
         tapeWidthMm: Int = 29,
-        labelLengthMm: Int = 60
+        labelLengthMm: Int = 50
     ): Result<Boolean> = withContext(Dispatchers.IO) {
         Log.d(TAG, "Printing SN label via Bluetooth: $serialNumber")
         

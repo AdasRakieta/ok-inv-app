@@ -64,11 +64,10 @@ class PrinterSettingsFragment : Fragment() {
     }
 
     private fun setupLabelSizeSpinner() {
-        val labelSizes = PrinterConfig.LABEL_SIZES.map { "${it.first}mm x ${it.second}mm" }
         val adapter = ArrayAdapter(
             requireContext(),
             R.layout.spinner_item,
-            labelSizes
+            PrinterConfig.LABEL_SIZE_NAMES
         ).apply {
             setDropDownViewResource(R.layout.spinner_dropdown_item)
         }

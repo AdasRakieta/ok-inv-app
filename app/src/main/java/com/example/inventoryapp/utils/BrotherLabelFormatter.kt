@@ -15,26 +15,45 @@ object BrotherLabelFormatter {
 
     private const val DOTS_PER_MM = 8  // 203 DPI ≈ 8 dots/mm
     private const val TEXT_SIZE_SMALL = 24f
-    private const val TEXT_SIZE_MEDIUM = 32f
+    private const val TEXT_SIZE_MEDIUM = 27f  // Reduced from 32f to prevent text cutoff
     private const val TEXT_SIZE_LARGE = 40f
+    
+    /**
+     * Get scale factor based on label length
+     * - Small (40mm): 50% scale
+     * - Medium (50mm): 75% scale  
+     * - Large (70mm): 100% scale
+     */
+    private fun getScaleFactor(labelLengthMm: Int): Float {
+        return when (labelLengthMm) {
+            40 -> 0.5f   // Mała - 50%
+            50 -> 0.75f  // Średnia - 75%
+            70 -> 1.0f   // Duża - 100%
+            else -> when {
+                labelLengthMm < 45 -> 0.5f
+                labelLengthMm < 60 -> 0.75f
+                else -> 1.0f
+            }
+        }
+    }
 
     /**
      * Format label data combining barcode and serial number text
      * For PT-P950NW with 29mm tape:
      * - tapeWidthMm: Physical tape width (29mm)
-     * - labelLengthMm: How long the label should be (default 60mm)
+     * - labelLengthMm: How long the label should be (default 50mm = 5cm)
      * - Max printable height on 29mm tape: ~25mm
      * @param serialNumber Device serial number
      * @param barcodeBitmap Generated Code128 barcode bitmap
      * @param tapeWidthMm Tape width in mm (29mm for standard)
-     * @param labelLengthMm Label length in mm (60mm default)
-     * @return ByteArray of ESC/POS commands ready to send to printer
+     * @param labelLengthMm Label length in mm (50mm = 5cm default)
+     * @return ByteArray of ESC/P commands ready to send to printer
      */
     fun formatLabelData(
         serialNumber: String,
         barcodeBitmap: Bitmap,
         tapeWidthMm: Int = 29,
-        labelLengthMm: Int = 60
+        labelLengthMm: Int = 50
     ): ByteArray {
         // Create composite bitmap with barcode and text
         // For tape printer: bitmap width = label length, height = tape width
@@ -51,6 +70,11 @@ object BrotherLabelFormatter {
 
     /**
      * Create a composite bitmap with barcode and serial number text
+     * VERTICAL LAYOUT: Barcode on top, text underneath
+     * Scales barcode and text size based on label length:
+     * - Small (40mm): 50% scale
+     * - Medium (50mm): 75% scale
+     * - Large (70mm): 100% scale
      * For tape printer orientation:
      * - Bitmap WIDTH = label length (how long the label is)
      * - Bitmap HEIGHT = tape width (max printable area ~25mm for 29mm tape)
@@ -73,39 +97,58 @@ object BrotherLabelFormatter {
         val canvas = Canvas(bitmap)
         canvas.drawColor(Color.WHITE)
 
-        // Calculate positions - horizontal layout
-        val padding = 8
-        val textWidth = 120  // Space for text on right side
-        val barcodeWidth = widthPx - textWidth - (padding * 3)
+        // VERTICAL LAYOUT: barcode on top, text below
+        // Reduced padding for less white space between cuts
+        val padding = 1  // Minimal padding for all sizes
+        
+        // Text area - enough space to prevent bottom clipping
+        val textHeight = when (labelLengthMm) {
+            40 -> 28   // Mała - zwiększone dla pełnego tekstu
+            50 -> 33   // Średnia
+            else -> 40 // Duża
+        }
+        
+        val barcodeHeight = heightPx - textHeight - (padding * 2)
+        
+        // Center barcode vertically with slight upward shift for better alignment
+        val barcodeTopOffset = padding
 
-        // Scale barcode to fit left side
+        // Scale barcode to fit area
         val scaledBarcode = Bitmap.createScaledBitmap(
             barcodeBitmap,
-            barcodeWidth,
-            heightPx - (padding * 2),
+            widthPx - (padding * 2),
+            barcodeHeight,
             true
         )
 
-        // Draw barcode on left
+        // Draw barcode (centered horizontally, aligned to top with minimal padding)
         canvas.drawBitmap(
             scaledBarcode,
             padding.toFloat(),
-            padding.toFloat(),
+            barcodeTopOffset.toFloat(),
             null
         )
 
-        // Draw serial number text on right side
+        // Text size - larger relative to barcode for small labels
+        val textSize = when (labelLengthMm) {
+            40 -> TEXT_SIZE_MEDIUM * 0.7f   // Mała: 70% zamiast 50% - większy tekst
+            50 -> TEXT_SIZE_MEDIUM * 0.85f  // Średnia: 85% zamiast 75%
+            else -> TEXT_SIZE_MEDIUM        // Duża: 100%
+        }
+        
+        // Draw serial number text BELOW barcode (centered)
         val textPaint = Paint().apply {
             color = Color.BLACK
-            textSize = TEXT_SIZE_SMALL
+            this.textSize = textSize
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-            textAlign = Paint.Align.LEFT
+            textAlign = Paint.Align.CENTER
             isAntiAlias = true
         }
 
-        // Draw text vertically centered on right
-        val textX = (padding + barcodeWidth + padding).toFloat()
-        val textY = heightPx / 2f + (TEXT_SIZE_SMALL / 3f)
+        // Center text horizontally and place at bottom (closer to barcode)
+        val textX = widthPx / 2f
+        // Draw text with more margin - text baseline vs top issue
+        val textY = padding + barcodeHeight + padding + (textSize * 0.95f)
 
         canvas.drawText(serialNumber, textX, textY, textPaint)
 
@@ -224,8 +267,8 @@ object BrotherLabelFormatter {
      * Uses ESC/P mode compatible with PT-P950NW factory defaults
      */
     fun createTestLabel(message: String = "Test Print OK"): ByteArray {
-        // Create test bitmap: 60mm length x 25mm height (for 29mm tape)
-        val width = 480   // 60mm label length
+        // Create test bitmap: 40mm length x 25mm height (for 29mm tape)
+        val width = 320   // 40mm label length (shorter test)
         val height = 200  // 25mm printable height
         val testBitmap = createTestBitmap(message, width, height)
 
@@ -258,16 +301,30 @@ object BrotherLabelFormatter {
     /**
      * Calculate optimal barcode size based on label dimensions
      * For tape printer: returns (width, height) for barcode bitmap
-     * - width: fits in label length (minus space for text)
-     * - height: fits in tape width printable area
+     * VERTICAL LAYOUT: barcode spans full width, text below
+     * Scales barcode size based on label length:
+     * - Small (40mm): 50% scale
+     * - Medium (50mm): 75% scale
+     * - Large (70mm): 100% scale
+     * - width: full label length minus margins
+     * - height: fits in tape width printable area (minus space for text)
      */
     fun calculateBarcodeSize(tapeWidthMm: Int, labelLengthMm: Int): Pair<Int, Int> {
-        // For horizontal layout: barcode on left, text on right
-        val textSpaceMm = 15  // Reserve 15mm for serial number text
+        // Get scale factor for this label size
+        val scale = getScaleFactor(labelLengthMm)
+        
+        // For vertical layout: barcode on top, text below
+        val textSpaceMm = (5 * scale).toInt().coerceAtLeast(3)  // Scaled text space
         val effectivePrintHeightMm = (tapeWidthMm * 0.85).toInt()  // 85% usable height
         
-        val widthPx = ((labelLengthMm - textSpaceMm) * DOTS_PER_MM * 0.95).toInt()  // 95% of remaining space
-        val heightPx = (effectivePrintHeightMm * DOTS_PER_MM * 0.9).toInt()  // 90% of height
+        // Calculate base size and apply scale
+        val baseWidthPx = (labelLengthMm * DOTS_PER_MM * 0.98).toInt()
+        val baseHeightPx = ((effectivePrintHeightMm - textSpaceMm) * DOTS_PER_MM * 0.95).toInt()
+        
+        // Apply scale to barcode dimensions (larger labels get bigger barcodes)
+        val widthPx = (baseWidthPx * (0.5f + scale * 0.5f)).toInt()  // 50%-100% of base
+        val heightPx = (baseHeightPx * (0.5f + scale * 0.5f)).toInt()
+        
         return Pair(widthPx, heightPx)
     }
 }
