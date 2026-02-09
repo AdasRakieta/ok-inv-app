@@ -190,6 +190,10 @@ class BluetoothPrinterHelper {
                         // Generic: Try standard SPP first, then fallbacks
                         connectWithGenericStrategy(context, device)
                     }
+                    PrinterModel.BROTHER_PT_P950NW -> {
+                        // Brother: Use standard connection (similar to generic)
+                        connectWithGenericStrategy(context, device)
+                    }
                 }
                 
                 if (socket != null) {

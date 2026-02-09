@@ -86,6 +86,11 @@ class HomeFragment : Fragment() {
         binding.warehouseCard.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_warehouse)
         }
+        
+        // Printer module - navigate to printer settings
+        binding.printerCard.setOnClickListener {
+            findNavController().navigate(R.id.action_home_to_printer_settings)
+        }
 
         binding.warehouseInfoButton.setOnClickListener {
             showCategoriesBottomSheet()

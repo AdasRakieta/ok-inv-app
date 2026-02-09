@@ -109,6 +109,15 @@ dependencies {
     // ZXing
     implementation("com.google.zxing:core:3.4.1")
 
+    // Brother Print SDK for PT-P950NW (if available)
+    // Note: Brother SDK is not publicly available in Maven Central
+    // For production, download from Brother Developer Portal:
+    // https://support.brother.com/g/s/es/dev/en/mobilesdk/android/index.html
+    // implementation(files("libs/BrotherPrintLibrary.aar"))
+    
+    // ESC/POS fallback approach is implemented in BrotherPrinterHelper.kt
+    // using standard TCP socket communication (works without SDK)
+
     // Testy
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:4.4.0")

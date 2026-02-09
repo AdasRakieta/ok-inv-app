@@ -1,5 +1,7 @@
 package com.example.inventoryapp.ui.products
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -24,6 +26,9 @@ import java.util.*
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import androidx.appcompat.app.AlertDialog
 import com.example.inventoryapp.utils.MovementHistoryUtils
+import com.example.inventoryapp.utils.BrotherPrinterHelper
+import com.example.inventoryapp.utils.PrinterPreferences
+import com.google.android.material.snackbar.Snackbar
 
 class ProductDetailsFragment : Fragment() {
 
@@ -138,6 +143,7 @@ class ProductDetailsFragment : Fragment() {
         binding.editSerialButton.setOnClickListener { promptEditSerial() }
         binding.editProductButton.setOnClickListener { navigateToEditForm() }
         binding.deleteProductButton.setOnClickListener { confirmDeleteProduct() }
+        binding.fabPrintLabel.setOnClickListener { printBarcodeLabel() }
     }
 
     private fun promptEditSerial() {
@@ -302,6 +308,125 @@ class ProductDetailsFragment : Fragment() {
                 else -> warehouseLocation
             }
             binding.movementHistoryText.text = statusFallback
+        }
+    }
+
+    /**
+     * Print barcode label for current product
+     */
+    private fun printBarcodeLabel() {
+        val product = currentProduct ?: return
+        
+        if (product.serialNumber.isBlank()) {
+            Snackbar.make(
+                binding.root,
+                "Cannot print label: Serial number is empty",
+                Snackbar.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        // Check if printer is configured
+        val printerPreferences = PrinterPreferences(requireContext())
+        val config = printerPreferences.loadPrinterConfig()
+        
+        if (!config.isConfigured) {
+            Snackbar.make(
+                binding.root,
+                "Printer not configured. Please configure printer first.",
+                Snackbar.LENGTH_LONG
+            ).setAction("Configure") {
+                // Navigate to printer settings
+                findNavController().navigate(
+                    com.example.inventoryapp.R.id.action_global_printerSettings
+                )
+            }.show()
+            return
+        }
+
+        // Show printing progress
+        Snackbar.make(
+            binding.root,
+            "Printing label for SN: ${product.serialNumber}...",
+            Snackbar.LENGTH_SHORT
+        ).show()
+
+        // Print in background
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val result = when (config.connectionMethod) {
+                    com.example.inventoryapp.data.models.PrinterConfig.ConnectionMethod.WIFI -> {
+                        BrotherPrinterHelper.printSerialNumberLabelWifi(
+                            serialNumber = product.serialNumber,
+                            ipAddress = config.ipAddress,
+                            port = config.port,
+                            tapeWidthMm = config.labelWidth,
+                            labelLengthMm = config.labelHeight
+                        )
+                    }
+                    com.example.inventoryapp.data.models.PrinterConfig.ConnectionMethod.BLUETOOTH -> {
+                        // Get Bluetooth device by MAC - NO PAIRING REQUIRED!
+                        val device = BrotherPrinterHelper.getBluetoothDeviceByAddress(
+                            config.bluetoothAddress
+                        )
+                        
+                        if (device == null) {
+                            Snackbar.make(
+                                binding.root,
+                                "Bluetooth not available or invalid MAC: ${config.bluetoothAddress}",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                            return@launch
+                        }
+                        
+                        BrotherPrinterHelper.printSerialNumberLabelBluetooth(
+                            serialNumber = product.serialNumber,
+                            device = device,
+                            tapeWidthMm = config.labelWidth,
+                            labelLengthMm = config.labelHeight
+                        )
+                    }
+                    com.example.inventoryapp.data.models.PrinterConfig.ConnectionMethod.WIRELESS_DIRECT -> {
+                        // Wireless Direct uses WiFi with direct connection IP
+                        BrotherPrinterHelper.printSerialNumberLabelWifi(
+                            serialNumber = product.serialNumber,
+                            ipAddress = config.ipAddress,
+                            port = config.port,
+                            tapeWidthMm = config.labelWidth,
+                            labelLengthMm = config.labelHeight
+                        )
+                    }
+                }
+
+                if (result.isSuccess) {
+                    Snackbar.make(
+                        binding.root,
+                        "Label printed successfully!",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                    
+                    printerPreferences.saveLastConnectionStatus(
+                        true,
+                        "Label printed for ${product.serialNumber}"
+                    )
+                } else {
+                    val errorMessage = result.exceptionOrNull()?.message ?: "Unknown error"
+                    Snackbar.make(
+                        binding.root,
+                        "Print failed: $errorMessage",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                    
+                    printerPreferences.saveLastConnectionStatus(false, errorMessage)
+                }
+
+            } catch (e: Exception) {
+                Snackbar.make(
+                    binding.root,
+                    "Print error: ${e.message}",
+                    Snackbar.LENGTH_LONG
+                ).show()
+            }
         }
     }
 

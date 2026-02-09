@@ -41,6 +41,7 @@
     <color name="warehouse_accent">#8B5CF6</color> <!-- Purple -->
     <color name="orders_accent">#EC4899</color> <!-- Pink -->
     <color name="backup_accent">#10B981</color> <!-- Emerald -->
+    <color name="printer_accent">#06B6D4</color> <!-- Cyan -->
     
     <!-- Status colors -->
     <color name="status_new">#10B981</color>

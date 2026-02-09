@@ -20,6 +20,10 @@
         <action
             android:id="@+id/action_home_to_warehouse"
             app:destination="@id/warehouseFragment" />
+        
+        <action
+            android:id="@+id/action_home_to_printer_settings"
+            app:destination="@id/printerSettingsFragment" />
     </fragment>
 
     <fragment
@@ -213,5 +217,15 @@
             app:nullable="true"
             android:defaultValue="@null" />
     </fragment>
+
+    <fragment
+        android:id="@+id/printerSettingsFragment"
+        android:name="com.example.inventoryapp.ui.settings.PrinterSettingsFragment"
+        android:label="Printer Settings" />
+
+    <!-- Global action to navigate to printer settings from anywhere -->
+    <action
+        android:id="@+id/action_global_printerSettings"
+        app:destination="@id/printerSettingsFragment" />
 
 </navigation>

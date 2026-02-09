@@ -44,12 +44,22 @@ enum class PrinterModel(
         connectionType = ConnectionType.SPP,
         requiresSecureConnection = false,
         supportsBLE = false
+    ),
+    BROTHER_PT_P950NW(
+        displayName = "Brother PT-P950NW",
+        manufacturer = "Brother",
+        connectionType = ConnectionType.WIFI_OR_BLUETOOTH,
+        requiresSecureConnection = false,
+        supportsBLE = false
     );
 
     enum class ConnectionType {
-        SPP,           // Serial Port Profile (classic Bluetooth)
-        BLE,           // Bluetooth Low Energy
-        SPP_OR_BLE     // Supports both
+        SPP,                    // Serial Port Profile (classic Bluetooth)
+        BLE,                    // Bluetooth Low Energy
+        SPP_OR_BLE,            // Supports both SPP and BLE
+        WIFI,                  // WiFi/Network connection
+        WIFI_OR_BLUETOOTH,     // Supports WiFi and classic Bluetooth
+        WIRELESS_DIRECT        // WiFi Direct / Ad-hoc
     }
 
     companion object {
@@ -67,6 +77,32 @@ enum class PrinterModel(
          */
         fun getZebraModels(): List<PrinterModel> {
             return values().filter { it.manufacturer == "Zebra" }
+        }
+
+        /**
+         * Get all Brother printer models
+         */
+        fun getBrotherModels(): List<PrinterModel> {
+            return values().filter { it.manufacturer == "Brother" }
+        }
+
+        /**
+         * Check if printer supports WiFi connectivity
+         */
+        fun PrinterModel.supportsWifi(): Boolean {
+            return connectionType == ConnectionType.WIFI || 
+                   connectionType == ConnectionType.WIFI_OR_BLUETOOTH ||
+                   connectionType == ConnectionType.WIRELESS_DIRECT
+        }
+
+        /**
+         * Check if printer supports Bluetooth connectivity
+         */
+        fun PrinterModel.supportsBluetooth(): Boolean {
+            return connectionType == ConnectionType.SPP || 
+                   connectionType == ConnectionType.BLE ||
+                   connectionType == ConnectionType.SPP_OR_BLE ||
+                   connectionType == ConnectionType.WIFI_OR_BLUETOOTH
         }
 
         /**
