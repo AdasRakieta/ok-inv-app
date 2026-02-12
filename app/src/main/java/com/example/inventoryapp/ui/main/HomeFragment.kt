@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -14,11 +15,15 @@ import com.example.inventoryapp.BuildConfig
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.CategoryEntity
+import com.example.inventoryapp.data.local.entities.ScanHistoryEntity
+import com.example.inventoryapp.data.local.entities.ScanType
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentHomeBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 class HomeFragment : Fragment() {
 
@@ -30,6 +35,12 @@ class HomeFragment : Fragment() {
     }
     private val categoryRepository by lazy {
         (requireActivity().application as InventoryApplication).categoryRepository
+    }
+    private val employeeRepository by lazy {
+        (requireActivity().application as InventoryApplication).employeeRepository
+    }
+    private val scanHistoryRepository by lazy {
+        (requireActivity().application as InventoryApplication).scanHistoryRepository
     }
 
     private var cachedCategoryCounts: List<CategoryCount> = emptyList()
@@ -50,7 +61,9 @@ class HomeFragment : Fragment() {
 
         setupAppVersion()
         setupClickListeners()
+        loadSummaryCounts()
         loadWarehouseStats()
+        loadRecentActivity()
     }
 
     private fun setupAppVersion() {
@@ -67,6 +80,26 @@ class HomeFragment : Fragment() {
                 cachedCategoryCounts = categories
                     .map { cat -> CategoryCount(cat, categoryCountsMap[cat.id] ?: 0) }
                     .sortedBy { it.count }
+            }
+        }
+    }
+
+    private fun loadSummaryCounts() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            productRepository.getProductCount().collect { count ->
+                binding.productsCountText.text = count.toString()
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            employeeRepository.getAllEmployeesFlow().collect { employees ->
+                binding.employeesCountText.text = employees.size.toString()
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            productRepository.getProductCountByStatus(ProductStatus.IN_STOCK).collect { count ->
+                binding.warehouseCountText.text = count.toString()
             }
         }
     }
@@ -95,6 +128,97 @@ class HomeFragment : Fragment() {
         binding.warehouseInfoButton.setOnClickListener {
             showCategoriesBottomSheet()
         }
+    }
+
+    private fun loadRecentActivity() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            scanHistoryRepository.getRecentScans().collect { scans ->
+                val recentItems = scans.take(5)
+                val container = binding.recentActivityContainer
+                container.removeAllViews()
+
+                if (recentItems.isEmpty()) {
+                    binding.recentActivityEmpty.visibility = View.VISIBLE
+                    container.addView(binding.recentActivityEmpty)
+                    return@collect
+                }
+
+                binding.recentActivityEmpty.visibility = View.GONE
+                recentItems.forEach { scan ->
+                    val itemView = layoutInflater.inflate(
+                        R.layout.item_recent_activity,
+                        container,
+                        false
+                    )
+                    bindRecentActivityItem(itemView, scan)
+                    container.addView(itemView)
+                }
+            }
+        }
+    }
+
+    private fun bindRecentActivityItem(view: View, scan: ScanHistoryEntity) {
+        val iconContainer = view.findViewById<MaterialCardView>(R.id.activityIconContainer)
+        val iconText = view.findViewById<TextView>(R.id.activityIcon)
+        val titleText = view.findViewById<TextView>(R.id.activityTitle)
+        val subtitleText = view.findViewById<TextView>(R.id.activitySubtitle)
+
+        val (icon, colorRes) = getActivityIcon(scan)
+        val baseColor = ContextCompat.getColor(requireContext(), colorRes)
+        val backgroundColor = ColorUtils.setAlphaComponent(baseColor, 32)
+
+        iconText.text = icon
+        iconText.setTextColor(baseColor)
+        iconContainer.setCardBackgroundColor(backgroundColor)
+
+        val titlePrefix = if (scan.success) "Zeskanowano" else "Nieudany skan"
+        titleText.text = "$titlePrefix: ${formatScanValue(scan.scannedValue)}"
+
+        val contextLabel = getContextLabel(scan.context)
+        subtitleText.text = "$contextLabel • ${formatTimeAgo(scan.timestamp)}"
+    }
+
+    private fun getActivityIcon(scan: ScanHistoryEntity): Pair<String, Int> {
+        if (!scan.success) {
+            return "⚠️" to R.color.warning
+        }
+
+        return when (scan.scanType) {
+            ScanType.QR_CODE -> "🔳" to R.color.info
+            ScanType.SERIAL_NUMBER -> "🔢" to R.color.accent
+            ScanType.BARCODE -> "➕" to R.color.home_primary
+        }
+    }
+
+    private fun getContextLabel(context: String?): String {
+        return when (context?.lowercase()) {
+            "bulk_add" -> "Dodawanie zbiorcze"
+            "product_details" -> "Szczegoly produktu"
+            "inventory_count" -> "Inwentaryzacja"
+            "assign_by_scan" -> "Przypisanie"
+            "warehouse" -> "Magazyn"
+            else -> "Skanowanie"
+        }
+    }
+
+    private fun formatTimeAgo(timestamp: Long): String {
+        val diff = System.currentTimeMillis() - timestamp
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(diff)
+        val hours = TimeUnit.MILLISECONDS.toHours(diff)
+        val days = TimeUnit.MILLISECONDS.toDays(diff)
+
+        return when {
+            minutes < 1 -> "przed chwila"
+            minutes < 60 -> "$minutes min temu"
+            hours < 24 -> "$hours godz. temu"
+            days < 7 -> "$days dni temu"
+            else -> "ponad tydzien temu"
+        }
+    }
+
+    private fun formatScanValue(value: String): String {
+        val trimmed = value.trim()
+        return if (trimmed.length <= 24) trimmed else trimmed.take(21) + "..."
     }
 
     private fun showCategoriesBottomSheet() {
