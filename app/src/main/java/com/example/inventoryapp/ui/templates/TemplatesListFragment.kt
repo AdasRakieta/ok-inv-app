@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.doAfterTextChanged
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -12,7 +13,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.ProductTemplateEntity
+import com.example.inventoryapp.databinding.BottomSheetFilterBinding
 import com.example.inventoryapp.databinding.FragmentTemplatesListBinding
+import com.example.inventoryapp.ui.products.FilterOption
+import com.example.inventoryapp.ui.products.FilterOptionsAdapter
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.launch
 
 class TemplatesListFragment : Fragment() {
@@ -30,6 +35,9 @@ class TemplatesListFragment : Fragment() {
 
     private lateinit var adapter: TemplatesAdapter
     private var categories: List<CategoryEntity> = emptyList()
+    private var allTemplates: List<ProductTemplateEntity> = emptyList()
+    private var searchQuery: String = ""
+    private var selectedCategoryId: Long? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,9 +60,6 @@ class TemplatesListFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = TemplatesAdapter(
             onItemClick = { template ->
-                openTemplateDetails(template.id)
-            },
-            onUseTemplate = { template ->
                 openBulkAddWithTemplate(template.id)
             },
             onEditTemplate = { template ->
@@ -64,7 +69,8 @@ class TemplatesListFragment : Fragment() {
                 confirmDeleteTemplate(template)
             },
             getCategoryName = { categoryId -> categoryNameFor(categoryId) },
-            getCategoryIcon = { categoryId -> categoryIconFor(categoryId) }
+            getCategoryIcon = { categoryId -> categoryIconFor(categoryId) },
+            getCategoryColor = { categoryId -> categoryColorFor(categoryId) }
         )
 
         binding.templatesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -78,13 +84,23 @@ class TemplatesListFragment : Fragment() {
         binding.emptyAddButton.setOnClickListener {
             openTemplateDetails(0L)
         }
+        binding.backButton.setOnClickListener {
+            findNavController().navigateUp()
+        }
+        binding.searchInput.doAfterTextChanged { text ->
+            searchQuery = text?.toString()?.trim().orEmpty()
+            applyFilters()
+        }
+        binding.filterButton.setOnClickListener {
+            openCategoryFilter()
+        }
     }
 
     private fun loadTemplates() {
         viewLifecycleOwner.lifecycleScope.launch {
             templateRepository.getAllTemplates().collect { templates ->
-                adapter.submitList(templates)
-                updateEmptyState(templates.isEmpty())
+                allTemplates = templates
+                applyFilters()
             }
         }
     }
@@ -93,8 +109,65 @@ class TemplatesListFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             categoryRepository.getAllCategories().collect { list ->
                 categories = list
+                applyFilters()
             }
         }
+    }
+
+    private fun openCategoryFilter() {
+        val options = mutableListOf(
+            FilterOption("all", "Wszystkie", "📦", selectedCategoryId == null)
+        )
+
+        categories.forEach { category ->
+            options.add(
+                FilterOption(
+                    category.id.toString(),
+                    category.name,
+                    category.icon ?: "📦",
+                    selectedCategoryId == category.id
+                )
+            )
+        }
+
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetFilterBinding.inflate(layoutInflater)
+        sheetBinding.sheetTitle.text = "Filtruj po kategorii"
+
+        val adapter = FilterOptionsAdapter(options) { selectedOption ->
+            bottomSheet.dismiss()
+            selectedCategoryId = if (selectedOption.id == "all") {
+                null
+            } else {
+                selectedOption.id.toLongOrNull()
+            }
+            applyFilters()
+        }
+
+        sheetBinding.optionsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        sheetBinding.optionsRecyclerView.adapter = adapter
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+
+    private fun applyFilters() {
+        var filtered = allTemplates
+
+        selectedCategoryId?.let { id ->
+            filtered = filtered.filter { it.categoryId == id }
+        }
+
+        if (searchQuery.isNotEmpty()) {
+            val query = searchQuery.lowercase()
+            filtered = filtered.filter { template ->
+                template.name.lowercase().contains(query) ||
+                    (template.defaultManufacturer?.lowercase()?.contains(query) == true) ||
+                    (template.defaultModel?.lowercase()?.contains(query) == true)
+            }
+        }
+
+        adapter.submitList(filtered)
+        updateEmptyState(filtered.isEmpty())
     }
 
     private fun categoryNameFor(categoryId: Long?): String {
@@ -105,6 +178,11 @@ class TemplatesListFragment : Fragment() {
     private fun categoryIconFor(categoryId: Long?): String {
         if (categoryId == null) return "📦"
         return categories.firstOrNull { it.id == categoryId }?.icon ?: "📦"
+    }
+
+    private fun categoryColorFor(categoryId: Long?): String? {
+        if (categoryId == null) return null
+        return categories.firstOrNull { it.id == categoryId }?.color
     }
 
     private fun openTemplateDetails(templateId: Long) {

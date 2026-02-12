@@ -61,6 +61,10 @@ class AddProductFragment : Fragment() {
             findNavController().navigateUp()
         }
 
+        binding.backButton.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
         binding.saveButton.setOnClickListener {
             saveProduct()
         }

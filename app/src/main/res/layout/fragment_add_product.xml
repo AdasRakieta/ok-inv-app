@@ -4,276 +4,422 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/home_background"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp">
 
-        <!-- Form Header -->
-        <TextView
-            android:id="@+id/titleText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Dodaj nowy produkt"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="24dp" />
-
-        <!-- Product Name Field -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/productNameLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Nazwa produktu"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/productNameInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="text" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Product ID Field -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/productIdLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="ID produktu (np. LapOK10)"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            app:endIconMode="clear_text"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/productIdInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="textCapCharacters"
-                android:fontFamily="monospace" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Kategoria -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/categoryLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Kategoria"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="16dp">
-
-            <AutoCompleteTextView
-                android:id="@+id/categoryInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="none" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Numer seryjny -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Numer seryjny"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="12dp" />
-
-        <!-- Serial Number Input -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/serialNumberLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Numer seryjny"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            app:endIconMode="clear_text"
-            android:layout_marginBottom="8dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/serialNumberInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="textCapCharacters" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Producent -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/manufacturerLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Producent"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/manufacturerInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="text" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Model -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/modelLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Model"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/modelInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="text" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Opis -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/descriptionLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Opis (opcjonalnie)"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/descriptionInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="textMultiLine"
-                android:minLines="3"
-                android:gravity="top|start" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Status -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/statusLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Status"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="12dp">
-
-            <AutoCompleteTextView
-                android:id="@+id/statusInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="none" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Lokacja magazynowa (pokazywana tylko dla statusu Magazyn) -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/warehouseLocationLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Lokalizacja magazynowa"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone">
-
-            <AutoCompleteTextView
-                android:id="@+id/warehouseLocationInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="none" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Pracownik (pokazywany tylko dla statusu Przypisane) -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/assignedEmployeeLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Pracownik"
-            app:boxBackgroundColor="@color/surface"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="24dp"
-            android:visibility="gone">
-
-            <AutoCompleteTextView
-                android:id="@+id/assignedEmployeeInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:inputType="none" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Action Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="2">
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <ImageButton
+                android:id="@+id/backButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_product_icon_container"
+                android:contentDescription="Wstecz"
+                android:src="@android:drawable/ic_media_previous"
+                android:tint="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="Dodaj nowy produkt"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/home_card_background"
+            app:cardElevation="1dp"
+            app:strokeColor="@color/home_card_stroke"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="12dp"
+                    android:background="@color/home_primary" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Podstawowe informacje"
+                        android:textAllCaps="true"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/productNameLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Nazwa produktu"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/home_card_stroke"
+                        app:hintTextColor="@color/text_secondary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/productNameInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/productIdLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="ID produktu (np. Lap0K10)"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/home_card_stroke"
+                        app:hintTextColor="@color/text_secondary"
+                        app:endIconMode="clear_text">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/productIdInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapCharacters"
+                            android:fontFamily="monospace"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/categoryLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Kategoria"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/home_card_stroke"
+                        app:hintTextColor="@color/text_secondary">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/categoryInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/home_card_background"
+            app:cardElevation="1dp"
+            app:strokeColor="@color/home_card_stroke"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="12dp"
+                    android:background="@color/success" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Numer seryjny"
+                            android:textAllCaps="true"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/serialNumberLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Numer seryjny"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/success"
+                        app:hintTextColor="@color/text_secondary"
+                        app:endIconMode="clear_text">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/serialNumberInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapCharacters"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/manufacturerLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Producent"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/home_card_stroke"
+                        app:hintTextColor="@color/text_secondary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/manufacturerInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/modelLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Model"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/home_card_stroke"
+                        app:hintTextColor="@color/text_secondary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/modelInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/descriptionLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Opis (opcjonalnie)"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/home_card_stroke"
+                        app:hintTextColor="@color/text_secondary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/descriptionInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textMultiLine"
+                            android:minLines="3"
+                            android:gravity="top|start"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="@color/home_card_background"
+            app:cardElevation="1dp"
+            app:strokeColor="@color/home_card_stroke"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <View
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="12dp"
+                    android:background="@color/warning" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ustawienia dodawania"
+                        android:textAllCaps="true"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/statusLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Status"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/warning"
+                        app:hintTextColor="@color/text_secondary">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/statusInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/warehouseLocationLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Lokalizacja magazynowa"
+                        android:visibility="gone"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/warning"
+                        app:hintTextColor="@color/text_secondary">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/warehouseLocationInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/assignedEmployeeLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Pracownik"
+                        android:visibility="gone"
+                        app:boxBackgroundColor="@color/home_card_background"
+                        app:boxStrokeColor="@color/warning"
+                        app:hintTextColor="@color/text_secondary">
+
+                        <AutoCompleteTextView
+                            android:id="@+id/assignedEmployeeInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="none"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/cancelButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
                 android:layout_weight="1"
                 android:text="Anuluj"
-                android:textColor="#FFFFFF"
-                android:backgroundTint="#EF4444"
                 android:textAllCaps="false"
-                android:layout_marginEnd="8dp"
-                app:cornerRadius="8dp" />
+                app:strokeColor="@color/home_card_stroke"
+                app:cornerRadius="14dp"
+                android:textColor="@color/text_secondary" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveButton"
-                style="@style/Widget.App.Button"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="52dp"
+                android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:text="Zapisz produkt"
+                android:text="Zapisz"
                 android:textAllCaps="false"
-                android:layout_marginStart="8dp" />
+                app:backgroundTint="@color/home_primary"
+                app:cornerRadius="14dp"
+                android:textColor="@color/white" />
 
         </LinearLayout>
 
