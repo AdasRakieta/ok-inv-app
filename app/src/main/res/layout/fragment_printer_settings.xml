@@ -17,7 +17,8 @@
             android:background="@color/primary"
             app:title="Printer Settings"
             app:titleTextColor="@color/surface"
-            app:navigationIcon="@drawable/ic_arrow_back" />
+            app:navigationIcon="@drawable/ic_back_custom"
+            app:navigationIconTint="@color/surface" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

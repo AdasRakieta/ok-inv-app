@@ -17,7 +17,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:title="Przypisz sprzęt"
         app:titleTextColor="@color/text_primary"
-        app:titleCentered="true" />
+        app:titleCentered="true"
+        app:navigationIcon="@drawable/ic_back_custom"
+        app:navigationIconTint="@color/text_primary" />
 
     <!-- Search Bar -->
     <com.google.android.material.card.MaterialCardView

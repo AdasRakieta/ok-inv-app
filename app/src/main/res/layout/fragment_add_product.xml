@@ -27,9 +27,11 @@
                 android:id="@+id/backButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:background="@drawable/bg_product_icon_container"
+                android:background="@android:color/transparent"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Wstecz"
-                android:src="@android:drawable/ic_media_previous"
+                android:padding="8dp"
+                android:src="@drawable/ic_back_custom"
                 android:tint="@color/text_secondary" />
 
             <TextView
