@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/bottomNavRoot"
     android:layout_width="match_parent"
-    android:layout_height="128dp"
+    android:layout_height="88dp"
     android:background="@drawable/bg_home_bottom_nav"
     android:clipChildren="false"
     android:clipToPadding="false"
@@ -19,8 +19,8 @@
         android:orientation="horizontal"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp">
+        android:paddingTop="14dp"
+        android:paddingBottom="8dp">
 
         <LinearLayout
             android:id="@+id/navProducts"
@@ -77,8 +77,7 @@
         <FrameLayout
             android:id="@+id/navHome"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="-12dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:foreground="@drawable/ripple_home_button"
             android:foregroundGravity="center"
@@ -88,6 +87,7 @@
                 android:id="@+id/navHomeButton"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
+                android:translationY="-18dp"
                 app:cardCornerRadius="28dp"
                 app:cardElevation="6dp"
                 app:cardBackgroundColor="@color/home_primary">
