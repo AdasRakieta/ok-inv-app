@@ -24,8 +24,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        setSupportActionBar(binding.toolbar)
-
         val window = window
         val backgroundColor = ContextCompat.getColor(this, R.color.background)
         window.statusBarColor = backgroundColor
@@ -152,11 +150,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateAppBarVisibility(destinationId: Int) {
-        if (destinationId == R.id.homeFragment) {
-            binding.appBarLayout.visibility = android.view.View.GONE
-        } else {
-            binding.appBarLayout.visibility = android.view.View.VISIBLE
-        }
+        binding.appBarLayout.visibility = android.view.View.GONE
     }
 
     private fun hideSystemNavigation() {

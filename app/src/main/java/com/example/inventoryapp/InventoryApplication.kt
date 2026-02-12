@@ -2,6 +2,9 @@ package com.example.inventoryapp
 
 import android.app.Application
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import androidx.room.Room
 import com.example.inventoryapp.data.local.database.AppDatabase
 import com.example.inventoryapp.data.repository.*
@@ -45,6 +48,8 @@ class InventoryApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         
-        // No automatic data seeding on install.
+        CoroutineScope(Dispatchers.IO).launch {
+            categoryRepository.initializeDefaultCategories()
+        }
     }
 }
