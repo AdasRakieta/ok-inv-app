@@ -19,6 +19,7 @@ import com.example.inventoryapp.data.local.entities.ScanHistoryEntity
 import com.example.inventoryapp.data.local.entities.ScanType
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentHomeBinding
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.flow.first
@@ -353,5 +354,20 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setAppBarVisible(false)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        setAppBarVisible(true)
+    }
+
+    private fun setAppBarVisible(visible: Boolean) {
+        val appBar = activity?.findViewById<AppBarLayout>(R.id.appBarLayout)
+        appBar?.visibility = if (visible) View.VISIBLE else View.GONE
     }
 }
