@@ -17,7 +17,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:paddingBottom="20dp">
 
         <CheckBox
             android:id="@+id/locationCheckbox"
@@ -129,7 +130,7 @@
             android:max="100"
             android:progressTint="@color/home_primary"
             android:progressBackgroundTint="@color/home_card_stroke"
-            app:layout_constraintTop_toBottomOf="@id/locationIconContainer"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
