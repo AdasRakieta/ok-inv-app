@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.databinding.ItemEmployeeBinding
+import com.example.inventoryapp.R
 
 class EmployeesAdapter(
     private val onEmployeeClick: (EmployeeEntity) -> Unit,
@@ -73,18 +74,11 @@ class EmployeesAdapter(
                 employeeCheckbox.isVisible = selectionMode
                 employeeCheckbox.isChecked = selectedItems.contains(employee.id)
                 
-                // Employee initials in circle
-                val initials = "${employee.firstName.firstOrNull() ?: ""}${employee.lastName.firstOrNull() ?: ""}".uppercase()
-                employeeInitials.text = initials
-                
                 // Employee name
                 employeeName.text = employee.fullName
                 
                 // Department
                 employeeDepartment.text = employee.department?.takeIf { it.isNotBlank() } ?: "IT"
-                
-                // Position  
-                employeePosition.text = employee.position?.takeIf { it.isNotBlank() } ?: "Pracownik"
                 
                 // Assigned equipment count
                 assignedCount.text = when (equipmentCount) {
@@ -94,16 +88,21 @@ class EmployeesAdapter(
                     else -> "$equipmentCount urządzeń"
                 }
                 
-                // Contact info
-                val contactInfo = buildString {
-                    if (!employee.email.isNullOrBlank()) {
-                        append("📧 ${employee.email}")
-                    } else if (!employee.phone.isNullOrBlank()) {
-                        append("📱 ${employee.phone}")
-                    }
+                if (equipmentCount == 0) {
+                    assignedCountContainer.setBackgroundResource(R.drawable.bg_employee_badge_muted)
+                    assignedCountIcon.setImageResource(R.drawable.ic_devices_off)
+                    assignedCountIcon.imageTintList = android.content.res.ColorStateList.valueOf(
+                        itemView.context.getColor(R.color.text_secondary)
+                    )
+                    assignedCount.setTextColor(itemView.context.getColor(R.color.text_secondary))
+                } else {
+                    assignedCountContainer.setBackgroundResource(R.drawable.bg_employee_badge_primary)
+                    assignedCountIcon.setImageResource(R.drawable.ic_devices)
+                    assignedCountIcon.imageTintList = android.content.res.ColorStateList.valueOf(
+                        itemView.context.getColor(R.color.home_primary)
+                    )
+                    assignedCount.setTextColor(itemView.context.getColor(R.color.home_primary))
                 }
-                employeeContact.text = contactInfo.ifBlank { "Brak danych kontaktowych" }
-                employeeContact.isVisible = contactInfo.isNotBlank()
                 
                 // Click listeners
                 root.setOnClickListener {
