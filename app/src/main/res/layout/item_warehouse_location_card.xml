@@ -2,51 +2,68 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/locationCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
     android:layout_marginBottom="12dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardElevation="2dp"
-    app:cardCornerRadius="12dp"
-    app:strokeColor="#E5E7EB"
+    app:cardBackgroundColor="@color/home_card_background"
+    app:cardElevation="1dp"
+    app:cardCornerRadius="14dp"
+    app:strokeColor="@color/home_card_stroke"
     app:strokeWidth="1dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="#FFFFFF">
+        android:padding="16dp">
 
-        <!-- Location Header -->
+        <CheckBox
+            android:id="@+id/locationCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:visibility="gone"
+            android:buttonTint="@color/home_primary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <View
+            android:id="@+id/locationAccent"
+            android:layout_width="6dp"
+            android:layout_height="0dp"
+            android:background="@color/home_primary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/locationCheckbox" />
+
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            app:layout_constraintStart_toEndOf="@id/locationAccent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-            <CheckBox
-                android:id="@+id/locationCheckbox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
+            <FrameLayout
+                android:id="@+id/locationIconContainer"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="12dp"
                 android:layout_marginEnd="12dp"
-                android:buttonTint="@color/primary" />
+                android:background="@drawable/bg_icon_button_round">
 
-            <TextView
-                android:id="@+id/locationIcon"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:text="📦"
-                android:textSize="28sp"
-                android:gravity="center"
-                android:layout_marginEnd="12dp" />
+                <TextView
+                    android:id="@+id/locationIcon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="\uD83C\uDFEC"
+                    android:textSize="20sp"
+                    android:gravity="center" />
+
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -56,71 +73,66 @@
 
                 <TextView
                     android:id="@+id/locationName"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Location Name"
-                    android:textSize="18sp"
+                    android:text="Magazyn Glowny"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#111827"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
+                    android:textColor="@color/text_primary" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/locationDescription"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="2dp"
-                    android:gravity="center_vertical">
+                    android:text="Centrum logistyczne"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
 
-                    <TextView
-                        android:id="@+id/locationCategories"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Kategorie"
-                        android:textSize="15sp"
-                        android:textColor="#0EA5E9"
-                        android:maxLines="1"
-                        android:ellipsize="end" />
+            </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" • "
-                        android:textSize="15sp"
-                        android:textColor="#9CA3AF"
-                        android:paddingHorizontal="4dp" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="end"
+                android:layout_marginStart="8dp">
 
-                    <TextView
-                        android:id="@+id/productCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Magazyn"
-                        android:textSize="13sp"
-                        android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="3dp"
-                        android:maxLines="1" />
+                <TextView
+                    android:id="@+id/locationCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
 
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/locationCountLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="sztuk"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_tertiary" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Description -->
-        <TextView
-            android:id="@+id/locationDescription"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Description"
-            android:textSize="13sp"
-            android:textColor="#6B7280"
-            android:layout_marginTop="4dp"
-            android:ellipsize="end"
-            android:maxLines="2"
-            tools:text="Brak opisu" />
+        <ProgressBar
+            android:id="@+id/locationProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            android:layout_marginTop="12dp"
+            android:progress="0"
+            android:max="100"
+            android:progressTint="@color/home_primary"
+            android:progressBackgroundTint="@color/home_card_stroke"
+            app:layout_constraintTop_toBottomOf="@id/locationIconContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

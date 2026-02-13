@@ -9,6 +9,8 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.graphics.ColorUtils
+import androidx.core.widget.doAfterTextChanged
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -41,6 +43,8 @@ class WarehouseFragment : Fragment() {
     private val locationStorage by lazy { LocationStorage(requireContext()) }
 
     private lateinit var locationsAdapter: WarehouseLocationsListAdapter
+    private var searchQuery: String = ""
+    private var allLocationCards: List<WarehouseLocationCard> = emptyList()
 
     private data class LowStockItem(val category: CategoryEntity, val count: Int)
 
@@ -93,6 +97,11 @@ class WarehouseFragment : Fragment() {
             showAddLocationDialog()
         }
 
+        binding.searchInput.doAfterTextChanged { text ->
+            searchQuery = text?.toString()?.trim().orEmpty()
+            applySearchFilter()
+        }
+
         binding.selectAllButton.setOnClickListener {
             locationsAdapter.selectAll()
             updateSelectionPanel()
@@ -108,6 +117,9 @@ class WarehouseFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                 productRepository.getAllProducts().collect { products ->
                     val inStockProducts = products.filter { it.status == ProductStatus.IN_STOCK }
+                    val repairProducts = products.filter { it.status == ProductStatus.IN_REPAIR }
+                    val retiredProducts = products.filter { it.status == ProductStatus.RETIRED }
+                    val lostProducts = products.filter { it.status == ProductStatus.LOST }
 
                     // Group by location from products
                     val locationGroups = inStockProducts.groupBy { product ->
@@ -118,6 +130,7 @@ class WarehouseFragment : Fragment() {
                     val storedLocations = locationStorage.getLocations()
 
                     categoryRepository.getAllCategories().collect { categories ->
+                        bindStatusCards(categories, repairProducts, retiredProducts, lostProducts)
                         // Build location cards from product groups
                         val productCards = locationGroups.map { (locationName, productsInLocation) ->
                             val categoryIds = productsInLocation.map { it.categoryId }.distinct()
@@ -126,11 +139,23 @@ class WarehouseFragment : Fragment() {
                                 .distinct()
                                 .joinToString(" ")
 
+                            val dominantCategory = productsInLocation
+                                .mapNotNull { it.categoryId }
+                                .groupingBy { it }
+                                .eachCount()
+                                .maxByOrNull { it.value }
+                                ?.key
+                            val dominantColor = categories.firstOrNull { it.id == dominantCategory }?.color
+                            val fallbackColor = locationStorage.getOrAssignLocationColor(locationName)
+                            val colorHex = dominantColor ?: fallbackColor
+
                             WarehouseLocationCard(
                                 name = locationName,
                                 productCount = productsInLocation.size,
                                    categories = categoryEmojis,
-                                   description = locationStorage.getLocationDescription(locationName)
+                                   description = locationStorage.getLocationDescription(locationName),
+                                   colorHex = colorHex,
+                                   progressPercent = 0
                             )
                         }
 
@@ -138,18 +163,30 @@ class WarehouseFragment : Fragment() {
                         val cardsFromStorage = storedLocations
                             .filter { stored -> productCards.none { it.name == stored } }
                             .map { storedName ->
+                                val colorHex = locationStorage.getOrAssignLocationColor(storedName)
                                 WarehouseLocationCard(
                                     name = storedName,
                                     productCount = 0,
                                     categories = "",
-                                       description = locationStorage.getLocationDescription(storedName)
+                                       description = locationStorage.getLocationDescription(storedName),
+                                       colorHex = colorHex,
+                                       progressPercent = 0
                                 )
                             }
 
-                        val locationCards = (productCards + cardsFromStorage).sortedBy { it.name }
+                        val allCards = (productCards + cardsFromStorage)
+                        val maxCount = (allCards.maxOfOrNull { it.productCount } ?: 0).coerceAtLeast(1)
+                        val locationCards = allCards
+                            .map { card ->
+                                card.copy(progressPercent = ((card.productCount * 100) / maxCount))
+                            }
+                            .sortedBy { it.name }
 
-                        locationsAdapter.submitList(locationCards)
-                        updateEmptyState(locationCards.isEmpty())
+                        allLocationCards = locationCards
+                        val filteredCards = filterLocations(locationCards, searchQuery)
+
+                        locationsAdapter.submitList(filteredCards)
+                        updateEmptyState(filteredCards.isEmpty())
 
                         if (locationsAdapter.selectionMode) {
                             updateSelectionPanel()
@@ -157,10 +194,88 @@ class WarehouseFragment : Fragment() {
 
                         // Check for low stock alerts
                         checkLowStockAlerts(categories, inStockProducts)
+
+                        updateSummary(inStockProducts.size, repairProducts.size, retiredProducts.size, lostProducts.size)
                     }
                 }
             }
         }
+    }
+
+    private fun applySearchFilter() {
+        val filteredCards = filterLocations(allLocationCards, searchQuery)
+        locationsAdapter.submitList(filteredCards)
+        updateEmptyState(filteredCards.isEmpty())
+    }
+
+    private fun filterLocations(cards: List<WarehouseLocationCard>, queryRaw: String): List<WarehouseLocationCard> {
+        if (queryRaw.isBlank()) return cards
+        val query = queryRaw.lowercase()
+        return cards.filter { card ->
+            card.name.lowercase().contains(query) ||
+                card.description.lowercase().contains(query)
+        }
+    }
+
+    private fun bindStatusCards(
+        categories: List<CategoryEntity>,
+        repairProducts: List<ProductEntity>,
+        retiredProducts: List<ProductEntity>,
+        lostProducts: List<ProductEntity>
+    ) {
+        val container = binding.statusContainer
+        container.removeAllViews()
+
+        val total = (repairProducts.size + retiredProducts.size + lostProducts.size).coerceAtLeast(1)
+
+        val items = listOf(
+            StatusCard("Serwis", "Sprzet w naprawie", "🛠️", "#F59E0B", repairProducts.size, total),
+            StatusCard("Wycofane", "Sprzet wycofany", "🗂️", "#6B7280", retiredProducts.size, total),
+            StatusCard("Zaginione", "Brak w lokalizacji", "⚠️", "#EF4444", lostProducts.size, total)
+        )
+
+        items.forEach { item ->
+            val card = layoutInflater.inflate(R.layout.item_warehouse_status_card, container, false)
+            val accent = card.findViewById<View>(R.id.statusAccent)
+            val iconContainer = card.findViewById<View>(R.id.statusIconContainer)
+            val iconText = card.findViewById<TextView>(R.id.statusIcon)
+            val title = card.findViewById<TextView>(R.id.statusTitle)
+            val subtitle = card.findViewById<TextView>(R.id.statusSubtitle)
+            val value = card.findViewById<TextView>(R.id.statusValue)
+            val progress = card.findViewById<android.widget.ProgressBar>(R.id.statusProgress)
+
+            val color = android.graphics.Color.parseColor(item.colorHex)
+            accent.setBackgroundColor(color)
+            iconText.text = item.icon
+            iconContainer.background?.setTint(ColorUtils.setAlphaComponent(color, 32))
+            title.text = item.title
+            subtitle.text = item.subtitle
+            value.text = item.count.toString()
+            progress.progress = if (item.total == 0) 0 else (item.count * 100 / item.total)
+            progress.progressTintList = android.content.res.ColorStateList.valueOf(color)
+
+            container.addView(card)
+        }
+    }
+
+    private data class StatusCard(
+        val title: String,
+        val subtitle: String,
+        val icon: String,
+        val colorHex: String,
+        val count: Int,
+        val total: Int
+    )
+
+    private fun updateSummary(inStock: Int, repair: Int, retired: Int, lost: Int) {
+        val total = (inStock + repair + retired + lost).coerceAtLeast(1)
+        val usedPercent = ((inStock * 100) / total).coerceIn(0, 100)
+        val freePercent = (100 - usedPercent).coerceIn(0, 100)
+
+        binding.summaryCapacityValue.text = "$usedPercent%"
+        binding.summaryFreeValue.text = "$freePercent%"
+        binding.summaryCapacityBar.progress = usedPercent
+        binding.summaryFreeBar.progress = freePercent
     }
 
     private fun checkLowStockAlerts(categories: List<CategoryEntity>, productsInLocation: List<ProductEntity>) {
