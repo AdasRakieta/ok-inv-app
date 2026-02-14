@@ -5,6 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -38,8 +40,23 @@ class AddEmployeeFragment : Fragment() {
         val app = requireActivity().application as InventoryApplication
         employeeRepository = app.employeeRepository
 
+        setupDepartmentDropdown()
         loadEmployeeIfEditing()
         setupButtons()
+    }
+
+    private fun setupDepartmentDropdown() {
+        lifecycleScope.launch {
+            val departments = employeeRepository.getAllDepartments().ifEmpty {
+                listOf("IT / Helpdesk", "Marketing", "Sprzedaż", "HR", "Zarząd")
+            }
+            val adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_list_item_1,
+                departments
+            )
+            (binding.departmentInput as? AutoCompleteTextView)?.setAdapter(adapter)
+        }
     }
 
     private fun loadEmployeeIfEditing() {
@@ -52,7 +69,9 @@ class AddEmployeeFragment : Fragment() {
                     binding.apply {
                         firstNameInput.setText(employee.firstName)
                         lastNameInput.setText(employee.lastName)
-                        departmentInput.setText(employee.department ?: "")
+                        val department = employee.department ?: ""
+                        (departmentInput as? AutoCompleteTextView)?.setText(department, false)
+                            ?: departmentInput.setText(department)
                         positionInput.setText(employee.position ?: "")
                         emailInput.setText(employee.email ?: "")
                         phoneInput.setText(employee.phone ?: "")
@@ -64,6 +83,9 @@ class AddEmployeeFragment : Fragment() {
     }
 
     private fun setupButtons() {
+        binding.backButton.setOnClickListener {
+            findNavController().navigateUp()
+        }
         binding.cancelButton.setOnClickListener {
             findNavController().navigateUp()
         }
