@@ -1,0 +1,9 @@
+Proprietary License - Szymon Przybysz
+
+Copyright (c) 2026 Szymon Przybysz. All rights reserved.
+
+This file contains the license terms for this build. Redistribution or public
+distribution is not permitted without explicit written permission from the
+copyright owner.
+
+Contact for licensing inquiries: szymon.przybysz2003@gmail.com
