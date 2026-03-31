@@ -30,11 +30,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Set up Android SDK
-        uses: r0adkll/setup-android@v2
-        with:
-          api-levels: 33
-          build-tools: 33.0.2
+      - name: Check / prepare Android SDK (best-effort)
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          if command -v sdkmanager >/dev/null 2>&1; then
+            echo "sdkmanager found: $(command -v sdkmanager)"
+            yes | sdkmanager --licenses || true
+            sdkmanager "platforms;android-33" "build-tools;33.0.2" || true
+          else
+            echo "sdkmanager not found on runner — relying on preinstalled SDK"
+          fi
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -59,7 +65,7 @@ jobs:
         run: ls -la app/build/outputs/apk || true
 
       - name: Upload APK as artifact (Actions)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: app-apk
           path: app/build/outputs/apk/**/**/*.apk
