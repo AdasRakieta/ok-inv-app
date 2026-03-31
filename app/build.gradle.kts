@@ -6,6 +6,16 @@ plugins {
     id("androidx.navigation.safeargs.kotlin")
 }
 
+import java.util.Properties
+
+// Load keystore properties from app/keystore.properties when present (CI uses this)
+val keystorePropertiesFile = file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        load(keystorePropertiesFile.inputStream())
+    }
+}
+
 android {
     compileSdkVersion(31)
 
@@ -18,13 +28,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // Load keystore properties from app/keystore.properties when present (CI uses this)
-    val keystorePropertiesFile = file("keystore.properties")
-    val keystoreProperties = java.util.Properties().apply {
-        if (keystorePropertiesFile.exists()) {
-            load(keystorePropertiesFile.inputStream())
-        }
-    }
+    
 
     signingConfigs {
         create("release") {

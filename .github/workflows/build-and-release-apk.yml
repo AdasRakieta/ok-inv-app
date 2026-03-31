@@ -83,8 +83,34 @@ jobs:
           set -o pipefail
           ./gradlew :app:assembleRelease --no-daemon --stacktrace | tee build.log
 
+      - name: Get versionName
+        id: get_version
+        run: |
+          # extract versionName from app/build.gradle.kts (fallback to timestamp if not found)
+          set -e
+          if [ -f app/build.gradle.kts ]; then
+            VERSION_NAME=$(sed -n 's/.*versionName *= *"\(.*\)".*/\1/p' app/build.gradle.kts | head -n1 || true
+          fi
+          if [ -z "${VERSION_NAME}" ]; then
+            VERSION_NAME="${GITHUB_RUN_ID}-${GITHUB_SHA::7}"
+          fi
+          echo "version=$VERSION_NAME" >> $GITHUB_OUTPUT
+
+      - name: Prepare versioned APK for release
+        run: |
+          set -e
+          mkdir -p release-apks
+          # Prefer the release APK location; otherwise try common fallback paths
+          cp app/build/outputs/apk/release/*.apk release-apks/ok-inv-app-v${{ steps.get_version.outputs.version }}.apk 2>/dev/null || \
+            cp app/build/outputs/apk/*/*/*.apk release-apks/ok-inv-app-v${{ steps.get_version.outputs.version }}.apk 2>/dev/null || true
+          ls -la release-apks || true
+
       - name: List built APKs
-        run: ls -la app/build/outputs/apk || true
+        run: |
+          echo '--- raw apk outputs ---'
+          ls -la app/build/outputs/apk || true
+          echo '--- release-apks (versioned) ---'
+          ls -la release-apks || true
 
       - name: Upload build log (always)
         if: ${{ always() }}
@@ -97,13 +123,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-apk
-          path: app/build/outputs/apk/**/**/*.apk
+          path: release-apks/**
 
-      - name: Publish Release and attach APK(s)
+      - name: Publish Release and attach APK
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: release-${{ github.sha }}
-          name: Release ${{ github.sha }}
-          files: app/build/outputs/apk/**/**/*.apk
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
+          files: release-apks/ok-inv-app-v${{ steps.get_version.outputs.version }}.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
