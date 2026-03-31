@@ -125,12 +125,84 @@ jobs:
           name: app-apk
           path: release-apks/**
 
-      - name: Publish Release and attach APK
+      - name: Publish release (create if new) and update stable 'latest' asset
         if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          name: Release v${{ steps.get_version.outputs.version }}
-          files: release-apks/ok-inv-app-v${{ steps.get_version.outputs.version }}.apk
         env:
+          REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          set -euo pipefail
+          OWNER_REPO="${REPO}"
+          VERSION_TAG="v${VERSION}"
+          VERSION_ASSET="ok-inv-app-v${VERSION}.apk"
+          LATEST_TAG="latest"
+          LATEST_ASSET="ok-inv-app-latest.apk"
+          VERSION_FILE="release-apks/${VERSION_ASSET}"
+
+          if [ ! -f "${VERSION_FILE}" ]; then
+            echo "ERROR: Version APK not found: ${VERSION_FILE}"
+            ls -la release-apks || true
+            exit 1
+          fi
+
+          command -v jq >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y jq)
+
+          api() { curl -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" "$@"; }
+
+          echo "Checking for existing release ${VERSION_TAG}"
+          resp=$(api "https://api.github.com/repos/${OWNER_REPO}/releases/tags/${VERSION_TAG}" || true)
+          release_id=$(echo "$resp" | jq -r '.id // empty')
+          upload_url=$(echo "$resp" | jq -r '.upload_url // empty' | sed -E 's/\{.*\}//')
+
+          if [ -n "${release_id}" ]; then
+            echo "Release ${VERSION_TAG} exists (id ${release_id}). Checking asset..."
+            assets_resp=$(api "https://api.github.com/repos/${OWNER_REPO}/releases/${release_id}/assets")
+            existing_asset_id=$(echo "$assets_resp" | jq -r --arg name "$VERSION_ASSET" '.[] | select(.name==$name) | .id' | head -n1 || true)
+            if [ -n "${existing_asset_id}" ]; then
+              echo "Version asset already exists (id ${existing_asset_id}), skipping upload."
+            else
+              echo "Uploading missing asset ${VERSION_ASSET} to release ${VERSION_TAG}"
+              if [ -z "${upload_url}" ]; then
+                upload_url=$(api "https://api.github.com/repos/${OWNER_REPO}/releases/${release_id}" | jq -r .upload_url | sed -E 's/\{.*\}//')
+              fi
+              curl -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/vnd.android.package-archive" --data-binary @"${VERSION_FILE}" "${upload_url}?name=${VERSION_ASSET}" | jq -r '.browser_download_url' || true
+            fi
+          else
+            echo "Creating release ${VERSION_TAG}"
+            create_resp=$(curl -sS -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${OWNER_REPO}/releases" -d "{\"tag_name\":\"${VERSION_TAG}\",\"name\":\"Release ${VERSION_TAG}\",\"body\":\"Automated release for version ${VERSION}\",\"draft\":false,\"prerelease\":false}")
+            release_id=$(echo "$create_resp" | jq -r .id)
+            upload_url=$(echo "$create_resp" | jq -r .upload_url | sed -E 's/\{.*\}//')
+            if [ -z "${release_id}" ] || [ "${release_id}" = "null" ]; then
+              echo "Failed to create release: ${create_resp}"
+              exit 1
+            fi
+            echo "Uploading asset ${VERSION_ASSET}"
+            curl -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/vnd.android.package-archive" --data-binary @"${VERSION_FILE}" "${upload_url}?name=${VERSION_ASSET}" | jq -r '.browser_download_url' || true
+          fi
+
+          # Ensure 'latest' release exists and replace its APK asset with the current version
+          echo "Ensuring ${LATEST_TAG} release exists and updating ${LATEST_ASSET}"
+          resp_latest=$(api "https://api.github.com/repos/${OWNER_REPO}/releases/tags/${LATEST_TAG}" || true)
+          latest_id=$(echo "$resp_latest" | jq -r '.id // empty')
+          latest_upload_url=$(echo "$resp_latest" | jq -r '.upload_url // empty' | sed -E 's/\{.*\}//')
+
+          if [ -z "${latest_id}" ]; then
+            echo "Creating '${LATEST_TAG}' release"
+            create_latest=$(curl -sS -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${OWNER_REPO}/releases" -d "{\"tag_name\":\"${LATEST_TAG}\",\"name\":\"Latest release\",\"body\":\"Always points to latest built APK\",\"draft\":false,\"prerelease\":false}")
+            latest_id=$(echo "$create_latest" | jq -r .id)
+            latest_upload_url=$(echo "$create_latest" | jq -r .upload_url | sed -E 's/\{.*\}//')
+          else
+            echo "'${LATEST_TAG}' release exists (id ${latest_id})"
+          fi
+
+          # Delete existing latest asset if present
+          assets_latest=$(api "https://api.github.com/repos/${OWNER_REPO}/releases/${latest_id}/assets")
+          existing_latest_asset_id=$(echo "$assets_latest" | jq -r --arg name "$LATEST_ASSET" '.[] | select(.name==$name) | .id' | head -n1 || true)
+          if [ -n "${existing_latest_asset_id}" ]; then
+            echo "Deleting existing latest asset id ${existing_latest_asset_id}"
+            api -X DELETE "https://api.github.com/repos/${OWNER_REPO}/releases/assets/${existing_latest_asset_id}"
+          fi
+
+          echo "Uploading latest asset ${LATEST_ASSET}"
+          curl -sS -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/vnd.android.package-archive" --data-binary @"${VERSION_FILE}" "${latest_upload_url}?name=${LATEST_ASSET}" | jq -r '.browser_download_url' || true
