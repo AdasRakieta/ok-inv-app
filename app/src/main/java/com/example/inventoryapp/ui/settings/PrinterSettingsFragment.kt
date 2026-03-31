@@ -91,8 +91,7 @@ class PrinterSettingsFragment : Fragment() {
             viewModel.clearConfiguration()
             Toast.makeText(context, "Configuration cleared", Toast.LENGTH_SHORT).show()
         }
-
-        binding.toolbar.setNavigationOnClickListener {
+        binding.backButton.setOnClickListener {
             findNavController().navigateUp()
         }
     }
@@ -147,12 +146,12 @@ class PrinterSettingsFragment : Fragment() {
 
         // Update status
         if (config.isConfigured) {
-            binding.textViewStatus.text = "Printer configured"
+            binding.textViewStatus.text = "Gotowa do pracy"
             binding.textViewStatus.setTextColor(
                 resources.getColor(android.R.color.holo_green_dark, null)
             )
         } else {
-            binding.textViewStatus.text = "Not configured"
+            binding.textViewStatus.text = "Brak konfiguracji"
             binding.textViewStatus.setTextColor(
                 resources.getColor(android.R.color.holo_orange_dark, null)
             )

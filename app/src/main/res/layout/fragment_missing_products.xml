@@ -18,6 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:title="Missing Products"
         app:titleTextColor="@color/text_primary"
+        app:navigationIcon="@drawable/ic_back_custom"
         app:navigationIconTint="@color/text_primary" />
 
     <!-- Loading Indicator -->

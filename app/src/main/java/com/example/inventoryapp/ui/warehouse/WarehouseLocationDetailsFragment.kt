@@ -76,6 +76,9 @@ class WarehouseLocationDetailsFragment : Fragment() {
     }
 
     private fun setupActions() {
+        binding.backButton.setOnClickListener {
+            findNavController().navigateUp()
+        }
         binding.assignProductButton.setOnClickListener {
             showAssignProductDialog()
         }

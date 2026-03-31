@@ -2,6 +2,7 @@ package com.example.inventoryapp.ui.products
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,9 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -19,6 +23,7 @@ import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.databinding.FragmentProductDetailsBinding
 import com.example.inventoryapp.databinding.BottomSheetEditSerialBinding
 import com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding
+import com.example.inventoryapp.R
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -29,6 +34,7 @@ import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.utils.BrotherPrinterHelper
 import com.example.inventoryapp.utils.PrinterPreferences
 import com.google.android.material.snackbar.Snackbar
+import com.example.inventoryapp.data.local.entities.ProductStatus
 
 class ProductDetailsFragment : Fragment() {
 
@@ -116,6 +122,8 @@ class ProductDetailsFragment : Fragment() {
 
                             buildMovementHistory(it)
 
+                            updateStatusBadge(it.status)
+
                             // Serial number visibility
                             if (it.serialNumber.isNotBlank()) {
                                 serialNumberAssignedLayout.visibility = View.VISIBLE
@@ -140,10 +148,57 @@ class ProductDetailsFragment : Fragment() {
     }
 
     private fun setupActions() {
+        binding.backButton.setOnClickListener {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+        }
+        binding.moreButton.setOnClickListener { showOptionsMenu(it) }
         binding.editSerialButton.setOnClickListener { promptEditSerial() }
-        binding.editProductButton.setOnClickListener { navigateToEditForm() }
-        binding.deleteProductButton.setOnClickListener { confirmDeleteProduct() }
         binding.fabPrintLabel.setOnClickListener { printBarcodeLabel() }
+    }
+
+    private fun showOptionsMenu(anchor: View) {
+        val popup = PopupMenu(requireContext(), anchor)
+        popup.menuInflater.inflate(R.menu.menu_product_details, popup.menu)
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_edit -> {
+                    navigateToEditForm()
+                    true
+                }
+                R.id.action_delete -> {
+                    confirmDeleteProduct()
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    private fun updateStatusBadge(status: ProductStatus) {
+        val color = ContextCompat.getColor(requireContext(), statusColor(status))
+        binding.statusBadgeText.text = statusLabel(status)
+        binding.statusBadgeText.setTextColor(color)
+        binding.statusDot.backgroundTintList = ColorStateList.valueOf(color)
+        binding.statusBadgeCard.setCardBackgroundColor(ColorUtils.setAlphaComponent(color, 26))
+    }
+
+    private fun statusLabel(status: ProductStatus): String = when (status) {
+        ProductStatus.IN_STOCK -> "Magazyn"
+        ProductStatus.ASSIGNED -> "Przypisane"
+        ProductStatus.UNASSIGNED -> "Brak przypisania"
+        ProductStatus.IN_REPAIR -> "Serwis"
+        ProductStatus.RETIRED -> "Wycofane"
+        ProductStatus.LOST -> "Zaginione"
+    }
+
+    private fun statusColor(status: ProductStatus): Int = when (status) {
+        ProductStatus.IN_STOCK -> R.color.success
+        ProductStatus.ASSIGNED -> R.color.info
+        ProductStatus.UNASSIGNED -> R.color.warning
+        ProductStatus.IN_REPAIR -> R.color.warning
+        ProductStatus.RETIRED -> R.color.text_tertiary
+        ProductStatus.LOST -> R.color.error
     }
 
     private fun promptEditSerial() {

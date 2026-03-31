@@ -86,5 +86,13 @@ lint-results_files/
  desktop.ini
  Thumbs.db
  *.tmp
+ 
+# Keystore artifacts (generated / temporary)
+# Keep any local keystores and generated keystore files out of source control
+keystore.base64.txt
+app/keystore.properties
+app/keystore.jks
+inventory-release.keystore
+keys.txt
 
 /tools/*

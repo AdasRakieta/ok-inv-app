@@ -9,7 +9,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:hint="Serial Number">
+        android:hint="Serial Number"
+        style="@style/Widget.App.FormInput">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/serialNumberEdit"
@@ -24,7 +25,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:hint="Product Name (optional)">
+        android:hint="Product Name (optional)"
+        style="@style/Widget.App.FormInput">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/productNameEdit"

@@ -5,6 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -20,6 +22,7 @@ class AddEmployeeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var employeeRepository: com.example.inventoryapp.data.repository.EmployeeRepository
+    private lateinit var departmentRepository: com.example.inventoryapp.data.repository.DepartmentRepository
     private val args: AddEmployeeFragmentArgs by navArgs()
     private var existingEmployee: EmployeeEntity? = null
 
@@ -37,22 +40,49 @@ class AddEmployeeFragment : Fragment() {
 
         val app = requireActivity().application as InventoryApplication
         employeeRepository = app.employeeRepository
+        departmentRepository = app.departmentRepository
 
+        setupDepartmentDropdown()
+        // Listen for changes from departments bottom sheet and refresh dropdown
+        parentFragmentManager.setFragmentResultListener("departments_changed", viewLifecycleOwner) { _, _ ->
+            setupDepartmentDropdown()
+        }
         loadEmployeeIfEditing()
         setupButtons()
+        binding.manageDepartmentsLink.setOnClickListener {
+            // Show bottom sheet to manage departments (overlay, swipe down to dismiss)
+            val sheet = DepartmentsBottomSheetFragment()
+            sheet.show(parentFragmentManager, "departments_sheet")
+        }
+    }
+
+    private fun setupDepartmentDropdown() {
+        lifecycleScope.launch {
+            val departments = departmentRepository.getAllNames().ifEmpty {
+                listOf("IT / Helpdesk", "Marketing", "Sprzedaż", "HR", "Zarząd")
+            }
+            val adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_list_item_1,
+                departments
+            )
+            (binding.departmentInput as? AutoCompleteTextView)?.setAdapter(adapter)
+        }
     }
 
     private fun loadEmployeeIfEditing() {
         if (args.employeeId > 0) {
             binding.headerText.text = "Edytuj pracownika"
-            
+
             lifecycleScope.launch {
                 existingEmployee = employeeRepository.getEmployeeById(args.employeeId)
                 existingEmployee?.let { employee ->
                     binding.apply {
                         firstNameInput.setText(employee.firstName)
                         lastNameInput.setText(employee.lastName)
-                        departmentInput.setText(employee.department ?: "")
+                        val department = employee.department ?: ""
+                        (departmentInput as? AutoCompleteTextView)?.setText(department, false)
+                            ?: departmentInput.setText(department)
                         positionInput.setText(employee.position ?: "")
                         emailInput.setText(employee.email ?: "")
                         phoneInput.setText(employee.phone ?: "")
@@ -60,10 +90,15 @@ class AddEmployeeFragment : Fragment() {
                     }
                 }
             }
+        } else {
+            binding.headerText.text = "Dodaj pracownika"
         }
     }
 
     private fun setupButtons() {
+        binding.backButton.setOnClickListener {
+            findNavController().navigateUp()
+        }
         binding.cancelButton.setOnClickListener {
             findNavController().navigateUp()
         }

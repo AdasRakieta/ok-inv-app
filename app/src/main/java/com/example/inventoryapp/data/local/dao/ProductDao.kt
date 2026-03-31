@@ -43,10 +43,10 @@ interface ProductDao {
     @Query("SELECT COUNT(*) FROM products WHERE status = :status")
     fun getProductCountByStatus(status: ProductStatus): Flow<Int>
     
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertProduct(product: ProductEntity): Long
     
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertProducts(products: List<ProductEntity>): List<Long>
     
     @Update

@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F4F7">
+    android:background="@color/home_background">
 
     <!-- Header -->
     <TextView
@@ -12,11 +12,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Produkty"
-        android:textSize="24sp"
+        android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="#111827"
-        android:padding="16dp"
-        android:background="#F2F4F7"
+        android:textColor="@color/text_primary"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -26,13 +28,13 @@
         android:id="@+id/searchCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="8dp"
-        app:cardElevation="2dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="6dp"
+        app:cardElevation="1dp"
         app:cardCornerRadius="12dp"
-        app:cardBackgroundColor="#FFFFFF"
-        app:strokeColor="#E5E7EB"
+        app:cardBackgroundColor="@color/home_card_background"
+        app:strokeColor="@color/home_card_stroke"
         app:strokeWidth="1dp"
         app:layout_constraintTop_toBottomOf="@id/productsToolbar"
         app:layout_constraintStart_toStartOf="parent"
@@ -42,15 +44,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="14dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
             android:gravity="center_vertical">
 
             <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:src="@android:drawable/ic_menu_search"
                 android:contentDescription="Search"
-                app:tint="#6B7280" />
+                app:tint="@color/text_tertiary" />
 
             <EditText
                 android:id="@+id/searchEditText"
@@ -59,35 +64,43 @@
                 android:layout_weight="1"
                 android:layout_marginStart="12dp"
                 android:background="@android:color/transparent"
-                android:hint="Szukaj po nazwie lub numerze"
+                android:hint="Szukaj po nazwie lub numerze..."
                 android:inputType="text"
                 android:maxLines="1"
-                android:textSize="16sp" />
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_tertiary"
+                android:textSize="14sp" />
 
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Filter and Sort Bar -->
-    <LinearLayout
+    <HorizontalScrollView
         android:id="@+id/filterSortBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="12dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/searchCard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/statsButton"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="12dp"
             android:padding="0dp"
             android:minHeight="0dp"
             android:insetTop="0dp"
@@ -96,53 +109,57 @@
             app:icon="@android:drawable/ic_menu_info_details"
             app:iconPadding="0dp"
             app:iconGravity="textStart"
-            app:strokeColor="#E5E7EB"
+            app:iconTint="@color/home_primary"
+            app:backgroundTint="@color/home_card_background"
+            app:strokeColor="@color/home_card_stroke"
             app:strokeWidth="1dp"
-            app:cornerRadius="8dp" />
+            app:cornerRadius="10dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/filterButton"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="40dp"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="12dp"
             android:minHeight="0dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:text="Kategoria"
-            android:textSize="14sp"
+            android:textSize="12sp"
             android:maxLines="1"
             android:textAllCaps="false"
-            app:strokeColor="#E5E7EB"
+            app:backgroundTint="@color/home_card_background"
+            app:strokeColor="@color/home_card_stroke"
             app:strokeWidth="1dp"
-            app:cornerRadius="8dp"
-            android:textColor="#0F172A" />
+            app:cornerRadius="10dp"
+            android:textColor="@color/text_primary" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/statusFilterButton"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="40dp"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="12dp"
             android:minHeight="0dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:text="Status"
-            android:textSize="14sp"
+            android:textSize="12sp"
             android:maxLines="1"
             android:textAllCaps="false"
-            app:strokeColor="#E5E7EB"
+            app:backgroundTint="@color/home_card_background"
+            app:strokeColor="@color/home_card_stroke"
             app:strokeWidth="1dp"
-            app:cornerRadius="8dp"
-            android:textColor="#0F172A" />
+            app:cornerRadius="10dp"
+            android:textColor="@color/text_primary" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/sortButton"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:padding="0dp"
             android:minHeight="0dp"
             android:insetTop="0dp"
@@ -151,11 +168,15 @@
             app:icon="@android:drawable/ic_menu_sort_by_size"
             app:iconPadding="0dp"
             app:iconGravity="textStart"
-            app:strokeColor="#E5E7EB"
+            app:iconTint="@color/home_primary"
+            app:backgroundTint="@color/home_card_background"
+            app:strokeColor="@color/home_card_stroke"
             app:strokeWidth="1dp"
-            app:cornerRadius="8dp" />
+            app:cornerRadius="10dp" />
 
-    </LinearLayout>
+        </LinearLayout>
+
+    </HorizontalScrollView>
 
     <!-- Empty State -->
     <LinearLayout
@@ -210,7 +231,10 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
-        android:padding="12dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp"
         android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/filterSortBar"
         app:layout_constraintBottom_toTopOf="@id/selectionPanel"
@@ -316,7 +340,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Masowe dodawanie według wzoru"
-                android:textColor="@color/white"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_marginEnd="12dp" />
@@ -361,7 +385,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Dodaj jeden produkt"
-                android:textColor="@color/white"
+                android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_marginEnd="12dp" />

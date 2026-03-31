@@ -19,6 +19,7 @@ import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.databinding.FragmentAddProductBinding
 import com.example.inventoryapp.ui.warehouse.LocationStorage
 import kotlinx.coroutines.flow.firstOrNull
+import androidx.core.widget.addTextChangedListener
 import kotlinx.coroutines.launch
 
 class AddProductFragment : Fragment() {
@@ -40,6 +41,7 @@ class AddProductFragment : Fragment() {
     private val locationStorage by lazy { LocationStorage(requireContext()) }
 
     private var categories: List<CategoryEntity> = emptyList()
+    private var leafCategories: List<CategoryEntity> = emptyList()
     private var employees: List<EmployeeEntity> = emptyList()
     private var currentProduct: ProductEntity? = null
     private var selectedEmployeeId: Long? = null
@@ -61,6 +63,10 @@ class AddProductFragment : Fragment() {
             findNavController().navigateUp()
         }
 
+        binding.backButton.setOnClickListener {
+            findNavController().navigateUp()
+        }
+
         binding.saveButton.setOnClickListener {
             saveProduct()
         }
@@ -70,20 +76,31 @@ class AddProductFragment : Fragment() {
         setupEmployeesDropdown()
         setupWarehouseLocationsDropdown()
         loadProductIfEditing()
+
+        // Clear layout errors when user edits inputs so error icon/message is removed
+        binding.serialNumberInput.addTextChangedListener { _ -> binding.serialNumberLayout.error = null }
+        binding.productIdInput.addTextChangedListener { _ -> binding.productIdLayout.error = null }
+        binding.warehouseLocationInput.addTextChangedListener { _ -> binding.warehouseLocationLayout.error = null }
     }
 
     private fun setupCategories() {
         lifecycleScope.launch {
             categoryRepository.getAllCategories().collect { list ->
                 categories = list
-                val names = list.map { it.name }
+                // Leaf categories are those that are not parents of any other category
+                leafCategories = list.filter { candidate -> list.none { it.parentId == candidate.id } }
+                val names = leafCategories.map { it.name }
                 val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, names)
                 binding.categoryInput.setAdapter(adapter)
+
                 val targetCategoryId = currentProduct?.categoryId
-                val prefill = names.firstOrNull { name ->
-                    val match = categories.firstOrNull { it.name == name }
-                    match?.id == targetCategoryId
-                }
+                // Try to prefill with the exact leaf category; if product has a parent category selected,
+                // fallback to first child of that parent so the input contains a selectable leaf value.
+                val prefill = when {
+                    targetCategoryId == null -> null
+                    else -> leafCategories.firstOrNull { it.id == targetCategoryId }?.name
+                } ?: categories.firstOrNull { it.parentId == targetCategoryId }?.name
+
                 when {
                     prefill != null -> binding.categoryInput.setText(prefill, false)
                     binding.categoryInput.text.isNullOrEmpty() && names.isNotEmpty() -> binding.categoryInput.setText(names.first(), false)
@@ -142,14 +159,14 @@ class AddProductFragment : Fragment() {
 
     private fun toggleEmployeeField() {
         val showEmployee = selectedStatus == ProductStatus.ASSIGNED
-        binding.assignedEmployeeLayout.visibility = if (showEmployee) View.VISIBLE else View.GONE
+        binding.assignedEmployeeContainer.visibility = if (showEmployee) View.VISIBLE else View.GONE
         if (!showEmployee) {
             selectedEmployeeId = null
             binding.assignedEmployeeInput.setText("")
         }
         
         val showLocation = selectedStatus == ProductStatus.IN_STOCK
-        binding.warehouseLocationLayout.visibility = if (showLocation) View.VISIBLE else View.GONE
+        binding.warehouseLocationContainer.visibility = if (showLocation) View.VISIBLE else View.GONE
         if (!showLocation) {
             binding.warehouseLocationInput.setText("")
         }
@@ -217,7 +234,7 @@ class AddProductFragment : Fragment() {
         val customId = binding.productIdInput.text.toString().trim().ifEmpty { null }
         val serialNumber = binding.serialNumberInput.text.toString().trim()
         val categoryName = binding.categoryInput.text.toString().trim()
-        val categoryId = categories.firstOrNull { it.name == categoryName }?.id
+        val categoryId = leafCategories.firstOrNull { it.name == categoryName }?.id
         val manufacturer = binding.manufacturerInput.text.toString().trim().ifEmpty { null }
         val model = binding.modelInput.text.toString().trim().ifEmpty { null }
         val description = binding.descriptionInput.text.toString().trim().ifEmpty { null }
@@ -246,7 +263,7 @@ class AddProductFragment : Fragment() {
 
         if (selectedStatus == ProductStatus.IN_STOCK && warehouseLocation.isNullOrBlank()) {
             Toast.makeText(requireContext(), "Wybierz lokalizację dla statusu Magazyn", Toast.LENGTH_SHORT).show()
-            binding.warehouseLocationInput.error = "Wymagana lokalizacja"
+            binding.warehouseLocationLayout.error = "Wymagana lokalizacja"
             return
         }
         
@@ -355,13 +372,13 @@ class AddProductFragment : Fragment() {
                 findNavController().navigateUp()
             } catch (e: android.database.sqlite.SQLiteConstraintException) {
                 // Check if it's a customId conflict
-                if (e.message?.contains("customId") == true) {
-                    binding.productIdInput.error = "To ID jest już w użyciu"
-                } else if (e.message?.contains("serialNumber") == true) {
-                    binding.serialNumberInput.error = "Ten numer seryjny już istnieje"
-                } else {
-                    Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+                    if (e.message?.contains("customId") == true) {
+                        binding.productIdLayout.error = "To ID jest już w użyciu"
+                    } else if (e.message?.contains("serialNumber") == true) {
+                        binding.serialNumberLayout.error = "Ten numer seryjny już istnieje"
+                    } else {
+                        Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
             }

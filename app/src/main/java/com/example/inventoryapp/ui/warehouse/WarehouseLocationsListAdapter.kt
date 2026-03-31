@@ -2,6 +2,7 @@ package com.example.inventoryapp.ui.warehouse
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -12,7 +13,9 @@ data class WarehouseLocationCard(
     val name: String,
     val productCount: Int,
     val categories: String,
-    val description: String = ""
+    val description: String = "",
+    val colorHex: String = "#1261FF",
+    val progressPercent: Int = 0
 )
 
 class WarehouseLocationsListAdapter(
@@ -81,21 +84,24 @@ class WarehouseLocationsListAdapter(
 
         fun bind(location: WarehouseLocationCard) {
             binding.locationName.text = location.name
-            binding.productCount.text = "${location.productCount} szt."
-            binding.locationCategories.text = location.categories
+            binding.locationCount.text = location.productCount.toString()
             binding.locationDescription.text = location.description.takeIf { it.isNotEmpty() } ?: "Brak opisu"
+            binding.locationIcon.text = if (location.categories.isNotBlank()) location.categories.split(" ").first() else "🏬"
+
+            binding.locationCheckbox.isVisible = selectionMode
+            binding.locationCheckbox.isChecked = selectedItems.contains(location.name)
 
             binding.locationCheckbox.isVisible = selectionMode
             binding.locationCheckbox.isChecked = selectedItems.contains(location.name)
 
             // Set product count color and background
-            val color = when {
-                location.productCount < 5 -> android.graphics.Color.parseColor("#EF4444") // Red
-                location.productCount < 10 -> android.graphics.Color.parseColor("#F59E0B") // Orange
-                else -> android.graphics.Color.parseColor("#10B981") // Green
-            }
-            binding.productCount.setTextColor(android.graphics.Color.WHITE)
-            binding.productCount.setBackgroundColor(color)
+            val color = android.graphics.Color.parseColor(location.colorHex)
+            binding.locationAccent.setBackgroundColor(color)
+            binding.locationProgress.progress = location.progressPercent
+            binding.locationProgress.progressTintList = android.content.res.ColorStateList.valueOf(color)
+            binding.locationIconContainer.background?.setTint(
+                ColorUtils.setAlphaComponent(color, 32)
+            )
 
             // Click listener
             binding.root.setOnClickListener {

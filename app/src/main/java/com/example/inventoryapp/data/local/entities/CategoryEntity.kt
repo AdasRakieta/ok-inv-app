@@ -6,7 +6,7 @@ import androidx.room.Index
 
 @Entity(
     tableName = "categories",
-    indices = [Index(value = ["name"], unique = true)]
+    indices = [Index(value = ["name"], unique = true), Index(value = ["parentId"]) ]
 )
 data class CategoryEntity(
     @PrimaryKey(autoGenerate = true)
@@ -16,6 +16,7 @@ data class CategoryEntity(
     val description: String? = null,
     val color: String? = null, // Hex color for UI
     val icon: String? = null, // Icon name or emoji
-    
+    val parentId: Long? = null,
+
     val createdAt: Long = System.currentTimeMillis()
 )

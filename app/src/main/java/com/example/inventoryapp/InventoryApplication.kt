@@ -2,6 +2,9 @@ package com.example.inventoryapp
 
 import android.app.Application
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import androidx.room.Room
 import com.example.inventoryapp.data.local.database.AppDatabase
 import com.example.inventoryapp.data.repository.*
@@ -26,6 +29,8 @@ class InventoryApplication : Application() {
 
     // Employee repository
     val employeeRepository by lazy { EmployeeRepository(database.employeeDao()) }
+    // Department repository
+    val departmentRepository by lazy { com.example.inventoryapp.data.repository.DepartmentRepository(database.departmentDao()) }
     
     // Product repositories
     val productRepository by lazy { ProductRepository(database.productDao()) }
@@ -45,6 +50,10 @@ class InventoryApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         
-        // No automatic data seeding on install.
+        CoroutineScope(Dispatchers.IO).launch {
+            categoryRepository.initializeDefaultCategories()
+            // Initialize default departments if none exist
+            departmentRepository.initializeDefaultDepartments(listOf("IT / Helpdesk", "Marketing", "Sprzedaż", "HR", "Zarząd"))
+        }
     }
 }

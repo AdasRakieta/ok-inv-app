@@ -4,384 +4,689 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F9FAFB">
+    android:background="@color/home_background">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/primary"
-            app:title="Printer Settings"
-            app:titleTextColor="@color/surface"
-            app:navigationIcon="@drawable/ic_arrow_back" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:fillViewport="true">
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:gravity="center_vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="12dp">
 
-            <!-- Status Card -->
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.App.Card"
-                android:layout_width="match_parent"
+            <ImageButton
+                android:id="@+id/backButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_round_button_light"
+                android:contentDescription="Wstecz"
+                android:padding="8dp"
+                android:src="@drawable/ic_back_custom"
+                android:tint="@color/text_secondary"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeColor="#E5E7EB"
-                app:strokeWidth="1dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/textViewStatus"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Not configured"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@android:color/holo_orange_dark"
-                        android:gravity="center" />
-
-                    <ProgressBar
-                        android:id="@+id/progressBar"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Connection Method Card -->
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.App.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeColor="#E5E7EB"
-                app:strokeWidth="1dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Connection Method"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="12dp" />
-
-                    <RadioGroup
-                        android:id="@+id/radioGroupConnectionMethod"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                        <RadioButton
-                            android:id="@+id/radioWifi"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="WiFi"
-                            android:textColor="@color/text_primary"
-                            android:checked="true"
-                            android:padding="8dp" />
-
-                        <RadioButton
-                            android:id="@+id/radioBluetooth"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Bluetooth"
-                            android:textColor="@color/text_primary"
-                            android:padding="8dp" />
-
-                        <RadioButton
-                            android:id="@+id/radioWirelessDirect"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Wireless Direct"
-                            android:textColor="@color/text_primary"
-                            android:padding="8dp" />
-
-                    </RadioGroup>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- WiFi Settings Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/layoutWifiSettings"
-                style="@style/Widget.App.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeColor="#E5E7EB"
-                app:strokeWidth="1dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="WiFi Configuration"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="12dp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:hint="IP Address"
-                        app:boxBackgroundMode="outline">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editTextIpAddress"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textNoSuggestions"
-                            android:text="192.168.1.100" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:hint="Port"
-                        app:boxBackgroundMode="outline">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/editTextPort"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:text="9100" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <Button
-                        android:id="@+id/buttonScanNetwork"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Scan Network"
-                        android:layout_marginTop="8dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-                    <TextView
-                        android:id="@+id/textViewScanStatus"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Status..."
-                        android:textSize="14sp"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone" />
-
-                    <TextView
-                        android:id="@+id/textViewNearbyPrinters"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Found printers..."
-                        android:textSize="12sp"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone"
-                        android:fontFamily="monospace" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Bluetooth Settings Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/layoutBluetoothSettings"
-                style="@style/Widget.App.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeColor="#E5E7EB"
-                app:strokeWidth="1dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Bluetooth (BEZ PAROWANIA!)"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="12dp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="⚡ NOWOŚĆ: Nie wymaga parowania!"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/success"
-                        android:layout_marginBottom="8dp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="1. Włącz Bluetooth na urządzeniu\n2. Znajdź adres MAC drukarki (kod QR lub Menu → Network → Bluetooth)\n3. Wprowadź adres MAC poniżej\n4. Gotowe! Drukarka połączy się automatycznie"
-                        android:textSize="13sp"
-                        android:textColor="@color/text_primary"
-                        android:lineSpacingMultiplier="1.3"
-                        android:layout_marginBottom="16dp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/bluetoothMacLayout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Adres MAC Bluetooth"
-                        app:helperText="Np. A4:34:F1:7D:4A:B8"
-                        app:helperTextTextColor="@color/text_secondary"
-                        app:boxStrokeColor="@color/primary"
-                        app:hintTextColor="@color/primary"
-                        android:layout_marginBottom="8dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/bluetoothMacInput"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="text"
-                            android:textAllCaps="true"
-                            android:digits="0123456789ABCDEFabcdef:-"
-                            android:maxLength="17"
-                            android:textColor="@color/text_primary"
-                            android:fontFamily="monospace" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Label Size Card -->
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.App.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeColor="#E5E7EB"
-                app:strokeWidth="1dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Label Size"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="12dp" />
-
-                    <Spinner
-                        android:id="@+id/spinnerLabelSize"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="12dp"
-                        android:background="@android:drawable/edit_text" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Actions Card -->
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.App.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="#FFFFFF"
-                app:strokeColor="#E5E7EB"
-                app:strokeWidth="1dp"
-                app:cardElevation="2dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <Button
-                        android:id="@+id/buttonTestPrint"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Test Print"
-                        android:layout_marginBottom="8dp"
-                        style="@style/Widget.MaterialComponents.Button" />
-
-                    <Button
-                        android:id="@+id/buttonSave"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Save Configuration"
-                        android:layout_marginBottom="8dp"
-                        style="@style/Widget.MaterialComponents.Button" />
-
-                    <Button
-                        android:id="@+id/buttonClear"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Clear Configuration"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
+                android:layout_marginStart="12dp"
+                android:text="Ustawienia drukarki"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
-    </ScrollView>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="180dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/home_card_background"
+                    app:strokeColor="@color/home_card_stroke"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/success" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <FrameLayout
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_icon_circle"
+                                    android:backgroundTint="#E7F7EE">
+
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_gravity="center"
+                                        android:contentDescription="Status"
+                                        android:src="@drawable/ic_check_circle"
+                                        android:tint="@color/success" />
+
+                                </FrameLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="12dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Status konfiguracji"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold"
+                                        android:letterSpacing="0.08" />
+
+                                    <TextView
+                                        android:id="@+id/textViewStatus"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Gotowa do pracy"
+                                        android:textColor="@color/text_primary"
+                                        android:textSize="18sp"
+                                        android:textStyle="bold"
+                                        android:layout_marginTop="2dp" />
+
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="52dp"
+                                android:layout_marginTop="6dp"
+                                android:text="Drukarka jest poprawnie skonfigurowana i polaczona."
+                                android:textColor="@color/text_secondary"
+                                android:textSize="12sp" />
+
+                            <ProgressBar
+                                android:id="@+id/progressBar"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="52dp"
+                                android:layout_marginTop="8dp"
+                                android:visibility="gone" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/home_card_background"
+                    app:strokeColor="@color/home_card_stroke"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/warning" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="12dp">
+
+                                <FrameLayout
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_icon_circle"
+                                    android:backgroundTint="#FFF4E5">
+
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_gravity="center"
+                                        android:contentDescription="Polaczenie"
+                                        android:src="@drawable/ic_wifi"
+                                        android:tint="@color/warning" />
+
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="12dp"
+                                    android:text="Metoda polaczenia"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:letterSpacing="0.08" />
+
+                            </LinearLayout>
+
+                            <RadioGroup
+                                android:id="@+id/radioGroupConnectionMethod"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical">
+
+                                <com.google.android.material.radiobutton.MaterialRadioButton
+                                    android:id="@+id/radioWifi"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="10dp"
+                                    android:background="@drawable/bg_printer_option"
+                                    android:buttonTint="@color/warning"
+                                    android:checked="true"
+                                    android:drawableEnd="@drawable/ic_wifi"
+                                    android:drawablePadding="8dp"
+                                    android:drawableTint="@color/text_tertiary"
+                                    android:gravity="center_vertical"
+                                    android:padding="12dp"
+                                    android:text="Siec Wi-Fi"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
+
+                                <com.google.android.material.radiobutton.MaterialRadioButton
+                                    android:id="@+id/radioBluetooth"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="10dp"
+                                    android:background="@drawable/bg_printer_option"
+                                    android:buttonTint="@color/warning"
+                                    android:drawableEnd="@drawable/ic_bluetooth"
+                                    android:drawablePadding="8dp"
+                                    android:drawableTint="@color/text_tertiary"
+                                    android:gravity="center_vertical"
+                                    android:padding="12dp"
+                                    android:text="Bluetooth"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
+
+                                <com.google.android.material.radiobutton.MaterialRadioButton
+                                    android:id="@+id/radioWirelessDirect"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/bg_printer_option"
+                                    android:buttonTint="@color/warning"
+                                    android:drawableEnd="@drawable/ic_ethernet"
+                                    android:drawablePadding="8dp"
+                                    android:drawableTint="@color/text_tertiary"
+                                    android:gravity="center_vertical"
+                                    android:padding="12dp"
+                                    android:text="Wireless Direct"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
+
+                            </RadioGroup>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/layoutWifiSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/home_card_background"
+                    app:strokeColor="@color/home_card_stroke"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/home_primary" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="12dp">
+
+                                <FrameLayout
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_icon_circle"
+                                    android:backgroundTint="#E7F0FF">
+
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_gravity="center"
+                                        android:contentDescription="Dane polaczenia"
+                                        android:src="@drawable/ic_ethernet"
+                                        android:tint="@color/home_primary" />
+
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="12dp"
+                                    android:text="Dane polaczenia"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:letterSpacing="0.08" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Adres IP"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.08" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:layout_marginBottom="12dp"
+                                app:boxBackgroundMode="filled"
+                                app:boxBackgroundColor="@color/background_secondary"
+                                app:boxStrokeColor="@color/home_card_stroke"
+                                app:hintTextColor="@color/text_tertiary">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextIpAddress"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="textNoSuggestions"
+                                    android:text="192.168.1.105"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="14sp"
+                                    android:fontFamily="monospace" />
+
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Port"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.08" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:layout_marginBottom="12dp"
+                                app:boxBackgroundMode="filled"
+                                app:boxBackgroundColor="@color/background_secondary"
+                                app:boxStrokeColor="@color/home_card_stroke"
+                                app:hintTextColor="@color/text_tertiary">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/editTextPort"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="number"
+                                    android:text="9100"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="14sp"
+                                    android:fontFamily="monospace" />
+
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <Button
+                                android:id="@+id/buttonScanNetwork"
+                                android:layout_width="match_parent"
+                                android:layout_height="44dp"
+                                android:text="Skanuj siec"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                            <TextView
+                                android:id="@+id/textViewScanStatus"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Status..."
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginTop="8dp"
+                                android:visibility="gone" />
+
+                            <TextView
+                                android:id="@+id/textViewNearbyPrinters"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Found printers..."
+                                android:textSize="11sp"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginTop="6dp"
+                                android:visibility="gone"
+                                android:fontFamily="monospace" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/layoutBluetoothSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/home_card_background"
+                    app:strokeColor="@color/home_card_stroke"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/warning" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginBottom="12dp">
+
+                                <FrameLayout
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:background="@drawable/bg_icon_circle"
+                                    android:backgroundTint="#FFF4E5">
+
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_gravity="center"
+                                        android:contentDescription="Bluetooth"
+                                        android:src="@drawable/ic_bluetooth"
+                                        android:tint="@color/warning" />
+
+                                </FrameLayout>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="12dp"
+                                    android:text="Bluetooth (bez parowania)"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:letterSpacing="0.08" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Nowosc: nie wymaga parowania."
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/success"
+                                android:layout_marginBottom="8dp" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="1. Wlacz Bluetooth na urzadzeniu\n2. Znajdz adres MAC drukarki (kod QR lub Menu -> Network -> Bluetooth)\n3. Wprowadz adres MAC ponizej\n4. Gotowe! Drukarka polaczy sie automatycznie"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary"
+                                android:lineSpacingMultiplier="1.3"
+                                android:layout_marginBottom="12dp" />
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/bluetoothMacLayout"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Adres MAC Bluetooth"
+                                app:helperText="Np. A4:34:F1:7D:4A:B8"
+                                app:helperTextTextColor="@color/text_secondary"
+                                app:boxStrokeColor="@color/home_primary"
+                                app:hintTextColor="@color/home_primary"
+                                android:layout_marginBottom="8dp">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/bluetoothMacInput"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="text"
+                                    android:textAllCaps="true"
+                                    android:digits="0123456789ABCDEFabcdef:-"
+                                    android:maxLength="17"
+                                    android:textColor="@color/text_primary"
+                                    android:fontFamily="monospace" />
+
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/home_card_background"
+                    app:strokeColor="@color/home_card_stroke"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/home_primary" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Wielkosc etykiety"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.08"
+                                android:layout_marginBottom="8dp" />
+
+                            <Spinner
+                                android:id="@+id/spinnerLabelSize"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:padding="12dp"
+                                android:background="@drawable/bg_printer_option" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/home_card_background"
+                    app:strokeColor="@color/home_card_stroke"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <Button
+                            android:id="@+id/buttonClear"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:text="Wyczysc konfiguracje"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+        </ScrollView>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_printer_bottom_bar"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="20dp"
+        android:elevation="6dp"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/buttonTestPrint"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="WYDRUK TESTOWY"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textColor="@color/home_primary"
+            android:backgroundTint="@color/home_card_background"
+            android:layout_marginBottom="10dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            app:icon="@drawable/ic_print"
+            app:iconPadding="8dp"
+            app:iconTint="@color/home_primary" />
+
+        <Button
+            android:id="@+id/buttonSave"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="ZAPISZ KONFIGURACJE"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/home_primary"
+            style="@style/Widget.MaterialComponents.Button"
+            app:icon="@drawable/ic_save"
+            app:iconPadding="8dp"
+            app:iconTint="@color/white" />
+
+        <View
+            android:layout_width="44dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:background="@color/home_card_stroke" />
+
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

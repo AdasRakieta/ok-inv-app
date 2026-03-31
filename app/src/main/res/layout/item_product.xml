@@ -5,24 +5,21 @@
     android:id="@+id/productCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="14dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardElevation="2dp"
-    app:cardCornerRadius="12dp"
-    app:strokeColor="#E5E7EB"
+    app:cardBackgroundColor="@color/home_card_background"
+    app:cardElevation="1dp"
+    app:cardCornerRadius="14dp"
+    app:strokeColor="@color/home_card_stroke"
     app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:background="#FFFFFF">
+        android:padding="16dp">
 
-        <!-- Product Header with actions -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -30,7 +27,6 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
-            <!-- Selection Checkbox -->
             <CheckBox
                 android:id="@+id/selectionCheckbox"
                 android:layout_width="wrap_content"
@@ -39,14 +35,21 @@
                 android:layout_marginEnd="12dp"
                 android:buttonTint="@color/primary" />
 
-            <TextView
-                android:id="@+id/categoryIcon"
+            <FrameLayout
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:text="\uD83D\uDCE6"
-                android:textSize="28sp"
-                android:gravity="center"
-                android:layout_marginEnd="12dp" />
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_product_icon_container">
+
+                <TextView
+                    android:id="@+id/categoryIcon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="📦"
+                    android:textSize="20sp"
+                    android:gravity="center" />
+
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -59,9 +62,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Product Name"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
@@ -77,8 +80,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Category"
-                        android:textSize="15sp"
-                        android:textColor="#0EA5E9"
+                        android:textSize="12sp"
+                        android:textColor="@color/home_primary"
                         android:maxLines="1"
                         android:ellipsize="end" />
 
@@ -86,8 +89,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text=" • "
-                        android:textSize="15sp"
-                        android:textColor="#9CA3AF"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_tertiary"
                         android:paddingHorizontal="4dp" />
 
                     <TextView
@@ -95,11 +98,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Magazyn"
-                        android:textSize="13sp"
+                        android:textSize="10sp"
                         android:textColor="#FFFFFF"
                         android:textStyle="bold"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="3dp"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
                         android:maxLines="1" />
 
                 </LinearLayout>
@@ -109,7 +112,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Package: Package Name"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textColor="@color/accent"
                     android:maxLines="1"
                     android:ellipsize="end"
@@ -117,19 +120,19 @@
 
             </LinearLayout>
 
-
-
         </LinearLayout>
 
-        <!-- Serial Number Badge -->
         <LinearLayout
             android:id="@+id/serialNumberContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="#F3F4F6"
-            android:padding="10dp"
+            android:background="@drawable/bg_serial_badge"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:layout_marginTop="8dp"
             android:visibility="visible">
 
@@ -137,8 +140,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="SN:"
-                android:textSize="13sp"
-                android:textColor="#374151"
+                android:textSize="11sp"
+                android:textColor="@color/text_secondary"
                 android:textStyle="bold"
                 android:layout_marginEnd="6dp" />
 
@@ -148,8 +151,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="ABC-123-XYZ"
-                android:textSize="14sp"
-                android:textColor="#059669"
+                android:textSize="12sp"
+                android:textColor="@color/success"
                 android:textStyle="bold"
                 android:fontFamily="monospace"
                 android:maxLines="1"
@@ -159,30 +162,28 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\u2713"
-                android:textSize="16sp"
-                android:textColor="#059669" />
+                android:textSize="14sp"
+                android:textColor="@color/success" />
 
         </LinearLayout>
 
-        <!-- Created Date -->
         <TextView
             android:id="@+id/productCreatedDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Created: 2025-10-31 14:30"
-            android:textSize="12sp"
-            android:textColor="#9CA3AF"
+            android:textSize="10sp"
+            android:textColor="@color/text_tertiary"
             android:layout_marginTop="8dp"
             android:visibility="gone" />
 
-        <!-- No Serial Number State -->
         <TextView
             android:id="@+id/noSerialNumber"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="No serial number"
             android:textSize="13sp"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/text_tertiary"
             android:background="#FEF3C7"
             android:padding="8dp"
             android:gravity="center"

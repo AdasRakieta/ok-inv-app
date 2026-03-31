@@ -9,56 +9,45 @@
     android:layout_marginBottom="12dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardElevation="2dp"
-    app:cardCornerRadius="12dp"
-    app:strokeColor="#E5E7EB"
+    app:cardBackgroundColor="@color/home_card_background"
+    app:cardElevation="1dp"
+    app:cardCornerRadius="14dp"
+    app:strokeColor="@color/home_card_stroke"
     app:strokeWidth="1dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="#FFFFFF">
+        android:layout_height="wrap_content">
 
-        <!-- Employee Header with actions -->
+        <View
+            android:id="@+id/employeeAccent"
+            android:layout_width="6dp"
+            android:layout_height="0dp"
+            android:background="@color/home_primary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <CheckBox
+            android:id="@+id/employeeCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:visibility="gone"
+            android:buttonTint="@color/home_primary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/employeeAccent" />
+
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/employeeContent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
-
-            <!-- Selection Checkbox -->
-            <CheckBox
-                android:id="@+id/employeeCheckbox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:layout_marginEnd="12dp"
-                android:buttonTint="@color/primary" />
-
-            <!-- Employee Icon -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/employeeIcon"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                app:cardBackgroundColor="#E3F2FD"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                android:layout_marginEnd="12dp">
-
-                <TextView
-                    android:id="@+id/employeeInitials"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:textColor="#1565C0"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    tools:text="JK" />
-            </com.google.android.material.card.MaterialCardView>
+            android:padding="16dp"
+            app:layout_constraintStart_toEndOf="@id/employeeCheckbox"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -68,99 +57,69 @@
 
                 <TextView
                     android:id="@+id/employeeName"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Jan Kowalski"
+                    android:text="Anna Kowalska"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/employeeDepartment"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="Dział HR"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginTop="2dp" />
+
+                <LinearLayout
+                    android:id="@+id/assignedCountContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="horizontal"
-                    android:layout_marginTop="2dp"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_employee_badge_primary"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
+
+                    <ImageView
+                        android:id="@+id/assignedCountIcon"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:contentDescription="Urzadzenia"
+                        android:src="@drawable/ic_devices"
+                        android:tint="@color/home_primary" />
 
                     <TextView
-                        android:id="@+id/employeeDepartment"
+                        android:id="@+id/assignedCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="IT"
-                        android:textSize="15sp"
-                        android:textColor="#0EA5E9"
-                        android:maxLines="1"
-                        android:ellipsize="end" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=" • "
-                        android:textSize="15sp"
-                        android:textColor="#9CA3AF"
-                        android:paddingHorizontal="4dp" />
-
-                    <TextView
-                        android:id="@+id/employeePosition"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Programista"
-                        android:textSize="13sp"
-                        android:textColor="#374151"
-                        android:maxLines="1" />
+                        android:layout_marginStart="6dp"
+                        android:text="2 urządzenia"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/home_primary" />
 
                 </LinearLayout>
 
             </LinearLayout>
 
-        </LinearLayout>
-
-        <!-- Assigned Equipment Badge -->
-        <LinearLayout
-            android:id="@+id/assignedCountContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="#FFF3E0"
-            android:padding="10dp"
-            android:layout_marginTop="8dp"
-            android:visibility="visible">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📦"
-                android:textSize="13sp"
-                android:layout_marginEnd="6dp" />
-
-            <TextView
-                android:id="@+id/assignedCount"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="5 urządzeń"
-                android:textSize="13sp"
-                android:textColor="#E65100"
-                android:textStyle="bold"
-                android:maxLines="1"
-                android:ellipsize="end" />
+            <ImageView
+                android:id="@+id/employeeChevron"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Szczegóły"
+                android:src="@drawable/ic_chevron_right"
+                android:tint="@color/text_tertiary" />
 
         </LinearLayout>
 
-        <!-- Contact Info -->
-        <TextView
-            android:id="@+id/employeeContact"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="📧 jan.kowalski@firma.pl"
-            android:textSize="12sp"
-            android:textColor="#9CA3AF"
-            android:layout_marginTop="8dp"
-            android:visibility="visible" />
-
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

@@ -28,11 +28,11 @@ class EmployeesListFragment : Fragment() {
 
     private lateinit var employeeRepository: com.example.inventoryapp.data.repository.EmployeeRepository
     private lateinit var productRepository: com.example.inventoryapp.data.repository.ProductRepository
+    private lateinit var departmentRepository: com.example.inventoryapp.data.repository.DepartmentRepository
     private lateinit var adapter: EmployeesAdapter
 
     private val searchQueryFlow = MutableStateFlow("")
     private val departmentFilterFlow = MutableStateFlow<String?>(null)
-    private val statusFilterFlow = MutableStateFlow<String?>(null)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,14 +48,14 @@ class EmployeesListFragment : Fragment() {
 
         val app = requireActivity().application as InventoryApplication
         employeeRepository = app.employeeRepository
+        departmentRepository = app.departmentRepository
         productRepository = app.productRepository
 
         setupRecyclerView()
         setupSearchBar()
         setupFilterButton()
-        setupStatusFilterButton()
         setupSortButton()
-        setupStatsButton()
+        setupBackButton()
         setupFab()
         setupSelectionPanel()
         observeEmployees()
@@ -95,12 +95,6 @@ class EmployeesListFragment : Fragment() {
         }
     }
 
-    private fun setupStatusFilterButton() {
-        binding.statusFilterButton.setOnClickListener {
-            showStatusFilterDialog()
-        }
-    }
-
     private fun setupSortButton() {
         binding.sortButton.setOnClickListener {
             showSortDialog()
@@ -109,7 +103,7 @@ class EmployeesListFragment : Fragment() {
 
     private fun showDepartmentFilterDialog() {
         lifecycleScope.launch {
-            val departments = employeeRepository.getAllDepartments()
+            val departments = departmentRepository.getAllNames()
             val options = listOf("Wszystkie") + departments
             val selectedIndex = if (departmentFilterFlow.value == null) 0 
                 else departments.indexOf(departmentFilterFlow.value) + 1
@@ -124,26 +118,6 @@ class EmployeesListFragment : Fragment() {
                 .setNegativeButton("Anuluj", null)
                 .show()
         }
-    }
-
-    private fun showStatusFilterDialog() {
-        val options = arrayOf("Wszystkie", "Aktywni", "Nieaktywni")
-        val selectedIndex = when (statusFilterFlow.value) {
-            null -> 0
-            "Aktywni" -> 1
-            "Nieaktywni" -> 2
-            else -> 0
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Filtruj po statusie")
-            .setSingleChoiceItems(options, selectedIndex) { dialog, which ->
-                statusFilterFlow.value = if (which == 0) null else options[which]
-                binding.statusFilterButton.text = options[which]
-                dialog.dismiss()
-            }
-            .setNegativeButton("Anuluj", null)
-            .show()
     }
 
     private fun showSortDialog() {
@@ -165,34 +139,9 @@ class EmployeesListFragment : Fragment() {
             .show()
     }
 
-    private fun setupStatsButton() {
-        binding.statsButton.setOnClickListener {
-            showStatsDialog()
-        }
-    }
-
-    private fun showStatsDialog() {
-        lifecycleScope.launch {
-            val employees = employeeRepository.getAllEmployees()
-            val totalEmployees = employees.size
-            val departments = employees.mapNotNull { it.department }.distinct().size
-            
-            var totalAssigned = 0
-            employees.forEach { employee ->
-                totalAssigned += productRepository.getAssignedProductsCount(employee.id)
-            }
-
-            val message = """
-                👥 Pracownicy: $totalEmployees
-                🏢 Działy: $departments
-                📦 Przypisany sprzęt: $totalAssigned urządzeń
-            """.trimIndent()
-
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Statystyki pracowników")
-                .setMessage(message)
-                .setPositiveButton("OK", null)
-                .show()
+    private fun setupBackButton() {
+        binding.backButton.setOnClickListener {
+            findNavController().navigateUp()
         }
     }
 
@@ -297,6 +246,7 @@ class EmployeesListFragment : Fragment() {
                 adapter.submitList(employeesWithStats)
                 binding.emptyState.isVisible = employeesWithStats.isEmpty()
                 binding.employeesRecyclerView.isVisible = employeesWithStats.isNotEmpty()
+                binding.employeesCountBadge.text = "${employeesWithStats.size} osób"
                 
                 // Update selection panel if in selection mode
                 if (adapter.selectionMode) {
