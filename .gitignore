@@ -86,3 +86,5 @@ lint-results_files/
  desktop.ini
  Thumbs.db
  *.tmp
+
+/tools/*
