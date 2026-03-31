@@ -154,7 +154,13 @@ class TemplatesListFragment : Fragment() {
         var filtered = allTemplates
 
         selectedCategoryId?.let { id ->
-            filtered = filtered.filter { it.categoryId == id }
+            val isParent = categories.any { it.parentId == id }
+            filtered = if (isParent) {
+                val childIds = categories.filter { it.parentId == id }.map { it.id }
+                filtered.filter { it.categoryId == id || it.categoryId in childIds }
+            } else {
+                filtered.filter { it.categoryId == id }
+            }
         }
 
         if (searchQuery.isNotEmpty()) {

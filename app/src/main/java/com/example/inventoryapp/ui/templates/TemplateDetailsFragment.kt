@@ -32,6 +32,7 @@ class TemplateDetailsFragment : Fragment() {
     }
 
     private var categories: List<CategoryEntity> = emptyList()
+    private var leafCategories: List<CategoryEntity> = emptyList()
     private var selectedCategoryId: Long? = null
     private var editingTemplate: ProductTemplateEntity? = null
 
@@ -60,6 +61,7 @@ class TemplateDetailsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             categoryRepository.getAllCategories().collect { list ->
                 categories = list
+                leafCategories = list.filter { candidate -> list.none { it.parentId == candidate.id } }
                 updateCategoryDropdown()
             }
         }
@@ -70,7 +72,7 @@ class TemplateDetailsFragment : Fragment() {
     }
 
     private fun updateCategoryDropdown() {
-        val categoryNames = categories.map { it.name }
+        val categoryNames = leafCategories.map { it.name }
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
@@ -78,7 +80,7 @@ class TemplateDetailsFragment : Fragment() {
         )
         binding.categoryInput.setAdapter(adapter)
         binding.categoryInput.setOnItemClickListener { _, _, position, _ ->
-            selectedCategoryId = categories[position].id
+            selectedCategoryId = leafCategories.getOrNull(position)?.id
         }
     }
 
@@ -100,7 +102,11 @@ class TemplateDetailsFragment : Fragment() {
         binding.descriptionInput.setText(template.defaultDescription)
 
         selectedCategoryId = template.categoryId
-        val categoryName = categories.firstOrNull { it.id == template.categoryId }?.name
+        // If the template's category is a leaf, show it. If it's a parent, try to pick a child under it.
+        val leafMatch = leafCategories.firstOrNull { it.id == template.categoryId }
+        val categoryName = leafMatch?.name
+            ?: categories.firstOrNull { it.parentId == template.categoryId }?.name
+            ?: categories.firstOrNull { it.id == template.categoryId }?.name
         binding.categoryInput.setText(categoryName, false)
     }
 

@@ -121,3 +121,57 @@ Internal use only.
 - Application ID: `com.ok.inv`
 - App name: `OK Inwentaryzacja Sprzętu`
 - Google Sheets integration is temporarily disabled via a feature flag in [GoogleSheetsApiService.kt](app/src/main/java/com/example/inventoryapp/data/remote/GoogleSheetsApiService.kt). To re-enable later, set `ENABLED = true` and ensure related UI buttons are visible.
+
+---
+
+## CI: Build & Release APK (for SOTI)
+
+What this workflow does
+- On push to `main` the action builds a signed Release APK and creates a GitHub Release attaching the APK(s).
+
+Files involved
+- [/.github/workflows/build-and-release-apk.yml](.github/workflows/build-and-release-apk.yml)
+- [/app/build.gradle.kts](app/build.gradle.kts)
+
+Required repository secrets (Settings → Secrets → Actions)
+- `KEYSTORE_BASE64` — base64-encoded content of your keystore (.jks), single-line (no newlines).
+- `KEYSTORE_PASSWORD`
+- `KEY_ALIAS`
+- `KEY_PASSWORD`
+
+How to generate `KEYSTORE_BASE64`
+
+Windows (PowerShell):
+```powershell
+$b64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes('inventory-release.keystore'))
+$b64 | Out-File -Encoding ascii keystore.base64.txt
+# open keystore.base64.txt and copy its content into GitHub secret KEYSTORE_BASE64
+# or copy directly to clipboard (if available):
+Set-Clipboard -Value $b64
+```
+
+Linux / macOS:
+```bash
+base64 -w0 inventory-release.keystore > keystore.base64.txt
+# copy keystore.base64.txt content to GitHub secret KEYSTORE_BASE64
+```
+
+Set secrets using GitHub CLI (optional):
+```bash
+gh secret set KEYSTORE_BASE64 --body-file keystore.base64.txt --repo AdasRakieta/ok-inv-app
+gh secret set KEYSTORE_PASSWORD --body 'YOUR_KEYSTORE_PASSWORD' --repo AdasRakieta/ok-inv-app
+gh secret set KEY_ALIAS --body 'YOUR_KEY_ALIAS' --repo AdasRakieta/ok-inv-app
+gh secret set KEY_PASSWORD --body 'YOUR_KEY_PASSWORD' --repo AdasRakieta/ok-inv-app
+```
+
+How to trigger and verify
+- Merge or push to `main` — Actions will run and build `:app:assembleRelease`.
+- Check the workflow run in the Actions tab; on success a Release `release-<sha>` is created with APK attached.
+- To get a direct download link for SOTI: open the Release, right-click the APK asset Download button and "Copy link address" — use that URL in SOTI.
+
+Notes & security
+- The workflow temporarily writes `app/keystore.jks` and `app/keystore.properties` during build; do not commit the keystore.
+- If your repository is private, the download link will require authentication and SOTI may not be able to fetch it. If SOTI requires public access, either make Releases public or host the APK on a public storage (e.g., signed URL on cloud storage).
+- Keep your keystore and passwords private; never commit them into source control.
+
+If you want, I can also add a small README section with the exact `gh` commands pre-filled for this repository.

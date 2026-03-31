@@ -18,12 +18,21 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Load keystore properties from app/keystore.properties when present (CI uses this)
+    val keystorePropertiesFile = file("keystore.properties")
+    val keystoreProperties = java.util.Properties().apply {
+        if (keystorePropertiesFile.exists()) {
+            load(keystorePropertiesFile.inputStream())
+        }
+    }
+
     signingConfigs {
         create("release") {
-            storeFile = file("inventory-release.keystore")
-            storePassword = "inventory2024"
-            keyAlias = "inventory-key"
-            keyPassword = "inventory2024"
+            val storeFilePath = keystoreProperties.getProperty("storeFile") ?: "inventory-release.keystore"
+            storeFile = file(storeFilePath)
+            storePassword = keystoreProperties.getProperty("storePassword") ?: "inventory2024"
+            keyAlias = keystoreProperties.getProperty("keyAlias") ?: "inventory-key"
+            keyPassword = keystoreProperties.getProperty("keyPassword") ?: "inventory2024"
         }
     }
 

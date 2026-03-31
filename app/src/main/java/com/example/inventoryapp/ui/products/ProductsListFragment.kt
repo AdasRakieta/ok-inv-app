@@ -315,7 +315,15 @@ class ProductsListFragment : Fragment() {
         var filtered = allProducts
 
         selectedCategoryId?.let { id ->
-            filtered = filtered.filter { it.categoryId == id }
+            // If selected category is a parent (has children), include products in any child category.
+            val isParent = categories.any { it.parentId == id }
+            filtered = if (isParent) {
+                val childIds = categories.filter { it.parentId == id }.map { it.id }
+                // Include products that are directly assigned to the parent as well as those in any child category
+                filtered.filter { it.categoryId == id || (it.categoryId != null && it.categoryId in childIds) }
+            } else {
+                filtered.filter { it.categoryId == id }
+            }
         }
 
         selectedStatus?.let { status ->
@@ -383,16 +391,29 @@ class ProductsListFragment : Fragment() {
         val options = mutableListOf(
             FilterOption("all", "Wszystkie kategorie", "📦", selectedCategoryId == null)
         )
-        
-        categories.forEach { category ->
+
+        // Group categories by parent. Show parents (parentId == null) and their children indented below.
+        val parents = categories.filter { it.parentId == null }
+        parents.forEach { parent ->
             options.add(
                 FilterOption(
-                    category.id.toString(),
-                    category.name,
-                    category.icon ?: "📦",
-                    selectedCategoryId == category.id
+                    parent.id.toString(),
+                    parent.name,
+                    parent.icon ?: "📦",
+                    selectedCategoryId == parent.id
                 )
             )
+            val children = categories.filter { it.parentId == parent.id }
+            children.forEach { child ->
+                options.add(
+                    FilterOption(
+                        child.id.toString(),
+                        "  ${child.name}",
+                        child.icon ?: "📦",
+                        selectedCategoryId == child.id
+                    )
+                )
+            }
         }
 
         showFilterBottomSheet("🗂️ Filtruj po kategorii", options) { option ->

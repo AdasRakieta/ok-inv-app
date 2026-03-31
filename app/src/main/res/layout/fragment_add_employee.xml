@@ -44,7 +44,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:text="Dodaj/Edytuj pracownika"
+                    android:text="Dodaj pracownika"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
@@ -56,11 +56,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/home_card_background"
-                app:strokeColor="@color/home_card_stroke"
-                app:strokeWidth="1dp">
+                style="@style/Widget.App.FormCard">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -127,19 +123,20 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:layout_marginEnd="8dp"
-                                app:boxBackgroundMode="filled"
-                                app:boxBackgroundColor="@color/background_secondary"
-                                app:boxStrokeColor="@color/home_card_stroke"
-                                app:hintEnabled="false">
+                                style="@style/Widget.App.FormInput">
 
-                                <com.google.android.material.textfield.TextInputEditText
-                                    android:id="@+id/firstNameInput"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:hint="Imie"
-                                    android:inputType="textCapWords"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="14sp" />
+                                    <com.google.android.material.textfield.TextInputEditText
+                                        android:id="@+id/firstNameInput"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:minHeight="48dp"
+                                        android:paddingTop="10dp"
+                                        android:paddingBottom="10dp"
+                                        android:hint="Imię"
+                                        android:inputType="textCapWords"
+                                        android:textColor="@color/text_primary"
+                                        android:textColorHint="@color/text_tertiary"
+                                        android:textSize="14sp" />
 
                             </com.google.android.material.textfield.TextInputLayout>
 
@@ -148,18 +145,19 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                app:boxBackgroundMode="filled"
-                                app:boxBackgroundColor="@color/background_secondary"
-                                app:boxStrokeColor="@color/home_card_stroke"
-                                app:hintEnabled="false">
+                                style="@style/Widget.App.FormInput">
 
                                 <com.google.android.material.textfield.TextInputEditText
                                     android:id="@+id/lastNameInput"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:minHeight="48dp"
+                                    android:paddingTop="10dp"
+                                    android:paddingBottom="10dp"
                                     android:hint="Nazwisko"
                                     android:inputType="textCapWords"
                                     android:textColor="@color/text_primary"
+                                    android:textColorHint="@color/text_tertiary"
                                     android:textSize="14sp" />
 
                             </com.google.android.material.textfield.TextInputLayout>
@@ -181,21 +179,39 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:layout_marginBottom="12dp"
-                            app:boxBackgroundMode="filled"
-                            app:boxBackgroundColor="@color/background_secondary"
-                            app:boxStrokeColor="@color/home_card_stroke"
-                            app:endIconMode="dropdown_menu">
+                            style="@style/Widget.App.FormInput"
+                            app:endIconMode="dropdown_menu"
+                            app:hintTextColor="@color/text_tertiary"
+                            android:hint="Wybierz dzial">
 
                             <com.google.android.material.textfield.MaterialAutoCompleteTextView
                                 android:id="@+id/departmentInput"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:hint="Wybierz dzial"
-                                android:inputType="text"
+                                android:minHeight="48dp"
+                                android:paddingTop="10dp"
+                                android:paddingBottom="10dp"
+                                android:inputType="none"
                                 android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_tertiary"
                                 android:textSize="14sp" />
 
                         </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/manageDepartmentsLink"
+                            android:layout_width="wrap_content"
+                            android:layout_height="36dp"
+                            android:layout_marginTop="8dp"
+                            android:text="Zarządzaj działami"
+                            android:textAllCaps="false"
+                            android:textColor="@color/home_primary"
+                            app:cornerRadius="8dp"
+                            android:insetLeft="12dp"
+                            android:insetRight="12dp"
+                            android:backgroundTint="@color/home_card_background"
+                            app:strokeWidth="1dp"
+                            app:strokeColor="@color/home_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -212,18 +228,19 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:layout_marginBottom="12dp"
-                            app:boxBackgroundMode="filled"
-                            app:boxBackgroundColor="@color/background_secondary"
-                            app:boxStrokeColor="@color/home_card_stroke"
-                            app:hintEnabled="false">
+                            style="@style/Widget.App.FormInput">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/positionInput"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:minHeight="48dp"
+                                android:paddingTop="10dp"
+                                android:paddingBottom="10dp"
                                 android:hint="Wpisz stanowisko"
                                 android:inputType="text"
                                 android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_tertiary"
                                 android:textSize="14sp" />
 
                         </com.google.android.material.textfield.TextInputLayout>
@@ -243,20 +260,21 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
                             android:layout_marginBottom="12dp"
-                            app:boxBackgroundMode="filled"
-                            app:boxBackgroundColor="@color/background_secondary"
-                            app:boxStrokeColor="@color/home_card_stroke"
+                            style="@style/Widget.App.FormInput"
                             app:startIconDrawable="@drawable/ic_mail"
-                            app:startIconTint="@color/text_tertiary"
-                            app:hintEnabled="false">
+                            app:startIconTint="@color/text_tertiary">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/emailInput"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:minHeight="48dp"
+                                android:paddingTop="10dp"
+                                android:paddingBottom="10dp"
                                 android:hint="adres@email.com"
                                 android:inputType="textEmailAddress"
                                 android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_tertiary"
                                 android:textSize="14sp" />
 
                         </com.google.android.material.textfield.TextInputLayout>
@@ -275,18 +293,19 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            app:boxBackgroundMode="filled"
-                            app:boxBackgroundColor="@color/background_secondary"
-                            app:boxStrokeColor="@color/home_card_stroke"
-                            app:hintEnabled="false">
+                            style="@style/Widget.App.FormInput">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/phoneInput"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:minHeight="48dp"
+                                android:paddingTop="10dp"
+                                android:paddingBottom="10dp"
                                 android:hint="Wpisz numer telefonu"
                                 android:inputType="phone"
                                 android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_tertiary"
                                 android:textSize="14sp" />
 
                         </com.google.android.material.textfield.TextInputLayout>
@@ -302,11 +321,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="1dp"
-                app:cardBackgroundColor="@color/home_card_background"
-                app:strokeColor="@color/home_card_stroke"
-                app:strokeWidth="1dp">
+                style="@style/Widget.App.FormCard">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -343,10 +358,7 @@
                         android:id="@+id/notesLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:boxBackgroundMode="filled"
-                        app:boxBackgroundColor="@color/background_secondary"
-                        app:boxStrokeColor="@color/home_card_stroke"
-                        app:hintEnabled="false">
+                        style="@style/Widget.App.FormInput">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/notesInput"
@@ -357,6 +369,7 @@
                             android:minLines="4"
                             android:gravity="top"
                             android:textColor="@color/text_primary"
+                            android:textColorHint="@color/text_tertiary"
                             android:textSize="14sp" />
 
                     </com.google.android.material.textfield.TextInputLayout>

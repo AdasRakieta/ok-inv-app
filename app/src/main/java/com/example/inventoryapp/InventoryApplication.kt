@@ -29,6 +29,8 @@ class InventoryApplication : Application() {
 
     // Employee repository
     val employeeRepository by lazy { EmployeeRepository(database.employeeDao()) }
+    // Department repository
+    val departmentRepository by lazy { com.example.inventoryapp.data.repository.DepartmentRepository(database.departmentDao()) }
     
     // Product repositories
     val productRepository by lazy { ProductRepository(database.productDao()) }
@@ -50,6 +52,8 @@ class InventoryApplication : Application() {
         
         CoroutineScope(Dispatchers.IO).launch {
             categoryRepository.initializeDefaultCategories()
+            // Initialize default departments if none exist
+            departmentRepository.initializeDefaultDepartments(listOf("IT / Helpdesk", "Marketing", "Sprzedaż", "HR", "Zarząd"))
         }
     }
 }

@@ -13,6 +13,8 @@ import com.example.inventoryapp.data.local.entities.*
     entities = [
         // Employees
         EmployeeEntity::class,
+        // Departments
+        com.example.inventoryapp.data.local.entities.DepartmentEntity::class,
         
         // Products
         ProductEntity::class,
@@ -38,12 +40,15 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 30,
+    version = 32,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     // Employee DAO
     abstract fun employeeDao(): EmployeeDao
+    
+    // Department DAO
+    abstract fun departmentDao(): com.example.inventoryapp.data.local.dao.DepartmentDao
     
     // Product DAOs
     abstract fun productDao(): ProductDao
@@ -386,6 +391,31 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 30 -> 31: Create departments table
+        private val MIGRATION_30_31 = object : Migration(30, 31) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS departments (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL,
+                        UNIQUE(name)
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_departments_name ON departments(name)")
+            }
+        }
+
+        // Migration 31 -> 32: Add parentId to categories for hierarchical categories
+        private val MIGRATION_31_32 = object : Migration(31, 32) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add parentId column to categories (nullable)
+                database.execSQL("ALTER TABLE categories ADD COLUMN parentId INTEGER")
+                // Create index to speed up parent lookups
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_categories_parentId ON categories(parentId)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -394,12 +424,14 @@ abstract class AppDatabase : RoomDatabase() {
                     "inventory_database"
                 )
                     .addMigrations(
-                        MIGRATION_24_25,
-                        MIGRATION_25_26,
-                        MIGRATION_26_27,
-                        MIGRATION_27_28,
-                        MIGRATION_28_29,
-                        MIGRATION_29_30
+                            MIGRATION_24_25,
+                            MIGRATION_25_26,
+                            MIGRATION_26_27,
+                            MIGRATION_27_28,
+                            MIGRATION_28_29,
+                            MIGRATION_29_30,
+                            MIGRATION_30_31,
+                            MIGRATION_31_32
                     )
                     .fallbackToDestructiveMigration()
                     .build()

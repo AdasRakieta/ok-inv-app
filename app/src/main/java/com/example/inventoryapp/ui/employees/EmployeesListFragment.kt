@@ -28,6 +28,7 @@ class EmployeesListFragment : Fragment() {
 
     private lateinit var employeeRepository: com.example.inventoryapp.data.repository.EmployeeRepository
     private lateinit var productRepository: com.example.inventoryapp.data.repository.ProductRepository
+    private lateinit var departmentRepository: com.example.inventoryapp.data.repository.DepartmentRepository
     private lateinit var adapter: EmployeesAdapter
 
     private val searchQueryFlow = MutableStateFlow("")
@@ -47,6 +48,7 @@ class EmployeesListFragment : Fragment() {
 
         val app = requireActivity().application as InventoryApplication
         employeeRepository = app.employeeRepository
+        departmentRepository = app.departmentRepository
         productRepository = app.productRepository
 
         setupRecyclerView()
@@ -101,7 +103,7 @@ class EmployeesListFragment : Fragment() {
 
     private fun showDepartmentFilterDialog() {
         lifecycleScope.launch {
-            val departments = employeeRepository.getAllDepartments()
+            val departments = departmentRepository.getAllNames()
             val options = listOf("Wszystkie") + departments
             val selectedIndex = if (departmentFilterFlow.value == null) 0 
                 else departments.indexOf(departmentFilterFlow.value) + 1

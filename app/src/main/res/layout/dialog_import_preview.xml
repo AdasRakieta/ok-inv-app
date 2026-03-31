@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:text="@string/import_preview_title"
             android:textSize="20sp"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_primary"
             android:textStyle="bold" />
 
         <TextView
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textSize="14sp"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_primary"
             android:alpha="0.9" />
     </LinearLayout>
 

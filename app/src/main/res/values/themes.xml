@@ -15,6 +15,10 @@
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
+        <!-- Apply our form input style app-wide -->
+        <item name="textInputStyle">@style/Widget.App.FormInput</item>
+        <!-- Ensure EditText (including TextInputEditText) uses our edit text defaults -->
+        <item name="editTextStyle">@style/Widget.App.EditText</item>
     </style>
     
     <style name="Widget.App.Card" parent="Widget.MaterialComponents.CardView">
@@ -54,4 +58,49 @@
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
     </style>
+
+    <!-- Form card and input styles to keep forms visually consistent -->
+    <style name="Widget.App.FormCard" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/home_card_background</item>
+        <item name="cardElevation">1dp</item>
+        <item name="strokeColor">@color/home_card_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardCornerRadius">16dp</item>
+    </style>
+
+    <style name="Widget.App.FormInput" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="boxBackgroundMode">filled</item>
+        <item name="boxBackgroundColor">@color/surface</item>
+        <item name="boxStrokeColor">@color/primary</item>
+        <item name="hintEnabled">false</item>
+        <item name="hintTextColor">@color/text_secondary</item>
+        <item name="boxCornerRadiusTopStart">8dp</item>
+        <item name="boxCornerRadiusTopEnd">8dp</item>
+        <item name="boxCornerRadiusBottomStart">8dp</item>
+        <item name="boxCornerRadiusBottomEnd">8dp</item>
+    </style>
+
+    <!-- Centralized EditText style for consistent paddings and heights -->
+    <style name="Widget.App.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+    </style>
+
+    <!-- Outlined variants for inputs (dropdowns, outlined boxes) -->
+    <style name="Widget.App.FormInput.Outlined" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/home_card_background</item>
+        <item name="boxStrokeColor">@color/home_card_stroke</item>
+        <item name="hintTextColor">@color/text_secondary</item>
+    </style>
+
+    <style name="Widget.App.FormInput.Outlined.ExposedDropdownMenu" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+        <item name="boxBackgroundColor">@color/home_card_background</item>
+        <item name="boxStrokeColor">@color/home_card_stroke</item>
+        <item name="hintTextColor">@color/text_secondary</item>
+    </style>
+
 </resources>

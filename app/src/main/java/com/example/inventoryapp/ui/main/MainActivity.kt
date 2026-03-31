@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             navigateTo(R.id.warehouseFragment)
         }
         binding.bottomNav.navSettings.setOnClickListener {
-            navigateTo(R.id.printerSettingsFragment)
+            navigateTo(R.id.settingsHubFragment)
         }
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
@@ -128,8 +128,9 @@ class MainActivity : AppCompatActivity() {
             activeColor,
             inactiveColor
         )
+        val settingsIds = setOf(R.id.printerSettingsFragment, R.id.settingsHubFragment)
         setNavItemActive(
-            destinationId == R.id.printerSettingsFragment,
+            settingsIds.contains(destinationId),
             binding.bottomNav.navSettingsIcon,
             binding.bottomNav.navSettingsLabel,
             activeColor,
