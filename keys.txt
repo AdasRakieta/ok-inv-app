@@ -1,0 +1,6 @@
+
+KEYSTORE_PASSWORD 'fG0OfkAX8yHC7ah8BBbO77O0'
+
+KEY_ALIAS 'inventory-key-f28fa16a'
+
+KEY_PASSWORD 'HibjNMuchTR4HvJK5aziNfwF'
