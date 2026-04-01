@@ -85,16 +85,19 @@ jobs:
 
       - name: Get versionName
         id: get_version
+        shell: bash
         run: |
-          # extract versionName from app/build.gradle.kts (fallback to timestamp if not found)
-          set -e
+          # extract versionName from app/build.gradle.kts (fallback to run id+sha if not found)
+          set -euo pipefail
+          VERSION_NAME=""
           if [ -f app/build.gradle.kts ]; then
-            VERSION_NAME=$(sed -n 's/.*versionName *= *"\(.*\)".*/\1/p' app/build.gradle.kts | head -n1 || true
+            # use awk to extract the value between double quotes after versionName
+            VERSION_NAME=$(awk -F'"' '/versionName/ {print $2; exit}' app/build.gradle.kts || true)
           fi
           if [ -z "${VERSION_NAME}" ]; then
-            VERSION_NAME="${GITHUB_RUN_ID}-${GITHUB_SHA::7}"
+            VERSION_NAME="${GITHUB_RUN_ID}-${GITHUB_SHA:0:7}"
           fi
-          echo "version=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version=${VERSION_NAME}" >> "${GITHUB_OUTPUT}"
 
       - name: Prepare versioned APK for release
         run: |
