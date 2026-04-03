@@ -31,6 +31,8 @@ class InventoryApplication : Application() {
     val employeeRepository by lazy { EmployeeRepository(database.employeeDao()) }
     // Department repository
     val departmentRepository by lazy { com.example.inventoryapp.data.repository.DepartmentRepository(database.departmentDao()) }
+    // Company repository
+    val companyRepository by lazy { CompanyRepository(database.companyDao()) }
     
     // Product repositories
     val productRepository by lazy { ProductRepository(database.productDao()) }

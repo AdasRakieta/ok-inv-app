@@ -7,16 +7,18 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "companies",
     indices = [
-        Index(value = ["nip"], unique = true)
+        Index(value = ["taxId"], unique = true),
+        Index(value = ["name"])
     ]
 )
 data class CompanyEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val nip: String,
+    val taxId: String,
     val address: String?,
     val city: String?,
     val postalCode: String?,
+    val country: String? = null,
     val contactPerson: String? = null,
     val email: String? = null,
     val phone: String? = null,

@@ -24,6 +24,13 @@ class EmployeeRepository(private val employeeDao: EmployeeDao) {
     
     fun searchEmployees(searchQuery: String?, department: String?): Flow<List<EmployeeEntity>> = 
         employeeDao.searchEmployees(searchQuery, department)
+
+    suspend fun getEmployeesByCompany(companyId: Long): List<EmployeeEntity> = withContext(Dispatchers.IO) {
+        employeeDao.getByCompany(companyId)
+    }
+
+    fun searchEmployeesByCompany(companyId: Long, searchQuery: String?, department: String?): Flow<List<EmployeeEntity>> =
+        employeeDao.searchEmployeesByCompany(companyId, searchQuery, department)
     
     suspend fun insertEmployee(employee: EmployeeEntity): Long = withContext(Dispatchers.IO) {
         employeeDao.insert(employee)

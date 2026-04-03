@@ -16,7 +16,8 @@ import com.example.inventoryapp.data.local.entities.*
         // Departments
         com.example.inventoryapp.data.local.entities.DepartmentEntity::class,
         // Companies
-        com.example.inventoryapp.data.local.entities.CompanyEntity::class,
+         com.example.inventoryapp.data.local.entities.CompanyEntity::class,
+        ContractorPointEntity::class,
         
         // Products
         ProductEntity::class,
@@ -42,7 +43,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 33,
+    version = 35,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -54,6 +55,7 @@ abstract class AppDatabase : RoomDatabase() {
     
     // Company DAO
     abstract fun companyDao(): CompanyDao
+    abstract fun contractorPointDao(): ContractorPointDao
     
     // Product DAOs
     abstract fun productDao(): ProductDao
@@ -428,10 +430,11 @@ abstract class AppDatabase : RoomDatabase() {
                     CREATE TABLE IF NOT EXISTS companies (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         name TEXT NOT NULL,
-                        nip TEXT NOT NULL,
+                        taxId TEXT NOT NULL,
                         address TEXT,
                         city TEXT,
                         postalCode TEXT,
+                        country TEXT,
                         contactPerson TEXT,
                         email TEXT,
                         phone TEXT,
@@ -440,7 +443,47 @@ abstract class AppDatabase : RoomDatabase() {
                         updatedAt INTEGER NOT NULL
                     )
                 """)
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_companies_nip ON companies(nip)")
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_companies_taxId ON companies(taxId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_companies_name ON companies(name)")
+            }
+        }
+
+        // Migration 33 -> 34: Add contractor_points table linked to companies
+        private val MIGRATION_33_34 = object : Migration(33, 34) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS contractor_points (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        code TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        pointType TEXT NOT NULL,
+                        companyId INTEGER NOT NULL,
+                        address TEXT,
+                        city TEXT,
+                        postalCode TEXT,
+                        contactPerson TEXT,
+                        email TEXT,
+                        phone TEXT,
+                        notes TEXT,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        FOREIGN KEY(companyId) REFERENCES companies(id) ON DELETE CASCADE
+                    )
+                    """
+                )
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_contractor_points_code ON contractor_points(code)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_contractor_points_pointType ON contractor_points(pointType)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_contractor_points_companyId ON contractor_points(companyId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_contractor_points_name ON contractor_points(name)")
+            }
+        }
+
+        // Migration 34 -> 35: Add optional company relationship to employees
+        private val MIGRATION_34_35 = object : Migration(34, 35) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE employees ADD COLUMN companyId INTEGER")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_employees_companyId ON employees(companyId)")
             }
         }
 
@@ -493,7 +536,9 @@ abstract class AppDatabase : RoomDatabase() {
                             MIGRATION_29_30,
                             MIGRATION_30_31,
                             MIGRATION_31_32,
-                            MIGRATION_32_33
+                            MIGRATION_32_33,
+                            MIGRATION_33_34,
+                            MIGRATION_34_35
                     )
                     .fallbackToDestructiveMigration()
                     .build()

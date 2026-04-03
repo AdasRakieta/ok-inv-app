@@ -40,10 +40,11 @@ class CompanyDaoTest {
     fun `insert company and retrieve by id`() = runBlocking {
         val company = CompanyEntity(
             name = "Test Company",
-            nip = "1234567890",
+            taxId = "1234567890",
             address = "Test Street 123",
             city = "Warsaw",
             postalCode = "00-001",
+            country = "Poland",
             contactPerson = "John Doe",
             email = "contact@test.com",
             phone = "+48123456789",
@@ -56,10 +57,11 @@ class CompanyDaoTest {
         val retrieved = companyDao.getById(id)
         assertNotNull(retrieved)
         assertEquals("Test Company", retrieved?.name)
-        assertEquals("1234567890", retrieved?.nip)
+        assertEquals("1234567890", retrieved?.taxId)
         assertEquals("Test Street 123", retrieved?.address)
         assertEquals("Warsaw", retrieved?.city)
         assertEquals("00-001", retrieved?.postalCode)
+        assertEquals("Poland", retrieved?.country)
         assertEquals("John Doe", retrieved?.contactPerson)
         assertEquals("contact@test.com", retrieved?.email)
         assertEquals("+48123456789", retrieved?.phone)
@@ -70,21 +72,21 @@ class CompanyDaoTest {
     fun `getAll returns all companies`() = runBlocking {
         val company1 = CompanyEntity(
             name = "Alpha Company",
-            nip = "1111111111",
+            taxId = "1111111111",
             address = "Alpha Street 1",
             city = "Warsaw",
             postalCode = "00-001"
         )
         val company2 = CompanyEntity(
             name = "Beta Company",
-            nip = "2222222222",
+            taxId = "2222222222",
             address = "Beta Street 2",
             city = "Krakow",
             postalCode = "30-001"
         )
         val company3 = CompanyEntity(
             name = "Gamma Company",
-            nip = "3333333333",
+            taxId = "3333333333",
             address = "Gamma Street 3",
             city = "Gdansk",
             postalCode = "80-001"
@@ -105,21 +107,21 @@ class CompanyDaoTest {
     fun `search by name returns matching companies`() = runBlocking {
         val company1 = CompanyEntity(
             name = "Tech Solutions Ltd",
-            nip = "1111111111",
+            taxId = "1111111111",
             address = "Tech Street 1",
             city = "Warsaw",
             postalCode = "00-001"
         )
         val company2 = CompanyEntity(
             name = "Digital Services Inc",
-            nip = "2222222222",
+            taxId = "2222222222",
             address = "Digital Avenue 2",
             city = "Krakow",
             postalCode = "30-001"
         )
         val company3 = CompanyEntity(
             name = "Tech Innovations",
-            nip = "3333333333",
+            taxId = "3333333333",
             address = "Innovation Blvd 3",
             city = "Gdansk",
             postalCode = "80-001"
@@ -139,21 +141,21 @@ class CompanyDaoTest {
     fun `search by city returns matching companies`() = runBlocking {
         val company1 = CompanyEntity(
             name = "Warsaw Corp",
-            nip = "1111111111",
+            taxId = "1111111111",
             address = "Street 1",
             city = "Warsaw",
             postalCode = "00-001"
         )
         val company2 = CompanyEntity(
             name = "Krakow Inc",
-            nip = "2222222222",
+            taxId = "2222222222",
             address = "Street 2",
             city = "Krakow",
             postalCode = "30-001"
         )
         val company3 = CompanyEntity(
             name = "Warsaw Ltd",
-            nip = "3333333333",
+            taxId = "3333333333",
             address = "Street 3",
             city = "Warsaw",
             postalCode = "00-002"
@@ -173,14 +175,14 @@ class CompanyDaoTest {
     fun `search with empty query returns all companies`() = runBlocking {
         val company1 = CompanyEntity(
             name = "Company A",
-            nip = "1111111111",
+            taxId = "1111111111",
             address = "Street 1",
             city = "Warsaw",
             postalCode = "00-001"
         )
         val company2 = CompanyEntity(
             name = "Company B",
-            nip = "2222222222",
+            taxId = "2222222222",
             address = "Street 2",
             city = "Krakow",
             postalCode = "30-001"
@@ -197,7 +199,7 @@ class CompanyDaoTest {
     fun `update company changes data`() = runBlocking {
         val company = CompanyEntity(
             name = "Original Name",
-            nip = "1234567890",
+            taxId = "1234567890",
             address = "Old Street",
             city = "Warsaw",
             postalCode = "00-001"
@@ -216,14 +218,14 @@ class CompanyDaoTest {
         assertNotNull(retrieved)
         assertEquals("Updated Name", retrieved?.name)
         assertEquals("New Street", retrieved?.address)
-        assertEquals("1234567890", retrieved?.nip) // Unchanged
+        assertEquals("1234567890", retrieved?.taxId) // Unchanged
     }
 
     @Test
     fun `delete company removes it from database`() = runBlocking {
         val company = CompanyEntity(
             name = "To Delete",
-            nip = "1234567890",
+            taxId = "1234567890",
             address = "Delete Street",
             city = "Warsaw",
             postalCode = "00-001"
@@ -243,21 +245,21 @@ class CompanyDaoTest {
     fun `deleteByIds removes multiple companies`() = runBlocking {
         val company1 = CompanyEntity(
             name = "Company 1",
-            nip = "1111111111",
+            taxId = "1111111111",
             address = "Street 1",
             city = "Warsaw",
             postalCode = "00-001"
         )
         val company2 = CompanyEntity(
             name = "Company 2",
-            nip = "2222222222",
+            taxId = "2222222222",
             address = "Street 2",
             city = "Krakow",
             postalCode = "30-001"
         )
         val company3 = CompanyEntity(
             name = "Company 3",
-            nip = "3333333333",
+            taxId = "3333333333",
             address = "Street 3",
             city = "Gdansk",
             postalCode = "80-001"
@@ -275,10 +277,10 @@ class CompanyDaoTest {
     }
 
     @Test
-    fun `getByNip returns company with matching NIP`() = runBlocking {
+    fun `getByTaxId returns company with matching taxId`() = runBlocking {
         val company = CompanyEntity(
             name = "NIP Test Company",
-            nip = "9876543210",
+            taxId = "9876543210",
             address = "NIP Street",
             city = "Warsaw",
             postalCode = "00-001"
@@ -286,14 +288,14 @@ class CompanyDaoTest {
 
         companyDao.insert(company)
 
-        val retrieved = companyDao.getByNip("9876543210")
+        val retrieved = companyDao.getByTaxId("9876543210")
         assertNotNull(retrieved)
         assertEquals("NIP Test Company", retrieved?.name)
     }
 
     @Test
-    fun `getByNip returns null for non-existent NIP`() = runBlocking {
-        val retrieved = companyDao.getByNip("0000000000")
+    fun `getByTaxId returns null for non-existent taxId`() = runBlocking {
+        val retrieved = companyDao.getByTaxId("0000000000")
         assertNull(retrieved)
     }
 }

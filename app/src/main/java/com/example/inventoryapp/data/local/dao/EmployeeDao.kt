@@ -12,6 +12,9 @@ interface EmployeeDao {
     @Query("SELECT * FROM employees ORDER BY firstName ASC, lastName ASC")
     suspend fun getAll(): List<EmployeeEntity>
 
+    @Query("SELECT * FROM employees WHERE companyId = :companyId ORDER BY firstName ASC, lastName ASC")
+    suspend fun getByCompany(companyId: Long): List<EmployeeEntity>
+
     @Query("SELECT * FROM employees WHERE id = :id")
     suspend fun getById(id: Long): EmployeeEntity?
 
@@ -29,6 +32,19 @@ interface EmployeeDao {
         ORDER BY firstName ASC, lastName ASC
     """)
     fun searchEmployees(searchQuery: String?, department: String?): Flow<List<EmployeeEntity>>
+
+    @Query("""
+        SELECT * FROM employees 
+        WHERE companyId = :companyId
+          AND (:searchQuery IS NULL OR :searchQuery = '' OR 
+               firstName LIKE '%' || :searchQuery || '%' OR 
+               lastName LIKE '%' || :searchQuery || '%' OR
+               department LIKE '%' || :searchQuery || '%' OR
+               position LIKE '%' || :searchQuery || '%')
+          AND (:department IS NULL OR :department = '' OR department = :department)
+        ORDER BY firstName ASC, lastName ASC
+    """)
+    fun searchEmployeesByCompany(companyId: Long, searchQuery: String?, department: String?): Flow<List<EmployeeEntity>>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(employee: EmployeeEntity): Long

@@ -153,6 +153,17 @@
     </fragment>
 
     <fragment
+        android:id="@+id/addEditCompanyFragment"
+        android:name="com.example.inventoryapp.ui.companies.AddEditCompanyFragment"
+        android:label="Dodaj firmę">
+
+        <argument
+            android:name="companyId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
+
+    <fragment
         android:id="@+id/departmentsFragment"
         android:name="com.example.inventoryapp.ui.employees.DepartmentsFragment"
         android:label="Działy" />

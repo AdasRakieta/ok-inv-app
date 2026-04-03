@@ -1,8 +1,13 @@
 package com.example.inventoryapp.data.local.entities
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.Index
+import androidx.room.PrimaryKey
+
+enum class DestinationType {
+    OFFICE,
+    CONTRACTOR
+}
 
 @Entity(
     tableName = "categories",
@@ -19,4 +24,16 @@ data class CategoryEntity(
     val parentId: Long? = null,
 
     val createdAt: Long = System.currentTimeMillis()
-)
+) {
+    val destinationType: DestinationType
+        get() = when (parentId) {
+            OFFICE_CATEGORY_PARENT_ID -> DestinationType.OFFICE
+            CONTRACTOR_CATEGORY_PARENT_ID -> DestinationType.CONTRACTOR
+            else -> DestinationType.OFFICE
+        }
+
+    companion object {
+        const val OFFICE_CATEGORY_PARENT_ID = 1L
+        const val CONTRACTOR_CATEGORY_PARENT_ID = 2L
+    }
+}

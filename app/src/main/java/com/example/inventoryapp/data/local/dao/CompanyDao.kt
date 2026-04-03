@@ -15,13 +15,14 @@ interface CompanyDao {
     @Query("SELECT * FROM companies WHERE id = :id")
     suspend fun getById(id: Long): CompanyEntity?
 
-    @Query("SELECT * FROM companies WHERE nip = :nip LIMIT 1")
-    suspend fun getByNip(nip: String): CompanyEntity?
+    @Query("SELECT * FROM companies WHERE taxId = :taxId LIMIT 1")
+    suspend fun getByTaxId(taxId: String): CompanyEntity?
     
     @Query("""
         SELECT * FROM companies 
         WHERE :searchQuery IS NULL OR :searchQuery = '' OR 
               name LIKE '%' || :searchQuery || '%' OR 
+              taxId LIKE '%' || :searchQuery || '%' OR
               city LIKE '%' || :searchQuery || '%' OR
               address LIKE '%' || :searchQuery || '%' OR
               contactPerson LIKE '%' || :searchQuery || '%'

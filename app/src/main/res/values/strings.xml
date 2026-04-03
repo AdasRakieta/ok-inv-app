@@ -118,4 +118,41 @@
     <string name="category_statistics_subtitle">Products grouped by category</string>
     <string name="total_products">Total Products</string>
     <string name="close">Close</string>
+
+    <!-- Company Form -->
+    <string name="back">Wstecz</string>
+    <string name="save_pl">Zapisz</string>
+    <string name="cancel_pl">Anuluj</string>
+    <string name="company_add_title">Dodaj firmę</string>
+    <string name="company_edit_title">Edytuj firmę</string>
+    <string name="company_save_changes">Zapisz zmiany</string>
+    <string name="company_data_section">DANE FIRMY</string>
+    <string name="company_name">Nazwa firmy</string>
+    <string name="company_name_hint">Wpisz nazwę firmy</string>
+    <string name="company_tax_id">NIP</string>
+    <string name="company_tax_id_hint">np. 1234567890</string>
+    <string name="company_address">Adres</string>
+    <string name="company_address_hint">Ulica i numer</string>
+    <string name="company_city">Miasto</string>
+    <string name="company_city_hint">Wpisz miasto</string>
+    <string name="company_postal_code">Kod pocztowy</string>
+    <string name="company_postal_code_hint">np. 00-000</string>
+    <string name="company_country">Kraj</string>
+    <string name="company_country_hint">np. Polska</string>
+    <string name="company_contact_person">Osoba kontaktowa</string>
+    <string name="company_contact_person_hint">Imię i nazwisko</string>
+    <string name="company_email">Email</string>
+    <string name="company_email_hint">adres@firma.pl</string>
+    <string name="company_phone">Telefon</string>
+    <string name="company_phone_hint">Wpisz numer telefonu</string>
+    <string name="company_notes">Notatki</string>
+    <string name="company_notes_hint">Dodatkowe informacje o firmie...</string>
+    <string name="company_created">Dodano firmę</string>
+    <string name="company_updated">Zapisano zmiany firmy</string>
+    <string name="company_not_found">Nie znaleziono firmy</string>
+    <string name="error_field_required">Pole wymagane</string>
+    <string name="error_invalid_email">Nieprawidłowy email</string>
+    <string name="error_invalid_tax_id">NIP musi mieć 10 cyfr</string>
+    <string name="error_tax_id_exists">Ten NIP jest już w użyciu</string>
+    <string name="error_prefix">Błąd: %1$s</string>
 </resources>
