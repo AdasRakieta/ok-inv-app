@@ -15,6 +15,8 @@ import com.example.inventoryapp.data.local.entities.*
         EmployeeEntity::class,
         // Departments
         com.example.inventoryapp.data.local.entities.DepartmentEntity::class,
+        // Companies
+        com.example.inventoryapp.data.local.entities.CompanyEntity::class,
         
         // Products
         ProductEntity::class,
@@ -40,7 +42,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 32,
+    version = 33,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -49,6 +51,9 @@ abstract class AppDatabase : RoomDatabase() {
     
     // Department DAO
     abstract fun departmentDao(): com.example.inventoryapp.data.local.dao.DepartmentDao
+    
+    // Company DAO
+    abstract fun companyDao(): CompanyDao
     
     // Product DAOs
     abstract fun productDao(): ProductDao
@@ -416,6 +421,62 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 32 -> 33: Add companies table for multi-company support
+        private val MIGRATION_32_33 = object : Migration(32, 33) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS companies (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        nip TEXT NOT NULL,
+                        address TEXT,
+                        city TEXT,
+                        postalCode TEXT,
+                        contactPerson TEXT,
+                        email TEXT,
+                        phone TEXT,
+                        notes TEXT,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL
+                    )
+                """)
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_companies_nip ON companies(nip)")
+            }
+        }
+
+        // Migration 33->36 will be implemented in separate tasks
+        // This migration (36->37) is prepared in advance and will be applied when DB reaches v36
+        
+        private val MIGRATION_36_37 = object : Migration(36, 37) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create parent categories for equipment destination classification
+                // ID 1: "Urządzenia Biurowe" - Office equipment for employees
+                database.execSQL("""
+                    INSERT INTO categories (id, name, description, color, icon, parent_id, created_at) 
+                    VALUES (1, 'Urządzenia Biurowe', 'Sprzęt dla pracowników biurowych', '#4CAF50', '💼', NULL, ${System.currentTimeMillis()})
+                """)
+                
+                // ID 2: "Urządzenia dla Kontrahentów" - Contractor equipment for CP/CC/DC points
+                database.execSQL("""
+                    INSERT INTO categories (id, name, description, color, icon, parent_id, created_at) 
+                    VALUES (2, 'Urządzenia dla Kontrahentów', 'Sprzęt dla punktów CP/CC/DC', '#2196F3', '📦', NULL, ${System.currentTimeMillis()})
+                """)
+                
+                // Update existing categories to use parent hierarchy
+                // Office equipment categories
+                database.execSQL("""
+                    UPDATE categories SET parent_id = 1 
+                    WHERE name IN ('Laptop', 'Monitor', 'Telefon', 'Tablet', 'Klawiatura', 'Mysz')
+                """)
+                
+                // Contractor equipment categories
+                database.execSQL("""
+                    UPDATE categories SET parent_id = 2 
+                    WHERE name IN ('Skaner', 'Drukarka mobilna', 'Stacja dokująca Skaner', 'Stacja dokująca drukarka')
+                """)
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -431,7 +492,8 @@ abstract class AppDatabase : RoomDatabase() {
                             MIGRATION_28_29,
                             MIGRATION_29_30,
                             MIGRATION_30_31,
-                            MIGRATION_31_32
+                            MIGRATION_31_32,
+                            MIGRATION_32_33
                     )
                     .fallbackToDestructiveMigration()
                     .build()
