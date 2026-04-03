@@ -48,10 +48,16 @@ class CompaniesFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = CompaniesAdapter { company ->
-            val action = CompaniesFragmentDirections.actionCompaniesToAddEditCompany(company.id)
-            findNavController().navigate(action)
-        }
+        adapter = CompaniesAdapter(
+            onCompanyClick = { company ->
+                val action = CompaniesFragmentDirections.actionCompaniesToAddEditCompany(company.id)
+                findNavController().navigate(action)
+            },
+            onCompanyLongClick = { company ->
+                val action = CompaniesFragmentDirections.actionCompaniesToContractorPoints(company.id)
+                findNavController().navigate(action)
+            }
+        )
         binding.companiesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.companiesRecyclerView.adapter = adapter
     }

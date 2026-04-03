@@ -7,11 +7,13 @@ import android.view.ViewGroup
 import android.widget.Toast
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.inventoryapp.InventoryApplication
+import com.example.inventoryapp.data.local.entities.CompanyEntity
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.databinding.FragmentAddEmployeeBinding
 import kotlinx.coroutines.launch
@@ -23,8 +25,11 @@ class AddEmployeeFragment : Fragment() {
 
     private lateinit var employeeRepository: com.example.inventoryapp.data.repository.EmployeeRepository
     private lateinit var departmentRepository: com.example.inventoryapp.data.repository.DepartmentRepository
+    private lateinit var companyRepository: com.example.inventoryapp.data.repository.CompanyRepository
     private val args: AddEmployeeFragmentArgs by navArgs()
     private var existingEmployee: EmployeeEntity? = null
+    private var companyOptions: List<CompanyEntity> = emptyList()
+    private var selectedCompanyId: Long? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,7 +46,9 @@ class AddEmployeeFragment : Fragment() {
         val app = requireActivity().application as InventoryApplication
         employeeRepository = app.employeeRepository
         departmentRepository = app.departmentRepository
+        companyRepository = app.companyRepository
 
+        setupCompanyDropdown()
         setupDepartmentDropdown()
         // Listen for changes from departments bottom sheet and refresh dropdown
         parentFragmentManager.setFragmentResultListener("departments_changed", viewLifecycleOwner) { _, _ ->
@@ -53,6 +60,37 @@ class AddEmployeeFragment : Fragment() {
             // Show bottom sheet to manage departments (overlay, swipe down to dismiss)
             val sheet = DepartmentsBottomSheetFragment()
             sheet.show(parentFragmentManager, "departments_sheet")
+        }
+    }
+
+    private fun setupCompanyDropdown() {
+        lifecycleScope.launch {
+            companyOptions = companyRepository.getAllCompanies()
+            val labels = mutableListOf("Brak firmy").apply { addAll(companyOptions.map { it.name }) }
+            val adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_list_item_1,
+                labels
+            )
+
+            val companyInput = binding.companyInput as? AutoCompleteTextView ?: return@launch
+            companyInput.setAdapter(adapter)
+            companyInput.setOnItemClickListener { _, _, position, _ ->
+                selectedCompanyId = if (position == 0) null else companyOptions[position - 1].id
+            }
+            companyInput.doAfterTextChanged { text ->
+                if (text.isNullOrBlank()) {
+                    selectedCompanyId = null
+                }
+            }
+
+            if (existingEmployee == null) {
+                companyInput.setText("Brak firmy", false)
+            } else {
+                val selectedCompanyName = companyOptions.firstOrNull { it.id == selectedCompanyId }?.name
+                    ?: "Brak firmy"
+                companyInput.setText(selectedCompanyName, false)
+            }
         }
     }
 
@@ -77,9 +115,13 @@ class AddEmployeeFragment : Fragment() {
             lifecycleScope.launch {
                 existingEmployee = employeeRepository.getEmployeeById(args.employeeId)
                 existingEmployee?.let { employee ->
+                    selectedCompanyId = employee.companyId
                     binding.apply {
                         firstNameInput.setText(employee.firstName)
                         lastNameInput.setText(employee.lastName)
+                        val company = companyOptions.firstOrNull { it.id == employee.companyId }?.name ?: "Brak firmy"
+                        (companyInput as? AutoCompleteTextView)?.setText(company, false)
+                            ?: companyInput.setText(company)
                         val department = employee.department ?: ""
                         (departmentInput as? AutoCompleteTextView)?.setText(department, false)
                             ?: departmentInput.setText(department)
@@ -89,6 +131,7 @@ class AddEmployeeFragment : Fragment() {
                         notesInput.setText(employee.notes ?: "")
                     }
                 }
+                setupCompanyDropdown()
             }
         } else {
             binding.headerText.text = "Dodaj pracownika"
@@ -149,6 +192,7 @@ class AddEmployeeFragment : Fragment() {
                 EmployeeEntity(
                     firstName = firstName,
                     lastName = lastName,
+                    companyId = selectedCompanyId,
                     email = email,
                     phone = phone,
                     department = department,
@@ -159,6 +203,7 @@ class AddEmployeeFragment : Fragment() {
                 existingEmployee!!.copy(
                     firstName = firstName,
                     lastName = lastName,
+                    companyId = selectedCompanyId,
                     email = email,
                     phone = phone,
                     department = department,

@@ -42,6 +42,12 @@ class HomeFragment : Fragment() {
     private val scanHistoryRepository by lazy {
         (requireActivity().application as InventoryApplication).scanHistoryRepository
     }
+    private val companyRepository by lazy {
+        (requireActivity().application as InventoryApplication).companyRepository
+    }
+    private val contractorPointRepository by lazy {
+        (requireActivity().application as InventoryApplication).contractorPointRepository
+    }
 
     private var cachedCategoryCounts: List<CategoryCount> = emptyList()
 
@@ -98,6 +104,18 @@ class HomeFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
+            companyRepository.getAllCompaniesFlow().collect { companies ->
+                binding.companiesCountText.text = companies.size.toString()
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            contractorPointRepository.getAllContractorPointsFlow().collect { points ->
+                binding.contractorPointsCountText.text = points.size.toString()
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
             productRepository.getProductCountByStatus(ProductStatus.IN_STOCK).collect { count ->
                 binding.warehouseCountText.text = count.toString()
             }
@@ -118,6 +136,14 @@ class HomeFragment : Fragment() {
         // Warehouse module - navigate to warehouse
         binding.warehouseCard.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_warehouse)
+        }
+
+        binding.companiesCard.setOnClickListener {
+            findNavController().navigate(R.id.action_home_to_companies)
+        }
+
+        binding.contractorPointsCard.setOnClickListener {
+            findNavController().navigate(R.id.action_home_to_contractorPoints)
         }
         
         // Printer module - navigate to printer settings

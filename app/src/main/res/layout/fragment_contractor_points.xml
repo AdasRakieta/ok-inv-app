@@ -7,7 +7,7 @@
     android:background="@color/home_background">
 
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/employeesHeader"
+        android:id="@+id/headerCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="@color/home_card_background"
@@ -38,22 +38,20 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:background="@drawable/bg_round_button_light"
-                    android:contentDescription="Wstecz"
+                    android:contentDescription="@string/back"
                     android:padding="8dp"
                     android:src="@drawable/ic_back_custom"
                     android:tint="@color/text_secondary"
                     android:foreground="?attr/selectableItemBackgroundBorderless" />
 
                 <TextView
-                    android:id="@+id/employeesToolbar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:text="Katalog pracowników"
+                    android:text="@string/contractor_points_title"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
-
             </LinearLayout>
 
             <FrameLayout
@@ -66,7 +64,7 @@
                     android:layout_height="20dp"
                     android:layout_gravity="start|center_vertical"
                     android:layout_marginStart="12dp"
-                    android:contentDescription="Szukaj"
+                    android:contentDescription="@string/search"
                     android:src="@android:drawable/ic_menu_search"
                     android:tint="@color/text_tertiary" />
 
@@ -75,7 +73,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:background="@color/background_secondary"
-                    android:hint="Szukaj pracownika..."
+                    android:hint="@string/contractor_points_search_hint"
                     android:inputType="text"
                     android:paddingStart="40dp"
                     android:paddingEnd="12dp"
@@ -83,28 +81,26 @@
                     android:textColor="@color/text_primary"
                     android:textColorHint="@color/text_tertiary"
                     android:textSize="14sp" />
-
             </FrameLayout>
 
             <LinearLayout
-                android:id="@+id/filterSortBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/filterButton"
+                    android:id="@+id/filterTypeButton"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="40dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="10dp"
-                    android:text="Dział/Firma"
+                    android:text="@string/contractor_points_filter_type_button"
                     android:textSize="13sp"
                     android:textAllCaps="false"
-                    app:iconPadding="6dp"
                     app:icon="@drawable/ic_filter_custom"
+                    app:iconPadding="6dp"
                     app:iconTint="@color/text_secondary"
                     app:strokeColor="@color/home_card_stroke"
                     app:strokeWidth="1dp"
@@ -113,31 +109,28 @@
                     android:textColor="@color/text_primary" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/sortButton"
+                    android:id="@+id/filterCompanyButton"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="40dp"
                     android:layout_weight="1"
-                    android:text="Sortuj"
+                    android:text="@string/contractor_points_filter_company_button"
                     android:textSize="13sp"
                     android:textAllCaps="false"
+                    app:icon="@drawable/ic_filter_custom"
                     app:iconPadding="6dp"
-                    app:icon="@drawable/ic_sort_custom"
                     app:iconTint="@color/text_secondary"
                     app:strokeColor="@color/home_card_stroke"
                     app:strokeWidth="1dp"
                     app:cornerRadius="20dp"
                     android:backgroundTint="@color/home_card_background"
                     android:textColor="@color/text_primary" />
-
             </LinearLayout>
-
         </LinearLayout>
-
     </com.google.android.material.card.MaterialCardView>
 
     <LinearLayout
-        android:id="@+id/employeesListHeader"
+        android:id="@+id/listHeader"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -145,7 +138,7 @@
         android:layout_marginTop="12dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        app:layout_constraintTop_toBottomOf="@id/employeesHeader"
+        app:layout_constraintTop_toBottomOf="@id/headerCard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -153,17 +146,17 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Lista pracowników"
+            android:text="@string/contractor_points_list_label"
             android:textColor="@color/text_tertiary"
             android:textSize="11sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/employeesCountBadge"
+            android:id="@+id/contractorPointsCountBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_employee_count_badge"
-            android:text="0 osób"
+            android:text="0"
             android:textColor="@color/home_primary"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -171,10 +164,60 @@
             android:paddingEnd="10dp"
             android:paddingTop="4dp"
             android:paddingBottom="4dp" />
-
     </LinearLayout>
 
-    <!-- Empty State -->
+    <LinearLayout
+        android:id="@+id/loadingState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/listHeader"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ProgressBar
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/loading_pl"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/errorState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/listHeader"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚠️"
+            android:textSize="52sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/contractor_points_error_title"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+    </LinearLayout>
+
     <LinearLayout
         android:id="@+id/emptyState"
         android:layout_width="wrap_content"
@@ -182,7 +225,7 @@
         android:orientation="vertical"
         android:gravity="center"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/listHeader"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -190,110 +233,59 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="👥"
+            android:text="📍"
             android:textSize="64sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Brak pracowników"
+            android:text="@string/contractor_points_empty_title"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#111827" />
+            android:textColor="@color/text_primary" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Dodaj pierwszego pracownika, aby zarządzać przypisaniami sprzętu"
+            android:text="@string/contractor_points_empty_subtitle"
             android:textSize="14sp"
-            android:textColor="#6B7280"
+            android:textColor="@color/text_secondary"
             android:gravity="center"
             android:paddingHorizontal="32dp" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/emptyAddButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/contractor_point_add_title"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/home_primary"
+            android:textColor="@color/white" />
     </LinearLayout>
 
-    <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/employeesRecyclerView"
+        android:id="@+id/contractorPointsRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
         android:paddingTop="8dp"
         android:paddingBottom="96dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/employeesListHeader"
-        app:layout_constraintBottom_toTopOf="@id/selectionPanel"
+        app:layout_constraintTop_toBottomOf="@id/listHeader"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Selection Panel (hidden by default) - Compact with emoji buttons -->
-    <LinearLayout
-        android:id="@+id/selectionPanel"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingVertical="8dp"
-        android:paddingHorizontal="12dp"
-        android:background="@color/surface"
-        android:elevation="8dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <TextView
-            android:id="@+id/selectionCountText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Zaznaczono: 0"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:gravity="center_vertical"
-            android:maxLines="1"
-            android:ellipsize="end" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/selectAllButton"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:text="Wszystkie"
-            android:textSize="13sp"
-            android:textAllCaps="false"
-            android:contentDescription="Zaznacz wszystko"
-            android:paddingHorizontal="8dp"
-            android:minWidth="0dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/deleteSelectedButton"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:text="🗑️"
-            android:textSize="24sp"
-            android:contentDescription="Usuń zaznaczone"
-            android:insetLeft="0dp"
-            android:insetTop="0dp"
-            android:insetRight="0dp"
-            android:insetBottom="0dp"
-            android:padding="0dp"
-            android:minWidth="0dp"
-            android:minHeight="0dp" />
-
-    </LinearLayout>
-
-    <!-- FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addEmployeeFab"
+        android:id="@+id/addContractorPointFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:src="@android:drawable/ic_input_add"
-        android:contentDescription="Dodaj pracownika"
+        android:contentDescription="@string/contractor_point_add_title"
         app:tint="@color/white"
         app:backgroundTint="@color/home_primary"
         app:layout_constraintBottom_toBottomOf="parent"

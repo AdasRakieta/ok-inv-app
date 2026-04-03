@@ -17,6 +17,7 @@ import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.domain.validators.AssignmentValidator
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.databinding.FragmentEmployeeDetailsBinding
 import com.example.inventoryapp.databinding.BottomSheetDeleteEmployeeConfirmBinding
@@ -32,10 +33,13 @@ class EmployeeDetailsFragment : Fragment() {
 
     private lateinit var employeeRepository: com.example.inventoryapp.data.repository.EmployeeRepository
     private lateinit var productRepository: com.example.inventoryapp.data.repository.ProductRepository
+    private lateinit var companyRepository: com.example.inventoryapp.data.repository.CompanyRepository
+    private lateinit var categoryRepository: com.example.inventoryapp.data.repository.CategoryRepository
     private val args: EmployeeDetailsFragmentArgs by navArgs()
     
     private var currentEmployee: EmployeeEntity? = null
     private lateinit var assignedProductsAdapter: AssignedProductsAdapter
+    private val assignmentValidator = AssignmentValidator()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,6 +56,8 @@ class EmployeeDetailsFragment : Fragment() {
         val app = requireActivity().application as InventoryApplication
         employeeRepository = app.employeeRepository
         productRepository = app.productRepository
+        companyRepository = app.companyRepository
+        categoryRepository = app.categoryRepository
 
         setupRecyclerView()
         setupButtons()
@@ -93,7 +99,11 @@ class EmployeeDetailsFragment : Fragment() {
 
         binding.assignEquipmentScanButton.setOnClickListener {
             val action = EmployeeDetailsFragmentDirections
-                .actionEmployeeDetailsToAssignByScan(employeeId = args.employeeId, locationName = null)
+                .actionEmployeeDetailsToAssignByScan(
+                    employeeId = args.employeeId,
+                    locationName = null,
+                    contractorPointId = -1L
+                )
             findNavController().navigate(action)
         }
     }
@@ -125,6 +135,11 @@ class EmployeeDetailsFragment : Fragment() {
                 }
             }
             employeePosition.text = positionText.ifBlank { "Brak stanowiska" }
+
+            lifecycleScope.launch {
+                val companyName = employee.companyId?.let { companyRepository.getCompanyById(it)?.name }
+                employeeCompany.text = companyName?.let { "🏢 $it" } ?: "🏢 Brak przypisanej firmy"
+            }
             
             employeeEmail.text = if (!employee.email.isNullOrBlank()) "📧 ${employee.email}" else "Brak emaila"
             employeeEmail.isVisible = !employee.email.isNullOrBlank()
@@ -177,6 +192,18 @@ class EmployeeDetailsFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 currentEmployee?.let { employee ->
+                    val categoriesById = categoryRepository.getAllCategories().first().associateBy { it.id }
+                    for (product in products) {
+                        val category = categoriesById[product.categoryId]
+                        when (val result = assignmentValidator.canAssignToEmployee(product, employee, category)) {
+                            is AssignmentValidator.ValidationResult.Success -> Unit
+                            is AssignmentValidator.ValidationResult.Error -> {
+                                Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                                return@launch
+                            }
+                        }
+                    }
+
                     products.forEach { product ->
                         val base = product.copy(
                             assignedToEmployeeId = employee.id,

@@ -77,8 +77,16 @@ class EmployeesAdapter(
                 // Employee name
                 employeeName.text = employee.fullName
                 
-                // Department
-                employeeDepartment.text = employee.department?.takeIf { it.isNotBlank() } ?: "IT"
+                // Company + Department
+                val subtitleParts = listOfNotNull(
+                    employeeWithStats.companyName?.takeIf { it.isNotBlank() },
+                    employee.department?.takeIf { it.isNotBlank() }
+                )
+                employeeDepartment.text = if (subtitleParts.isNotEmpty()) {
+                    subtitleParts.joinToString(" • ")
+                } else {
+                    "Brak przypisanej firmy"
+                }
                 
                 // Assigned equipment count
                 assignedCount.text = when (equipmentCount) {
@@ -138,5 +146,6 @@ class EmployeeDiffCallback : DiffUtil.ItemCallback<EmployeeWithStats>() {
 // Data class to hold employee with their assigned products count
 data class EmployeeWithStats(
     val employee: EmployeeEntity,
-    val assignedProductsCount: Int
+    val assignedProductsCount: Int,
+    val companyName: String? = null
 )

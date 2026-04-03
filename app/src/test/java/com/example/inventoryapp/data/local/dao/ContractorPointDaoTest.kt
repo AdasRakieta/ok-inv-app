@@ -120,6 +120,34 @@ class ContractorPointDaoTest {
     }
 
     @Test
+    fun `getAll and getByCode return expected contractor points`() = runBlocking {
+        val companyId = insertCompany("Company A", "1111111111")
+        contractorPointDao.insert(
+            ContractorPointEntity(
+                code = "CP-010",
+                name = "Point 10",
+                pointType = PointType.CP,
+                companyId = companyId
+            )
+        )
+        contractorPointDao.insert(
+            ContractorPointEntity(
+                code = "CC-020",
+                name = "Point 20",
+                pointType = PointType.CC,
+                companyId = companyId
+            )
+        )
+
+        val all = contractorPointDao.getAll()
+        val byCode = contractorPointDao.getByCode("CC-020")
+
+        assertEquals(2, all.size)
+        assertNotNull(byCode)
+        assertEquals("Point 20", byCode?.name)
+    }
+
+    @Test
     fun `search finds by code name and city`() = runBlocking {
         val companyId = insertCompany("Company A", "1111111111")
         contractorPointDao.insert(
@@ -196,6 +224,42 @@ class ContractorPointDaoTest {
         contractorPointDao.delete(existing!!)
 
         assertNull(contractorPointDao.getById(id))
+    }
+
+    @Test
+    fun `deleteByIds removes only selected rows`() = runBlocking {
+        val companyId = insertCompany("Company A", "1111111111")
+        val id1 = contractorPointDao.insert(
+            ContractorPointEntity(
+                code = "CP-101",
+                name = "Point 101",
+                pointType = PointType.CP,
+                companyId = companyId
+            )
+        )
+        val id2 = contractorPointDao.insert(
+            ContractorPointEntity(
+                code = "CP-102",
+                name = "Point 102",
+                pointType = PointType.CP,
+                companyId = companyId
+            )
+        )
+        val id3 = contractorPointDao.insert(
+            ContractorPointEntity(
+                code = "CP-103",
+                name = "Point 103",
+                pointType = PointType.CP,
+                companyId = companyId
+            )
+        )
+
+        contractorPointDao.deleteByIds(listOf(id1, id3))
+        val remaining = contractorPointDao.getAll()
+
+        assertEquals(1, remaining.size)
+        assertEquals(id2, remaining.first().id)
+        assertEquals("CP-102", remaining.first().code)
     }
 
     @Test

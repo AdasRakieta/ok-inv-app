@@ -23,6 +23,9 @@ class ProductRepository(private val productDao: ProductDao) {
     
     fun getProductsAssignedToEmployee(employeeId: Long): Flow<List<ProductEntity>> = 
         productDao.getProductsAssignedToEmployee(employeeId)
+
+    fun getProductsAssignedToContractorPoint(contractorPointId: Long): Flow<List<ProductEntity>> =
+        productDao.getProductsAssignedToContractorPoint(contractorPointId)
     
     suspend fun getAssignedProductsCount(employeeId: Long): Int = 
         productDao.getAssignedProductsCount(employeeId)
@@ -76,6 +79,40 @@ class ProductRepository(private val productDao: ProductDao) {
         val product = productDao.getProductByIdOnce(productId) ?: return
         val updated = product.copy(
             assignedToEmployeeId = null,
+            assignedToContractorPointId = null,
+            assignmentDate = null,
+            status = ProductStatus.UNASSIGNED,
+            movementHistory = MovementHistoryUtils.append(product.movementHistory, MovementHistoryUtils.entryUnassigned()),
+            updatedAt = now
+        )
+        productDao.updateProduct(updated)
+    }
+
+    suspend fun assignToContractorPoint(productId: Long, contractorPointId: Long, contractorPointName: String? = null) {
+        val now = System.currentTimeMillis()
+        val product = productDao.getProductByIdOnce(productId) ?: return
+        val updated = product.copy(
+            assignedToEmployeeId = null,
+            assignedToContractorPointId = contractorPointId,
+            assignmentDate = now,
+            status = ProductStatus.ASSIGNED,
+            shelf = null,
+            bin = null,
+            movementHistory = MovementHistoryUtils.append(
+                product.movementHistory,
+                MovementHistoryUtils.entryForContractorPoint(contractorPointName ?: "ID $contractorPointId")
+            ),
+            updatedAt = now
+        )
+        productDao.updateProduct(updated)
+    }
+
+    suspend fun unassignFromContractorPoint(productId: Long) {
+        val now = System.currentTimeMillis()
+        val product = productDao.getProductByIdOnce(productId) ?: return
+        val updated = product.copy(
+            assignedToEmployeeId = null,
+            assignedToContractorPointId = null,
             assignmentDate = null,
             status = ProductStatus.UNASSIGNED,
             movementHistory = MovementHistoryUtils.append(product.movementHistory, MovementHistoryUtils.entryUnassigned()),

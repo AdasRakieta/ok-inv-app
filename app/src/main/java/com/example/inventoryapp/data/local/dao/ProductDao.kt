@@ -27,9 +27,15 @@ interface ProductDao {
     
     @Query("SELECT * FROM products WHERE assignedToEmployeeId = :employeeId")
     fun getProductsAssignedToEmployee(employeeId: Long): Flow<List<ProductEntity>>
+
+    @Query("SELECT * FROM products WHERE assignedToContractorPointId = :contractorPointId")
+    fun getProductsAssignedToContractorPoint(contractorPointId: Long): Flow<List<ProductEntity>>
     
     @Query("SELECT COUNT(*) FROM products WHERE assignedToEmployeeId = :employeeId")
     suspend fun getAssignedProductsCount(employeeId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM products WHERE assignedToContractorPointId = :contractorPointId")
+    suspend fun getAssignedProductsCountForContractorPoint(contractorPointId: Long): Int
     
     @Query("SELECT * FROM products WHERE status = :status ORDER BY createdAt DESC")
     fun getProductsByStatus(status: ProductStatus): Flow<List<ProductEntity>>
@@ -58,9 +64,15 @@ interface ProductDao {
     @Query("DELETE FROM products WHERE id = :productId")
     suspend fun deleteProductById(productId: Long)
     
-    @Query("UPDATE products SET assignedToEmployeeId = :employeeId, assignmentDate = :assignmentDate, status = :status, updatedAt = :updatedAt WHERE id = :productId")
+    @Query("UPDATE products SET assignedToEmployeeId = :employeeId, assignedToContractorPointId = NULL, assignmentDate = :assignmentDate, status = :status, updatedAt = :updatedAt WHERE id = :productId")
     suspend fun assignToEmployee(productId: Long, employeeId: Long, assignmentDate: Long, status: ProductStatus, updatedAt: Long)
-    
-    @Query("UPDATE products SET assignedToEmployeeId = NULL, assignmentDate = NULL, status = :status, updatedAt = :updatedAt WHERE id = :productId")
+
+    @Query("UPDATE products SET assignedToEmployeeId = NULL, assignedToContractorPointId = :contractorPointId, assignmentDate = :assignmentDate, status = :status, updatedAt = :updatedAt WHERE id = :productId")
+    suspend fun assignToContractorPoint(productId: Long, contractorPointId: Long, assignmentDate: Long, status: ProductStatus, updatedAt: Long)
+
+    @Query("UPDATE products SET assignedToEmployeeId = NULL, assignedToContractorPointId = NULL, assignmentDate = NULL, status = :status, updatedAt = :updatedAt WHERE id = :productId")
     suspend fun unassignFromEmployee(productId: Long, status: ProductStatus, updatedAt: Long)
+
+    @Query("UPDATE products SET assignedToEmployeeId = NULL, assignedToContractorPointId = NULL, assignmentDate = NULL, status = :status, updatedAt = :updatedAt WHERE id = :productId")
+    suspend fun unassignFromContractorPoint(productId: Long, status: ProductStatus, updatedAt: Long)
 }

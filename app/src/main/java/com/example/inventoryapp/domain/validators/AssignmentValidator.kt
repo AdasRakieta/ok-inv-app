@@ -7,24 +7,28 @@ import com.example.inventoryapp.data.local.entities.ProductEntity
 
 class AssignmentValidator {
 
+    @Suppress("UNUSED_PARAMETER")
     fun canAssignToEmployee(
         product: ProductEntity,
         employee: EmployeeEntity,
         category: CategoryEntity?
     ): ValidationResult {
         // Employees can receive office and contractor equipment.
-        @Suppress("UNUSED_VARIABLE")
-        val keepExplicitContract = Triple(product, employee, category)
         return ValidationResult.Success
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun canAssignToContractorPoint(
         product: ProductEntity,
         category: CategoryEntity?
     ): ValidationResult {
-        @Suppress("UNUSED_VARIABLE")
-        val keepExplicitContract = product
-        if (category?.destinationType == DestinationType.OFFICE) {
+        if (category == null) {
+            return ValidationResult.Error(
+                "Nie można zweryfikować kategorii sprzętu dla punktu CP/CC/DC."
+            )
+        }
+
+        if (category.destinationType == DestinationType.OFFICE) {
             return ValidationResult.Error(
                 "Punkty CP/CC/DC mogą otrzymać tylko sprzęt kontrahencki."
             )

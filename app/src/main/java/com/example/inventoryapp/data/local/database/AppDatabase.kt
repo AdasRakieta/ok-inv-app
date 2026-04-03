@@ -43,7 +43,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 35,
+    version = 36,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -487,6 +487,14 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 35 -> 36: Add contractor-point product assignment support
+        private val MIGRATION_35_36 = object : Migration(35, 36) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE products ADD COLUMN assignedToContractorPointId INTEGER")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_products_assignedToContractorPointId ON products(assignedToContractorPointId)")
+            }
+        }
+
         // Migration 33->36 will be implemented in separate tasks
         // This migration (36->37) is prepared in advance and will be applied when DB reaches v36
         
@@ -538,7 +546,8 @@ abstract class AppDatabase : RoomDatabase() {
                             MIGRATION_31_32,
                             MIGRATION_32_33,
                             MIGRATION_33_34,
-                            MIGRATION_34_35
+                            MIGRATION_34_35,
+                            MIGRATION_35_36
                     )
                     .fallbackToDestructiveMigration()
                     .build()

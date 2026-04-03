@@ -20,7 +20,8 @@ import java.util.Date
         Index(value = ["serialNumber"], unique = true),
         Index(value = ["customId"], unique = true),
         Index(value = ["categoryId"]),
-        Index(value = ["warehouseLocationId"])
+        Index(value = ["warehouseLocationId"]),
+        Index(value = ["assignedToContractorPointId"])
     ]
 )
 data class ProductEntity(
@@ -53,6 +54,7 @@ data class ProductEntity(
     
     // Assignment (if assigned to employee)
     val assignedToEmployeeId: Long? = null,
+    val assignedToContractorPointId: Long? = null,
     val assignmentDate: Long? = null,
     
     val createdAt: Long = System.currentTimeMillis(),

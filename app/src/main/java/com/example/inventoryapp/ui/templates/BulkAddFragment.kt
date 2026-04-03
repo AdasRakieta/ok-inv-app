@@ -26,11 +26,13 @@ import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.data.local.entities.ProductTemplateEntity
 import com.example.inventoryapp.data.local.entities.ScanType
+import com.example.inventoryapp.domain.validators.AssignmentValidator
 import com.example.inventoryapp.databinding.FragmentBulkAddBinding
 import com.example.inventoryapp.ui.warehouse.LocationStorage
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -75,6 +77,7 @@ class BulkAddFragment : Fragment() {
     private val scannedProducts = mutableListOf<ProductEntity>()
     private val scannedSerials = mutableSetOf<String>()
     private var currentInputField: TextInputEditText? = null
+    private val assignmentValidator = AssignmentValidator()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -388,6 +391,31 @@ class BulkAddFragment : Fragment() {
         
         lifecycleScope.launch {
             try {
+                if (selectedStatus == ProductStatus.ASSIGNED) {
+                    val employee = employees.firstOrNull { it.id == selectedEmployeeId }
+                    if (employee == null) {
+                        Toast.makeText(requireContext(), "Nie znaleziono pracownika", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    val categoryId = selectedTemplate?.categoryId
+                    val category = categoryRepository.getAllCategories().first().firstOrNull { it.id == categoryId }
+                    val productForValidation = ProductEntity(
+                        name = selectedTemplate?.name ?: "Produkt",
+                        serialNumber = scannedValue,
+                        categoryId = categoryId
+                    )
+
+                    when (val result = assignmentValidator.canAssignToEmployee(productForValidation, employee, category)) {
+                        is AssignmentValidator.ValidationResult.Success -> Unit
+                        is AssignmentValidator.ValidationResult.Error -> {
+                            showStatus("❌ ${result.message}")
+                            currentInputField?.setText("")
+                            return@launch
+                        }
+                    }
+                }
+
                 // Check if already in current session
                 if (scannedSerials.contains(scannedValue)) {
                     showStatus("⚠️ Już zeskanowano: $scannedValue")

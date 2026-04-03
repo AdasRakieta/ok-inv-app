@@ -167,6 +167,40 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:text="Firma"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/companyLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:layout_marginBottom="12dp"
+                            style="@style/Widget.App.FormInput"
+                            app:endIconMode="dropdown_menu"
+                            app:hintTextColor="@color/text_tertiary"
+                            android:hint="Wybierz firmę (opcjonalnie)">
+
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:id="@+id/companyInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:minHeight="48dp"
+                                android:paddingTop="10dp"
+                                android:paddingBottom="10dp"
+                                android:inputType="none"
+                                android:textColor="@color/text_primary"
+                                android:textColorHint="@color/text_tertiary"
+                                android:textSize="14sp" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:text="Dzial"
                             android:textColor="@color/text_secondary"
                             android:textSize="11sp"

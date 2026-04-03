@@ -172,6 +172,31 @@ class CompanyDaoTest {
     }
 
     @Test
+    fun `search by taxId returns matching company`() = runBlocking {
+        val company1 = CompanyEntity(
+            name = "Alpha Company",
+            taxId = "1111111111",
+            address = "Street 1",
+            city = "Warsaw",
+            postalCode = "00-001"
+        )
+        val company2 = CompanyEntity(
+            name = "Beta Company",
+            taxId = "2222222222",
+            address = "Street 2",
+            city = "Krakow",
+            postalCode = "30-001"
+        )
+
+        companyDao.insert(company1)
+        companyDao.insert(company2)
+
+        val results = companyDao.search("2222")
+        assertEquals(1, results.size)
+        assertEquals("Beta Company", results.first().name)
+    }
+
+    @Test
     fun `search with empty query returns all companies`() = runBlocking {
         val company1 = CompanyEntity(
             name = "Company A",

@@ -9,7 +9,8 @@ import com.example.inventoryapp.data.local.entities.CompanyEntity
 import com.example.inventoryapp.databinding.ItemCompanyBinding
 
 class CompaniesAdapter(
-    private val onCompanyClick: (CompanyEntity) -> Unit
+    private val onCompanyClick: (CompanyEntity) -> Unit,
+    private val onCompanyLongClick: (CompanyEntity) -> Unit
 ) : ListAdapter<CompanyEntity, CompaniesAdapter.CompanyViewHolder>(CompanyDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CompanyViewHolder {
@@ -47,6 +48,10 @@ class CompaniesAdapter(
             }
 
             binding.root.setOnClickListener { onCompanyClick(company) }
+            binding.root.setOnLongClickListener {
+                onCompanyLongClick(company)
+                true
+            }
         }
     }
 }

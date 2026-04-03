@@ -29,10 +29,12 @@ class EmployeesListFragment : Fragment() {
     private lateinit var employeeRepository: com.example.inventoryapp.data.repository.EmployeeRepository
     private lateinit var productRepository: com.example.inventoryapp.data.repository.ProductRepository
     private lateinit var departmentRepository: com.example.inventoryapp.data.repository.DepartmentRepository
+    private lateinit var companyRepository: com.example.inventoryapp.data.repository.CompanyRepository
     private lateinit var adapter: EmployeesAdapter
 
     private val searchQueryFlow = MutableStateFlow("")
     private val departmentFilterFlow = MutableStateFlow<String?>(null)
+    private val companyFilterFlow = MutableStateFlow<Long?>(null)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -49,6 +51,7 @@ class EmployeesListFragment : Fragment() {
         val app = requireActivity().application as InventoryApplication
         employeeRepository = app.employeeRepository
         departmentRepository = app.departmentRepository
+        companyRepository = app.companyRepository
         productRepository = app.productRepository
 
         setupRecyclerView()
@@ -91,7 +94,7 @@ class EmployeesListFragment : Fragment() {
 
     private fun setupFilterButton() {
         binding.filterButton.setOnClickListener {
-            showDepartmentFilterDialog()
+            showFilterDialog()
         }
     }
 
@@ -99,6 +102,21 @@ class EmployeesListFragment : Fragment() {
         binding.sortButton.setOnClickListener {
             showSortDialog()
         }
+    }
+
+    private fun showFilterDialog() {
+        val options = arrayOf("Dział", "Firma")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Filtruj po")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> showDepartmentFilterDialog()
+                    1 -> showCompanyFilterDialog()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Anuluj", null)
+            .show()
     }
 
     private fun showDepartmentFilterDialog() {
@@ -112,7 +130,41 @@ class EmployeesListFragment : Fragment() {
                 .setTitle("Filtruj po dziale")
                 .setSingleChoiceItems(options.toTypedArray(), selectedIndex) { dialog, which ->
                     departmentFilterFlow.value = if (which == 0) null else departments[which - 1]
-                    binding.filterButton.text = if (which == 0) "Dział" else departments[which - 1]
+                    if (which == 0 && companyFilterFlow.value == null) {
+                        binding.filterButton.text = "Dział/Firma"
+                    } else {
+                        binding.filterButton.text = if (which == 0) "Firma" else departments[which - 1]
+                    }
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Anuluj", null)
+                .show()
+        }
+    }
+
+    private fun showCompanyFilterDialog() {
+        lifecycleScope.launch {
+            val companies = companyRepository.getAllCompanies()
+            val options = listOf("Wszystkie", "Bez firmy") + companies.map { it.name }
+            val selectedIndex = when (val selected = companyFilterFlow.value) {
+                null -> if (departmentFilterFlow.value == null) 0 else -1
+                -1L -> 1
+                else -> companies.indexOfFirst { it.id == selected }.takeIf { it >= 0 }?.plus(2) ?: 0
+            }.coerceAtLeast(0)
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Filtruj po firmie")
+                .setSingleChoiceItems(options.toTypedArray(), selectedIndex) { dialog, which ->
+                    companyFilterFlow.value = when (which) {
+                        0 -> null
+                        1 -> -1L
+                        else -> companies[which - 2].id
+                    }
+                    if (which == 0 && departmentFilterFlow.value == null) {
+                        binding.filterButton.text = "Dział/Firma"
+                    } else {
+                        binding.filterButton.text = options[which]
+                    }
                     dialog.dismiss()
                 }
                 .setNegativeButton("Anuluj", null)
@@ -228,19 +280,39 @@ class EmployeesListFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             combine(
                 searchQueryFlow.debounce(300),
-                departmentFilterFlow
-            ) { search, department ->
-                Pair(search, department)
-            }.flatMapLatest { (search, department) ->
-                employeeRepository.searchEmployees(
-                    if (search.isBlank()) null else search,
-                    department
-                )
+                departmentFilterFlow,
+                companyFilterFlow
+            ) { search, department, companyFilter ->
+                Triple(search, department, companyFilter)
+            }.flatMapLatest { (search, department, companyFilter) ->
+                when {
+                    companyFilter == null || companyFilter == -1L -> {
+                        employeeRepository.searchEmployees(
+                            if (search.isBlank()) null else search,
+                            department
+                        ).map { employees ->
+                            if (companyFilter == -1L) {
+                                employees.filter { it.companyId == null }
+                            } else {
+                                employees
+                            }
+                        }
+                    }
+                    else -> {
+                        employeeRepository.searchEmployeesByCompany(
+                            companyFilter,
+                            if (search.isBlank()) null else search,
+                            department
+                        )
+                    }
+                }
             }.collect { employees ->
+                val companiesById = companyRepository.getAllCompanies().associateBy { it.id }
                 // Get assigned counts for each employee
                 val employeesWithStats = employees.map { employee ->
                     val count = productRepository.getAssignedProductsCount(employee.id)
-                    EmployeeWithStats(employee, count)
+                    val companyName = employee.companyId?.let { companiesById[it]?.name }
+                    EmployeeWithStats(employee, count, companyName)
                 }
                 
                 adapter.submitList(employeesWithStats)

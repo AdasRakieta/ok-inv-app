@@ -24,6 +24,14 @@
         <action
             android:id="@+id/action_home_to_printer_settings"
             app:destination="@id/printerSettingsFragment" />
+
+        <action
+            android:id="@+id/action_home_to_companies"
+            app:destination="@id/companiesFragment" />
+
+        <action
+            android:id="@+id/action_home_to_contractorPoints"
+            app:destination="@id/contractorPointsFragment" />
     </fragment>
 
     <fragment
@@ -164,6 +172,72 @@
     </fragment>
 
     <fragment
+        android:id="@+id/addEditContractorPointFragment"
+        android:name="com.example.inventoryapp.ui.contractorpoints.AddEditContractorPointFragment"
+        android:label="Dodaj punkt kontrahenta">
+
+        <argument
+            android:name="contractorPointId"
+            app:argType="long"
+            android:defaultValue="0L" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/contractorPointDetailsFragment"
+        android:name="com.example.inventoryapp.ui.contractorpoints.ContractorPointDetailsFragment"
+        android:label="Szczegóły punktu kontrahenta">
+
+        <argument
+            android:name="contractorPointId"
+            app:argType="long" />
+
+        <action
+            android:id="@+id/action_contractorPointDetails_to_addEditContractorPoint"
+            app:destination="@id/addEditContractorPointFragment" />
+
+        <action
+            android:id="@+id/action_contractorPointDetails_to_productDetails"
+            app:destination="@id/productDetailsFragment" />
+
+        <action
+            android:id="@+id/action_contractorPointDetails_to_assignByScan"
+            app:destination="@id/assignByScanFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/contractorPointsFragment"
+        android:name="com.example.inventoryapp.ui.contractorpoints.ContractorPointsFragment"
+        android:label="Punkty kontrahenta">
+
+        <argument
+            android:name="companyId"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <action
+            android:id="@+id/action_contractorPoints_to_details"
+            app:destination="@id/contractorPointDetailsFragment" />
+
+        <action
+            android:id="@+id/action_contractorPoints_to_addEditContractorPoint"
+            app:destination="@id/addEditContractorPointFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/companiesFragment"
+        android:name="com.example.inventoryapp.ui.companies.CompaniesFragment"
+        android:label="Firmy">
+
+        <action
+            android:id="@+id/action_companies_to_addEditCompany"
+            app:destination="@id/addEditCompanyFragment" />
+
+        <action
+            android:id="@+id/action_companies_to_contractorPoints"
+            app:destination="@id/contractorPointsFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/departmentsFragment"
         android:name="com.example.inventoryapp.ui.employees.DepartmentsFragment"
         android:label="Działy" />
@@ -240,6 +314,11 @@
             app:argType="string"
             app:nullable="true"
             android:defaultValue="@null" />
+
+        <argument
+            android:name="contractorPointId"
+            app:argType="long"
+            android:defaultValue="-1L" />
     </fragment>
 
     <fragment

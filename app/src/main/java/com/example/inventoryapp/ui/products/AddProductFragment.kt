@@ -15,6 +15,7 @@ import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.domain.validators.AssignmentValidator
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.databinding.FragmentAddProductBinding
 import com.example.inventoryapp.ui.warehouse.LocationStorage
@@ -46,6 +47,7 @@ class AddProductFragment : Fragment() {
     private var currentProduct: ProductEntity? = null
     private var selectedEmployeeId: Long? = null
     private var selectedStatus: ProductStatus = ProductStatus.IN_STOCK
+    private val assignmentValidator = AssignmentValidator()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -259,6 +261,30 @@ class AddProductFragment : Fragment() {
         if (selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId == null) {
             Toast.makeText(requireContext(), "Wybierz pracownika dla statusu Przypisane", Toast.LENGTH_SHORT).show()
             return
+        }
+
+        if (selectedStatus == ProductStatus.ASSIGNED) {
+            val employee = employees.firstOrNull { it.id == selectedEmployeeId }
+            if (employee == null) {
+                Toast.makeText(requireContext(), "Nie znaleziono pracownika", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val category = categories.firstOrNull { it.id == categoryId }
+            val productForValidation = ProductEntity(
+                id = currentProduct?.id ?: 0L,
+                name = name,
+                serialNumber = serialNumber,
+                categoryId = categoryId
+            )
+
+            when (val result = assignmentValidator.canAssignToEmployee(productForValidation, employee, category)) {
+                is AssignmentValidator.ValidationResult.Success -> Unit
+                is AssignmentValidator.ValidationResult.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                    return
+                }
+            }
         }
 
         if (selectedStatus == ProductStatus.IN_STOCK && warehouseLocation.isNullOrBlank()) {

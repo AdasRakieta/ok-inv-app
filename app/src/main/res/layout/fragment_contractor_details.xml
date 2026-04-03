@@ -1,207 +1,319 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    android:background="@color/home_background">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/loadingState"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Back Button -->
-        <ImageButton
-            android:id="@+id/backButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@android:color/transparent"
-            android:foreground="?attr/selectableItemBackgroundBorderless"
-            android:padding="8dp"
-            android:src="@drawable/ic_back_custom"
-            android:contentDescription="Back"
-            android:tint="@color/text_primary"
-            android:layout_marginBottom="16dp" />
+        <ProgressBar
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
 
-        <!-- Contractor Header -->
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.App.Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="👤"
-                    android:textSize="64sp"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="16dp" />
-
-                <TextView
-                    android:id="@+id/nameText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Contractor Name"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:gravity="center"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- Phone -->
-                <LinearLayout
-                    android:id="@+id/phoneLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📱 Phone"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
-                        android:layout_marginBottom="4dp" />
-
-                    <TextView
-                        android:id="@+id/phoneText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="+1 234 567 890"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary" />
-
-                </LinearLayout>
-
-                <!-- Email -->
-                <LinearLayout
-                    android:id="@+id/emailLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📧 Email"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
-                        android:layout_marginBottom="4dp" />
-
-                    <TextView
-                        android:id="@+id/emailText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="email@example.com"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary" />
-
-                </LinearLayout>
-
-                <!-- Description -->
-                <LinearLayout
-                    android:id="@+id/descriptionLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📝 Description"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"
-                        android:layout_marginBottom="4dp" />
-
-                    <TextView
-                        android:id="@+id/descriptionText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Description text"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary" />
-
-                </LinearLayout>
-
-                <!-- Created At -->
-                <TextView
-                    android:id="@+id/createdAtText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Created: Jan 1, 2025 12:00"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="8dp" />
-
-                <!-- Updated At -->
-                <TextView
-                    android:id="@+id/updatedAtText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Updated: Jan 1, 2025 12:00"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Actions -->
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Actions"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp" />
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.App.Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <Button
-                    android:id="@+id/editButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="✏️ Edit Contractor"
-                    android:textColor="@color/text_primary"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_marginBottom="8dp" />
-
-                <Button
-                    android:id="@+id/deleteButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="🗑️ Delete Contractor"
-                    android:textColor="@color/error"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
+            android:layout_marginTop="12dp"
+            android:text="@string/loading_pl"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
     </LinearLayout>
 
-</ScrollView>
+    <LinearLayout
+        android:id="@+id/errorState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚠️"
+            android:textSize="52sp" />
+
+        <TextView
+            android:id="@+id/errorMessageText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Nie udało się załadować danych punktu"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/retryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/retry"
+            android:textAllCaps="false" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/contentScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <ImageButton
+                android:id="@+id/backButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_round_button_light"
+                android:contentDescription="@string/back"
+                android:padding="8dp"
+                android:src="@drawable/ic_back_custom"
+                android:tint="@color/text_secondary"
+                android:layout_marginBottom="16dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.App.FormCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:text="🏢"
+                        android:textSize="58sp" />
+
+                    <TextView
+                        android:id="@+id/nameText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:gravity="center"
+                        tools:text="Punkt CP Warszawa Centrum" />
+
+                    <TextView
+                        android:id="@+id/codeTypeText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        android:gravity="center"
+                        tools:text="CP_WAW_01 • CP" />
+
+                    <TextView
+                        android:id="@+id/companyText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary"
+                        tools:text="🏢 Firma: ACME Sp. z o.o." />
+
+                    <TextView
+                        android:id="@+id/addressText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary"
+                        tools:text="📍 ul. Przykładowa 1, 00-001 Warszawa" />
+
+                    <TextView
+                        android:id="@+id/contactText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_primary"
+                        tools:text="📞 Jan Kowalski • +48 123 456 789 • jan@acme.pl" />
+
+                    <TextView
+                        android:id="@+id/updatedAtText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_tertiary"
+                        tools:text="Zaktualizowano: 2026-04-03 10:00" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/notesCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                style="@style/Widget.App.FormCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📝 Notatki"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/notesText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        tools:text="Dodatkowe informacje o punkcie kontrahenta" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                style="@style/Widget.App.FormCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="📦 Przypisany sprzęt"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/assignEquipmentButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Wydaj sprzęt"
+                            android:textSize="13sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/assignEquipmentScanButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:text="Skanuj"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/assignedCountText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textSize="13sp"
+                        android:textColor="@color/text_secondary"
+                        tools:text="3 urządzenia przypisane" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/assignedEquipmentRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:nestedScrollingEnabled="false"
+                        tools:itemCount="2"
+                        tools:listitem="@layout/item_assigned_product" />
+
+                    <TextView
+                        android:id="@+id/noEquipmentText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="12dp"
+                        android:text="Brak przypisanego sprzętu"
+                        android:textColor="@color/text_tertiary"
+                        android:textSize="14sp"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/editButton"
+                    style="@style/Widget.App.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:text="Edytuj"
+                    android:textAllCaps="false" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/deleteButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:text="Usuń"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:backgroundTint="#EF4444"
+                    app:cornerRadius="8dp"
+                    app:elevation="2dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -85,7 +85,11 @@ class WarehouseLocationDetailsFragment : Fragment() {
 
         binding.assignProductScanButton.setOnClickListener {
             val action = WarehouseLocationDetailsFragmentDirections
-                .actionLocationDetailsToAssignByScan(employeeId = -1L, locationName = args.locationName)
+                .actionLocationDetailsToAssignByScan(
+                    employeeId = -1L,
+                    locationName = args.locationName,
+                    contractorPointId = -1L
+                )
             findNavController().navigate(action)
         }
 

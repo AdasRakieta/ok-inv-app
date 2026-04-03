@@ -2,6 +2,7 @@ package com.example.inventoryapp.data.repository
 
 import com.example.inventoryapp.data.local.dao.CompanyDao
 import com.example.inventoryapp.data.local.entities.CompanyEntity
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -25,6 +26,20 @@ class CompanyRepositoryTest {
     fun setup() {
         companyDao = mock()
         repository = CompanyRepository(companyDao)
+    }
+
+    @Test
+    fun `getAllCompaniesFlow delegates to dao`() {
+        val companies = listOf(
+            CompanyEntity(id = 1, name = "Flow Co", taxId = "1234567890", address = null, city = null, postalCode = null)
+        )
+        val flow = flowOf(companies)
+        whenever(companyDao.getAllFlow()).thenReturn(flow)
+
+        val result = repository.getAllCompaniesFlow()
+
+        assertEquals(flow, result)
+        verify(companyDao).getAllFlow()
     }
 
     @Test

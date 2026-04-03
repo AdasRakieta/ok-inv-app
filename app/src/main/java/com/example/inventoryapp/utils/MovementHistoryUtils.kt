@@ -52,6 +52,11 @@ object MovementHistoryUtils {
         return "Pracownik: $name"
     }
 
+    fun entryForContractorPoint(contractorPointName: String?): String {
+        val name = contractorPointName?.takeIf { it.isNotBlank() } ?: "Nieznany punkt"
+        return "Punkt kontrahenta: $name"
+    }
+
     fun entryForStatus(statusLabel: String): String = statusLabel
 
     fun entryUnassigned(): String = "Brak przypisania"

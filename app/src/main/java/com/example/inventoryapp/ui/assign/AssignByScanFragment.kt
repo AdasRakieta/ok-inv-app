@@ -20,11 +20,13 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.domain.validators.AssignmentValidator
 import com.example.inventoryapp.databinding.FragmentAssignByScanBinding
 import com.example.inventoryapp.ui.warehouse.LocationStorage
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class AssignByScanFragment : Fragment() {
@@ -40,16 +42,27 @@ class AssignByScanFragment : Fragment() {
     private val employeeRepository by lazy {
         (requireActivity().application as InventoryApplication).employeeRepository
     }
+    private val contractorPointRepository by lazy {
+        (requireActivity().application as InventoryApplication).contractorPointRepository
+    }
+    private val categoryRepository by lazy {
+        (requireActivity().application as InventoryApplication).categoryRepository
+    }
     private val locationStorage by lazy { LocationStorage(requireContext()) }
+    private val assignmentValidator = AssignmentValidator()
 
     private val scannedProducts = mutableListOf<ProductEntity>()
     private val scannedSerials = mutableSetOf<String>()
     private var currentInputField: TextInputEditText? = null
 
-    private enum class TargetType { EMPLOYEE, LOCATION }
+    private enum class TargetType { EMPLOYEE, LOCATION, CONTRACTOR_POINT }
 
     private val targetType: TargetType
-        get() = if (!args.locationName.isNullOrBlank()) TargetType.LOCATION else TargetType.EMPLOYEE
+        get() = when {
+            args.contractorPointId > 0L -> TargetType.CONTRACTOR_POINT
+            !args.locationName.isNullOrBlank() -> TargetType.LOCATION
+            else -> TargetType.EMPLOYEE
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -84,6 +97,15 @@ class AssignByScanFragment : Fragment() {
                 binding.targetIconText.text = "📦"
                 binding.targetTitleText.text = "Lokalizacja"
                 binding.targetNameText.text = args.locationName
+            }
+            TargetType.CONTRACTOR_POINT -> {
+                binding.targetIconText.text = "🏢"
+                binding.targetTitleText.text = "Punkt kontrahenta"
+                val contractorPointId = args.contractorPointId
+                lifecycleScope.launch {
+                    val contractorPoint = contractorPointRepository.getContractorPointById(contractorPointId)
+                    binding.targetNameText.text = contractorPoint?.name ?: "Nieznany"
+                }
             }
         }
     }
@@ -227,6 +249,12 @@ class AssignByScanFragment : Fragment() {
             return
         }
 
+        if (targetType == TargetType.CONTRACTOR_POINT && args.contractorPointId <= 0L) {
+            Toast.makeText(requireContext(), "Brak wybranego punktu kontrahenta", Toast.LENGTH_SHORT).show()
+            currentInputField?.setText("")
+            return
+        }
+
         lifecycleScope.launch {
             try {
                 if (scannedSerials.contains(scannedValue)) {
@@ -259,6 +287,15 @@ class AssignByScanFragment : Fragment() {
                     }
                 }
 
+                if (targetType == TargetType.CONTRACTOR_POINT &&
+                    existing.assignedToContractorPointId == args.contractorPointId &&
+                    existing.status == ProductStatus.ASSIGNED
+                ) {
+                    showStatus("ℹ️ Już przypisany do punktu: $scannedValue")
+                    currentInputField?.setText("")
+                    return@launch
+                }
+
                 scannedProducts.add(0, existing)
                 scannedSerials.add(scannedValue)
                 updateStats()
@@ -285,6 +322,23 @@ class AssignByScanFragment : Fragment() {
                 val now = System.currentTimeMillis()
                 if (targetType == TargetType.EMPLOYEE) {
                     val employee = employeeRepository.getEmployeeById(args.employeeId)
+                    if (employee == null) {
+                        Toast.makeText(requireContext(), "Nie znaleziono pracownika", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+                    val categoriesById = categoryRepository.getAllCategories().first().associateBy { it.id }
+
+                    for (product in scannedProducts) {
+                        val category = categoriesById[product.categoryId]
+                        when (val result = assignmentValidator.canAssignToEmployee(product, employee, category)) {
+                            is AssignmentValidator.ValidationResult.Success -> Unit
+                            is AssignmentValidator.ValidationResult.Error -> {
+                                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                                return@launch
+                            }
+                        }
+                    }
+
                     val employeeName = employee?.fullName
                     scannedProducts.forEach { product ->
                         val updated = product.copy(
@@ -300,7 +354,7 @@ class AssignByScanFragment : Fragment() {
                             MovementHistoryUtils.entryForEmployee(employeeName)
                         )
                     }
-                } else {
+                } else if (targetType == TargetType.LOCATION) {
                     val locationName = args.locationName ?: ""
                     val shelf = locationName.substringBefore("/").trim()
                     val bin = locationName.substringAfter("/", "").trim().takeIf { it.isNotEmpty() }
@@ -321,6 +375,32 @@ class AssignByScanFragment : Fragment() {
                     }
 
                     locationStorage.addLocation(locationName)
+                } else {
+                    val contractorPoint = contractorPointRepository.getContractorPointById(args.contractorPointId)
+                    if (contractorPoint == null) {
+                        Toast.makeText(requireContext(), "Nie znaleziono punktu kontrahenta", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    val categoriesById = categoryRepository.getAllCategories().first().associateBy { it.id }
+                    for (product in scannedProducts) {
+                        val category = categoriesById[product.categoryId]
+                        when (val result = assignmentValidator.canAssignToContractorPoint(product, category)) {
+                            is AssignmentValidator.ValidationResult.Success -> Unit
+                            is AssignmentValidator.ValidationResult.Error -> {
+                                Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                                return@launch
+                            }
+                        }
+                    }
+
+                    scannedProducts.forEach { product ->
+                        productRepository.assignToContractorPoint(
+                            productId = product.id,
+                            contractorPointId = contractorPoint.id,
+                            contractorPointName = contractorPoint.name
+                        )
+                    }
                 }
 
                 Toast.makeText(requireContext(), "✓ Przypisano ${scannedProducts.size} produktów", Toast.LENGTH_LONG).show()
