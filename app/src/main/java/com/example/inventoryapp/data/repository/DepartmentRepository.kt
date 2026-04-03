@@ -11,13 +11,21 @@ class DepartmentRepository(private val departmentDao: DepartmentDao) {
         departmentDao.getAll()
     }
 
-    suspend fun getAllNames(): List<String> = withContext(Dispatchers.IO) {
-        departmentDao.getAllNames()
+    suspend fun getByCompany(companyId: Long): List<DepartmentEntity> = withContext(Dispatchers.IO) {
+        departmentDao.getByCompany(companyId)
     }
 
-    suspend fun insert(name: String): Long = withContext(Dispatchers.IO) {
-        val existing = departmentDao.getByName(name)
-        if (existing != null) existing.id else departmentDao.insert(DepartmentEntity(name = name))
+    suspend fun getNamesByCompany(companyId: Long): List<String> = withContext(Dispatchers.IO) {
+        departmentDao.getNamesByCompany(companyId)
+    }
+
+    suspend fun insert(companyId: Long, name: String): Long = withContext(Dispatchers.IO) {
+        val existing = departmentDao.getByCompanyAndName(companyId, name)
+        if (existing != null) {
+            existing.id
+        } else {
+            departmentDao.insert(DepartmentEntity(companyId = companyId, name = name))
+        }
     }
 
     suspend fun update(id: Long, name: String) = withContext(Dispatchers.IO) {
@@ -33,12 +41,7 @@ class DepartmentRepository(private val departmentDao: DepartmentDao) {
         departmentDao.deleteByIds(ids)
     }
 
-    suspend fun initializeDefaultDepartments(defaults: List<String>) = withContext(Dispatchers.IO) {
-        val existing = departmentDao.getAllNames()
-        if (existing.isEmpty()) {
-            defaults.forEach { name ->
-                if (name.isNotBlank()) departmentDao.insert(DepartmentEntity(name = name))
-            }
-        }
+    suspend fun deleteByCompany(companyId: Long) = withContext(Dispatchers.IO) {
+        departmentDao.deleteByCompany(companyId)
     }
 }

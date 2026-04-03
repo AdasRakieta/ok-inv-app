@@ -30,14 +30,12 @@ class SettingsHubFragment : Fragment() {
             findNavController().navigate(R.id.printerSettingsFragment)
         }
 
-        binding.cardAppSettings.setOnClickListener {
-            // TODO: navigate to App settings fragment when available
-            findNavController().navigate(R.id.printerSettingsFragment)
+        binding.cardCompanies.setOnClickListener {
+            findNavController().navigate(R.id.companiesFragment)
         }
 
-        binding.cardAccountSettings.setOnClickListener {
-            // TODO: navigate to Account settings fragment when available
-            findNavController().navigate(R.id.printerSettingsFragment)
+        binding.cardContractorPoints.setOnClickListener {
+            findNavController().navigate(R.id.contractorPointsFragment)
         }
     }
 

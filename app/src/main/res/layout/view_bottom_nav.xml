@@ -4,15 +4,163 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/bottomNavRoot"
     android:layout_width="match_parent"
-    android:layout_height="88dp"
-    android:background="@drawable/bg_home_bottom_nav"
+    android:layout_height="match_parent"
     android:clipChildren="false"
-    android:clipToPadding="false"
-    android:elevation="8dp">
+    android:clipToPadding="false">
 
-    <LinearLayout
+    <!-- FAB Menu Overlay (full screen, behind bottom nav) -->
+    <View
+        android:id="@+id/fabMenuOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#88000000"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- FAB Menu Items Container -->
+    <FrameLayout
+        android:id="@+id/fabMenuContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- Companies Button (Left) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/fabMenuCompanies"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="200dp"
+            android:layout_marginEnd="75dp"
+            android:visibility="gone"
+            android:foreground="@drawable/ripple_fab_menu"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardElevation="6dp"
+            app:cardCornerRadius="37.5dp"
+            app:cardBackgroundColor="@color/orders_accent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="8dp">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_fab_companies"
+                    android:tint="@color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bottom_nav_menu_companies"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:layout_marginTop="2dp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Points Button (Center Top) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/fabMenuPoints"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="210dp"
+            android:visibility="gone"
+            android:foreground="@drawable/ripple_fab_menu"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardElevation="6dp"
+            app:cardCornerRadius="40dp"
+            app:cardBackgroundColor="@color/info">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="8dp">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_fab_points"
+                    android:tint="@color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Punkty"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:layout_marginTop="2dp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Settings Button (Right) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/fabMenuSettings"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="200dp"
+            android:layout_marginStart="75dp"
+            android:visibility="gone"
+            android:foreground="@drawable/ripple_fab_menu"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardElevation="6dp"
+            app:cardCornerRadius="37.5dp"
+            app:cardBackgroundColor="@color/warehouse_accent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="8dp">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_fab_settings"
+                    android:tint="@color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bottom_nav_menu_settings"
+                    android:textColor="@color/white"
+                    android:textSize="10sp"
+                    android:layout_marginTop="2dp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </FrameLayout>
+
+    <!-- Bottom Navigation Bar -->
+    <LinearLayout
+        android:id="@+id/bottomNavBar"
+        android:layout_width="match_parent"
+        android:layout_height="88dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_home_bottom_nav"
+        android:elevation="8dp"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:gravity="center_vertical"
@@ -42,7 +190,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Produkty"
+                android:text="@string/bottom_nav_products"
                 android:textColor="@color/home_nav_icon"
                 android:textSize="10sp" />
 
@@ -68,7 +216,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Pracownicy"
+                android:text="@string/bottom_nav_employees"
                 android:textColor="@color/home_nav_icon"
                 android:textSize="10sp" />
 
@@ -124,14 +272,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Magazyn"
+                android:text="@string/bottom_nav_warehouse"
                 android:textColor="@color/home_nav_icon"
                 android:textSize="10sp" />
 
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/navSettings"
+            android:id="@+id/navMore"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -139,23 +287,46 @@
             android:orientation="vertical">
 
             <ImageView
-                android:id="@+id/navSettingsIcon"
+                android:id="@+id/navMoreIcon"
                 android:layout_width="22dp"
                 android:layout_height="22dp"
-                android:src="@drawable/ic_nav_settings"
+                android:src="@drawable/ic_more_vertical"
                 android:tint="@color/home_nav_icon" />
 
             <TextView
-                android:id="@+id/navSettingsLabel"
+                android:id="@+id/navMoreLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Ustawienia"
+                android:text="@string/bottom_nav_more"
                 android:textColor="@color/home_nav_icon"
                 android:textSize="10sp" />
 
         </LinearLayout>
 
     </LinearLayout>
+
+    <!-- Close Button (displayed when menu is open) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/fabMenuClose"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"
+        android:foreground="@drawable/ripple_fab_menu"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="6dp"
+        app:cardBackgroundColor="@color/background_secondary">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="14dp"
+            android:src="@drawable/ic_fab_close" />
+
+    </com.google.android.material.card.MaterialCardView>
 
 </FrameLayout>

@@ -58,7 +58,6 @@ class EmployeesListFragment : Fragment() {
         setupSearchBar()
         setupFilterButton()
         setupSortButton()
-        setupBackButton()
         setupFab()
         setupSelectionPanel()
         observeEmployees()
@@ -121,7 +120,7 @@ class EmployeesListFragment : Fragment() {
 
     private fun showDepartmentFilterDialog() {
         lifecycleScope.launch {
-            val departments = departmentRepository.getAllNames()
+            val departments = employeeRepository.getAllDepartments()
             val options = listOf("Wszystkie") + departments
             val selectedIndex = if (departmentFilterFlow.value == null) 0 
                 else departments.indexOf(departmentFilterFlow.value) + 1
@@ -189,12 +188,6 @@ class EmployeesListFragment : Fragment() {
             }
             .setNegativeButton("Anuluj", null)
             .show()
-    }
-
-    private fun setupBackButton() {
-        binding.backButton.setOnClickListener {
-            findNavController().navigateUp()
-        }
     }
 
     private fun setupFab() {

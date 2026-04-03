@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.CompanyEntity
 import com.example.inventoryapp.databinding.ItemCompanyBinding
 
@@ -32,7 +33,14 @@ class CompaniesAdapter(
 
         fun bind(company: CompanyEntity) {
             binding.companyName.text = company.name
-            binding.companyNip.text = "NIP: ${company.taxId}"
+            val context = binding.root.context
+            binding.companyNip.text = company.taxId?.let { "NIP: $it" } ?: context.getString(R.string.company_nip_empty)
+            binding.companyDepartmentsInfo.text =
+                if (company.usesDepartments) {
+                    context.getString(R.string.company_departments_enabled)
+                } else {
+                    context.getString(R.string.company_departments_disabled)
+                }
             binding.companyLocation.text = when {
                 !company.city.isNullOrBlank() && !company.address.isNullOrBlank() ->
                     "${company.city} • ${company.address}"

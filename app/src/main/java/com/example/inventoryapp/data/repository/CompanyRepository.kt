@@ -18,7 +18,7 @@ class CompanyRepository(private val companyDao: CompanyDao) {
         companyDao.getById(id)
     }
 
-    suspend fun getCompanyByTaxId(taxId: String): CompanyEntity? = withContext(Dispatchers.IO) {
+    suspend fun getCompanyByTaxId(taxId: String?): CompanyEntity? = withContext(Dispatchers.IO) {
         companyDao.getByTaxId(taxId)
     }
 

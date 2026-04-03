@@ -4,9 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +17,7 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.CompanyEntity
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.databinding.FragmentAddEmployeeBinding
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class AddEmployeeFragment : Fragment() {
@@ -30,6 +32,8 @@ class AddEmployeeFragment : Fragment() {
     private var existingEmployee: EmployeeEntity? = null
     private var companyOptions: List<CompanyEntity> = emptyList()
     private var selectedCompanyId: Long? = null
+    private var initialDepartmentValue: String? = null
+    private var loadDepartmentsJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,18 +52,12 @@ class AddEmployeeFragment : Fragment() {
         departmentRepository = app.departmentRepository
         companyRepository = app.companyRepository
 
-        setupCompanyDropdown()
-        setupDepartmentDropdown()
-        // Listen for changes from departments bottom sheet and refresh dropdown
-        parentFragmentManager.setFragmentResultListener("departments_changed", viewLifecycleOwner) { _, _ ->
-            setupDepartmentDropdown()
-        }
-        loadEmployeeIfEditing()
         setupButtons()
-        binding.manageDepartmentsLink.setOnClickListener {
-            // Show bottom sheet to manage departments (overlay, swipe down to dismiss)
-            val sheet = DepartmentsBottomSheetFragment()
-            sheet.show(parentFragmentManager, "departments_sheet")
+        if (args.employeeId > 0) {
+            loadEmployeeIfEditing()
+        } else {
+            binding.headerText.text = "Dodaj pracownika"
+            setupCompanyDropdown()
         }
     }
 
@@ -77,34 +75,80 @@ class AddEmployeeFragment : Fragment() {
             companyInput.setAdapter(adapter)
             companyInput.setOnItemClickListener { _, _, position, _ ->
                 selectedCompanyId = if (position == 0) null else companyOptions[position - 1].id
+                updateDepartmentVisibilityAndOptions(restoreInitial = false)
+            }
+            companyInput.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    val selectedName = companyOptions.firstOrNull { it.id == selectedCompanyId }?.name ?: "Brak firmy"
+                    companyInput.setText(selectedName, false)
+                }
             }
             companyInput.doAfterTextChanged { text ->
                 if (text.isNullOrBlank()) {
                     selectedCompanyId = null
+                    updateDepartmentVisibilityAndOptions(restoreInitial = false)
+                } else {
+                    val typedName = text.toString().trim()
+                    val matchedCompany = companyOptions.firstOrNull { it.name == typedName }
+                    val newSelectedId = matchedCompany?.id
+                    if (newSelectedId != selectedCompanyId) {
+                        selectedCompanyId = newSelectedId
+                        updateDepartmentVisibilityAndOptions(restoreInitial = false)
+                    }
                 }
             }
 
-            if (existingEmployee == null) {
-                companyInput.setText("Brak firmy", false)
-            } else {
-                val selectedCompanyName = companyOptions.firstOrNull { it.id == selectedCompanyId }?.name
-                    ?: "Brak firmy"
-                companyInput.setText(selectedCompanyName, false)
-            }
+            val selectedCompanyName = companyOptions.firstOrNull { it.id == selectedCompanyId }?.name
+                ?: "Brak firmy"
+            companyInput.setText(selectedCompanyName, false)
+            updateDepartmentVisibilityAndOptions(restoreInitial = true)
         }
     }
 
-    private fun setupDepartmentDropdown() {
-        lifecycleScope.launch {
-            val departments = departmentRepository.getAllNames().ifEmpty {
-                listOf("IT / Helpdesk", "Marketing", "Sprzedaż", "HR", "Zarząd")
+    private fun updateDepartmentVisibilityAndOptions(restoreInitial: Boolean) {
+        val companyId = selectedCompanyId
+        val selectedCompany = companyOptions.firstOrNull { it.id == companyId }
+        if (companyId == null || selectedCompany?.usesDepartments != true) {
+            binding.departmentLabel.isVisible = false
+            binding.departmentLayout.isVisible = false
+            binding.departmentLayout.error = null
+            (binding.departmentInput as? AutoCompleteTextView)?.setText("", false)
+            return
+        }
+
+        loadDepartmentsJob?.cancel()
+        loadDepartmentsJob = viewLifecycleOwner.lifecycleScope.launch {
+            val departments = departmentRepository.getNamesByCompany(companyId)
+            val hasDepartments = departments.isNotEmpty()
+
+            binding.departmentLabel.isVisible = hasDepartments
+            binding.departmentLayout.isVisible = hasDepartments
+            binding.departmentLayout.error = null
+
+            val departmentInput = binding.departmentInput as? AutoCompleteTextView ?: return@launch
+            if (!hasDepartments) {
+                departmentInput.setText("", false)
+                return@launch
             }
+
             val adapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_list_item_1,
                 departments
             )
-            (binding.departmentInput as? AutoCompleteTextView)?.setAdapter(adapter)
+            departmentInput.setAdapter(adapter)
+
+            val current = departmentInput.text?.toString()?.trim().orEmpty()
+            val target = when {
+                restoreInitial && !initialDepartmentValue.isNullOrBlank() && departments.contains(initialDepartmentValue) ->
+                    initialDepartmentValue.orEmpty()
+                current.isNotBlank() && departments.contains(current) -> current
+                else -> ""
+            }
+            departmentInput.setText(target, false)
+            if (restoreInitial) {
+                initialDepartmentValue = null
+            }
         }
     }
 
@@ -116,15 +160,10 @@ class AddEmployeeFragment : Fragment() {
                 existingEmployee = employeeRepository.getEmployeeById(args.employeeId)
                 existingEmployee?.let { employee ->
                     selectedCompanyId = employee.companyId
+                    initialDepartmentValue = employee.department
                     binding.apply {
                         firstNameInput.setText(employee.firstName)
                         lastNameInput.setText(employee.lastName)
-                        val company = companyOptions.firstOrNull { it.id == employee.companyId }?.name ?: "Brak firmy"
-                        (companyInput as? AutoCompleteTextView)?.setText(company, false)
-                            ?: companyInput.setText(company)
-                        val department = employee.department ?: ""
-                        (departmentInput as? AutoCompleteTextView)?.setText(department, false)
-                            ?: departmentInput.setText(department)
                         positionInput.setText(employee.position ?: "")
                         emailInput.setText(employee.email ?: "")
                         phoneInput.setText(employee.phone ?: "")
@@ -133,8 +172,6 @@ class AddEmployeeFragment : Fragment() {
                 }
                 setupCompanyDropdown()
             }
-        } else {
-            binding.headerText.text = "Dodaj pracownika"
         }
     }
 
@@ -161,7 +198,11 @@ class AddEmployeeFragment : Fragment() {
             // Get values
             val firstName = firstNameInput.text.toString().trim()
             val lastName = lastNameInput.text.toString().trim()
-            val department = departmentInput.text.toString().trim().ifBlank { null }
+            val department = if (departmentLayout.isVisible) {
+                departmentInput.text.toString().trim().ifBlank { null }
+            } else {
+                null
+            }
             val position = positionInput.text.toString().trim().ifBlank { null }
             val email = emailInput.text.toString().trim().ifBlank { null }
             val phone = phoneInput.text.toString().trim().ifBlank { null }

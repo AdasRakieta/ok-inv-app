@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -28,6 +29,10 @@ class AddEditCompanyFragment : Fragment() {
         (requireActivity().application as InventoryApplication).companyRepository
     }
 
+    private val departmentRepository by lazy {
+        (requireActivity().application as InventoryApplication).departmentRepository
+    }
+
     private var existingCompany: CompanyEntity? = null
 
     override fun onCreateView(
@@ -45,13 +50,37 @@ class AddEditCompanyFragment : Fragment() {
         binding.backButton.setOnClickListener { findNavController().navigateUp() }
         binding.cancelButton.setOnClickListener { findNavController().navigateUp() }
         binding.saveButton.setOnClickListener { saveCompany() }
+        binding.manageDepartmentsButton.setOnClickListener { openDepartmentsManager() }
+        binding.usesDepartmentsCheckbox.setOnCheckedChangeListener { _, isChecked ->
+            binding.manageDepartmentsButton.isVisible = isChecked
+        }
+        binding.manageDepartmentsButton.isVisible = false
 
         loadCompanyIfEditing()
+    }
+
+    private fun openDepartmentsManager() {
+        if (!binding.usesDepartmentsCheckbox.isChecked) {
+            Toast.makeText(requireContext(), getString(R.string.company_enable_departments_first), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val company = existingCompany
+        if (company == null || company.id <= 0L) {
+            Toast.makeText(requireContext(), getString(R.string.company_save_first_for_departments), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val sheet = com.example.inventoryapp.ui.employees.DepartmentsBottomSheetFragment
+            .newInstance(company.id, company.name)
+        sheet.show(parentFragmentManager, "company_departments_sheet")
     }
 
     private fun loadCompanyIfEditing() {
         if (args.companyId <= 0L) {
             binding.headerText.text = getString(R.string.company_add_title)
+            binding.usesDepartmentsCheckbox.isChecked = false
+            binding.manageDepartmentsButton.isVisible = false
             return
         }
 
@@ -68,7 +97,9 @@ class AddEditCompanyFragment : Fragment() {
 
             existingCompany = company
             binding.nameInput.setText(company.name)
-            binding.taxIdInput.setText(company.taxId)
+            binding.taxIdInput.setText(company.taxId ?: "")
+            binding.usesDepartmentsCheckbox.isChecked = company.usesDepartments
+            binding.manageDepartmentsButton.isVisible = company.usesDepartments
             binding.addressInput.setText(company.address ?: "")
             binding.cityInput.setText(company.city ?: "")
             binding.postalCodeInput.setText(company.postalCode ?: "")
@@ -85,7 +116,8 @@ class AddEditCompanyFragment : Fragment() {
 
         val name = binding.nameInput.text.toString().trim()
         val taxIdRaw = binding.taxIdInput.text.toString().trim()
-        val taxId = taxIdRaw.filter { it.isDigit() }
+        val taxId = taxIdRaw.filter { it.isDigit() }.ifBlank { null }
+        val usesDepartments = binding.usesDepartmentsCheckbox.isChecked
         val address = binding.addressInput.text.toString().trim().ifBlank { null }
         val city = binding.cityInput.text.toString().trim().ifBlank { null }
         val postalCode = binding.postalCodeInput.text.toString().trim().ifBlank { null }
@@ -102,10 +134,7 @@ class AddEditCompanyFragment : Fragment() {
             hasError = true
         }
 
-        if (taxId.isBlank()) {
-            binding.taxIdLayout.error = getString(R.string.error_field_required)
-            hasError = true
-        } else if (taxId.length != 10) {
+        if (taxId != null && taxId.length != 10) {
             binding.taxIdLayout.error = getString(R.string.error_invalid_tax_id)
             hasError = true
         }
@@ -123,6 +152,7 @@ class AddEditCompanyFragment : Fragment() {
             CompanyEntity(
                 name = name,
                 taxId = taxId,
+                usesDepartments = usesDepartments,
                 address = address,
                 city = city,
                 postalCode = postalCode,
@@ -138,6 +168,7 @@ class AddEditCompanyFragment : Fragment() {
             current.copy(
                 name = name,
                 taxId = taxId,
+                usesDepartments = usesDepartments,
                 address = address,
                 city = city,
                 postalCode = postalCode,
@@ -157,11 +188,17 @@ class AddEditCompanyFragment : Fragment() {
                     Toast.makeText(requireContext(), getString(R.string.company_created), Toast.LENGTH_SHORT).show()
                 } else {
                     companyRepository.updateCompany(company)
+                    if (!usesDepartments) {
+                        departmentRepository.deleteByCompany(current.id)
+                    }
                     Toast.makeText(requireContext(), getString(R.string.company_updated), Toast.LENGTH_SHORT).show()
                 }
                 findNavController().navigateUp()
             } catch (e: SQLiteConstraintException) {
-                if (e.message?.contains("taxId", ignoreCase = true) == true) {
+                if (
+                    e.message?.contains("taxId", ignoreCase = true) == true ||
+                    e.message?.contains("index_companies_taxId", ignoreCase = true) == true
+                ) {
                     binding.taxIdLayout.error = getString(R.string.error_tax_id_exists)
                 } else {
                     Toast.makeText(requireContext(), getString(R.string.error_prefix, e.message ?: ""), Toast.LENGTH_SHORT).show()

@@ -30,7 +30,7 @@
     </style>
     
     <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@color/primary</item>
+        <item name="backgroundTint">@color/home_primary</item>
         <item name="android:textColor">@color/white</item>
         <item name="cornerRadius">6dp</item>
     </style>

@@ -55,8 +55,6 @@ class InventoryApplication : Application() {
         
         CoroutineScope(Dispatchers.IO).launch {
             categoryRepository.initializeDefaultCategories()
-            // Initialize default departments if none exist
-            departmentRepository.initializeDefaultDepartments(listOf("IT / Helpdesk", "Marketing", "Sprzedaż", "HR", "Zarząd"))
         }
     }
 }

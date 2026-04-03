@@ -323,4 +323,22 @@ class CompanyDaoTest {
         val retrieved = companyDao.getByTaxId("0000000000")
         assertNull(retrieved)
     }
+
+    @Test
+    fun `insert company without taxId succeeds`() = runBlocking {
+        val company = CompanyEntity(
+            name = "No NIP Company",
+            taxId = null,
+            address = "Test Street",
+            city = "Warsaw",
+            postalCode = "00-001"
+        )
+
+        val id = companyDao.insert(company)
+        val retrieved = companyDao.getById(id)
+
+        assertNotNull(retrieved)
+        assertNull(retrieved?.taxId)
+        assertEquals("No NIP Company", retrieved?.name)
+    }
 }

@@ -43,7 +43,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 36,
+    version = 38,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -495,36 +495,149 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // Migration 33->36 will be implemented in separate tasks
-        // This migration (36->37) is prepared in advance and will be applied when DB reaches v36
-        
-        private val MIGRATION_36_37 = object : Migration(36, 37) {
+        private fun migrateCompanyAndDepartmentModel(database: SupportSQLiteDatabase) {
+            database.execSQL("PRAGMA foreign_keys=OFF")
+            database.execSQL("ALTER TABLE contractor_points RENAME TO contractor_points_old")
+            database.execSQL("ALTER TABLE companies RENAME TO companies_old")
+            database.execSQL("ALTER TABLE departments RENAME TO departments_old")
+
+            database.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS companies (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name TEXT NOT NULL,
+                    taxId TEXT,
+                    usesDepartments INTEGER NOT NULL DEFAULT 0,
+                    address TEXT,
+                    city TEXT,
+                    postalCode TEXT,
+                    country TEXT,
+                    contactPerson TEXT,
+                    email TEXT,
+                    phone TEXT,
+                    notes TEXT,
+                    createdAt INTEGER NOT NULL,
+                    updatedAt INTEGER NOT NULL
+                )
+                """
+            )
+
+            database.execSQL(
+                """
+                INSERT INTO companies (
+                    id, name, taxId, usesDepartments, address, city, postalCode, country,
+                    contactPerson, email, phone, notes, createdAt, updatedAt
+                )
+                SELECT
+                    id, name, taxId, 0, address, city, postalCode, country,
+                    contactPerson, email, phone, notes, createdAt, updatedAt
+                FROM companies_old
+                """
+            )
+
+            database.execSQL(
+                """
+                INSERT INTO companies (
+                    name, taxId, usesDepartments, address, city, postalCode, country,
+                    contactPerson, email, phone, notes, createdAt, updatedAt
+                )
+                SELECT
+                    'Firma domyślna', NULL, 1, NULL, NULL, NULL, NULL,
+                    NULL, NULL, NULL, NULL, strftime('%s','now') * 1000, strftime('%s','now') * 1000
+                WHERE EXISTS (SELECT 1 FROM departments_old)
+                  AND NOT EXISTS (SELECT 1 FROM companies)
+                """
+            )
+
+            database.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS departments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    companyId INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    createdAt INTEGER NOT NULL,
+                    FOREIGN KEY(companyId) REFERENCES companies(id) ON DELETE CASCADE
+                )
+                """
+            )
+
+            database.execSQL(
+                """
+                INSERT INTO departments (companyId, name, createdAt)
+                SELECT c.id, d.name, d.createdAt
+                FROM departments_old d
+                CROSS JOIN companies c
+                """
+            )
+
+            database.execSQL(
+                """
+                UPDATE companies
+                SET usesDepartments = 1
+                WHERE id IN (SELECT DISTINCT companyId FROM departments)
+                """
+            )
+
+            database.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS contractor_points (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    code TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    pointType TEXT NOT NULL,
+                    companyId INTEGER NOT NULL,
+                    address TEXT,
+                    city TEXT,
+                    postalCode TEXT,
+                    contactPerson TEXT,
+                    email TEXT,
+                    phone TEXT,
+                    notes TEXT,
+                    createdAt INTEGER NOT NULL,
+                    updatedAt INTEGER NOT NULL,
+                    FOREIGN KEY(companyId) REFERENCES companies(id) ON DELETE CASCADE
+                )
+                """
+            )
+
+            database.execSQL(
+                """
+                INSERT INTO contractor_points (
+                    id, code, name, pointType, companyId, address, city, postalCode,
+                    contactPerson, email, phone, notes, createdAt, updatedAt
+                )
+                SELECT
+                    id, code, name, pointType, companyId, address, city, postalCode,
+                    contactPerson, email, phone, notes, createdAt, updatedAt
+                FROM contractor_points_old
+                """
+            )
+
+            database.execSQL("DROP TABLE contractor_points_old")
+            database.execSQL("DROP TABLE departments_old")
+            database.execSQL("DROP TABLE companies_old")
+
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_companies_taxId ON companies(taxId)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_companies_name ON companies(name)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_companies_usesDepartments ON companies(usesDepartments)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_departments_companyId ON departments(companyId)")
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_departments_companyId_name ON departments(companyId, name)")
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_contractor_points_code ON contractor_points(code)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_contractor_points_pointType ON contractor_points(pointType)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_contractor_points_companyId ON contractor_points(companyId)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_contractor_points_name ON contractor_points(name)")
+            database.execSQL("PRAGMA foreign_keys=ON")
+        }
+
+        private val MIGRATION_36_38 = object : Migration(36, 38) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Create parent categories for equipment destination classification
-                // ID 1: "Urządzenia Biurowe" - Office equipment for employees
-                database.execSQL("""
-                    INSERT INTO categories (id, name, description, color, icon, parent_id, created_at) 
-                    VALUES (1, 'Urządzenia Biurowe', 'Sprzęt dla pracowników biurowych', '#4CAF50', '💼', NULL, ${System.currentTimeMillis()})
-                """)
-                
-                // ID 2: "Urządzenia dla Kontrahentów" - Contractor equipment for CP/CC/DC points
-                database.execSQL("""
-                    INSERT INTO categories (id, name, description, color, icon, parent_id, created_at) 
-                    VALUES (2, 'Urządzenia dla Kontrahentów', 'Sprzęt dla punktów CP/CC/DC', '#2196F3', '📦', NULL, ${System.currentTimeMillis()})
-                """)
-                
-                // Update existing categories to use parent hierarchy
-                // Office equipment categories
-                database.execSQL("""
-                    UPDATE categories SET parent_id = 1 
-                    WHERE name IN ('Laptop', 'Monitor', 'Telefon', 'Tablet', 'Klawiatura', 'Mysz')
-                """)
-                
-                // Contractor equipment categories
-                database.execSQL("""
-                    UPDATE categories SET parent_id = 2 
-                    WHERE name IN ('Skaner', 'Drukarka mobilna', 'Stacja dokująca Skaner', 'Stacja dokująca drukarka')
-                """)
+                migrateCompanyAndDepartmentModel(database)
+            }
+        }
+
+        private val MIGRATION_37_38 = object : Migration(37, 38) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                migrateCompanyAndDepartmentModel(database)
             }
         }
 
@@ -547,7 +660,9 @@ abstract class AppDatabase : RoomDatabase() {
                             MIGRATION_32_33,
                             MIGRATION_33_34,
                             MIGRATION_34_35,
-                            MIGRATION_35_36
+                            MIGRATION_35_36,
+                            MIGRATION_36_38,
+                            MIGRATION_37_38
                     )
                     .fallbackToDestructiveMigration()
                     .build()

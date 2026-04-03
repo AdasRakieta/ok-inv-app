@@ -237,19 +237,6 @@
             app:destination="@id/contractorPointsFragment" />
     </fragment>
 
-    <fragment
-        android:id="@+id/departmentsFragment"
-        android:name="com.example.inventoryapp.ui.employees.DepartmentsFragment"
-        android:label="Działy" />
-
-    <action
-        android:id="@+id/action_employeesList_to_departments"
-        app:destination="@id/departmentsFragment" />
-
-    <action
-        android:id="@+id/action_addEmployee_to_departments"
-        app:destination="@id/departmentsFragment" />
-
     <!-- Warehouse -->
     <fragment
         android:id="@+id/warehouseFragment"

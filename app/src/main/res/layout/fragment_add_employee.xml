@@ -199,6 +199,7 @@
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <TextView
+                            android:id="@+id/departmentLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Dzial"
@@ -231,21 +232,6 @@
                                 android:textSize="14sp" />
 
                         </com.google.android.material.textfield.TextInputLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/manageDepartmentsLink"
-                            android:layout_width="wrap_content"
-                            android:layout_height="36dp"
-                            android:layout_marginTop="8dp"
-                            android:text="Zarządzaj działami"
-                            android:textAllCaps="false"
-                            android:textColor="@color/home_primary"
-                            app:cornerRadius="8dp"
-                            android:insetLeft="12dp"
-                            android:insetRight="12dp"
-                            android:backgroundTint="@color/home_card_background"
-                            app:strokeWidth="1dp"
-                            app:strokeColor="@color/home_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"

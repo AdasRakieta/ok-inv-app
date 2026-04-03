@@ -9,6 +9,7 @@ import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
@@ -24,6 +25,8 @@ class DepartmentsFragment : Fragment() {
 
     private lateinit var departmentRepository: com.example.inventoryapp.data.repository.DepartmentRepository
     private lateinit var adapter: DepartmentsAdapter
+    private val companyId: Long
+        get() = arguments?.getLong("companyId", -1L) ?: -1L
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,6 +42,12 @@ class DepartmentsFragment : Fragment() {
         val app = requireActivity().application as InventoryApplication
         departmentRepository = app.departmentRepository
 
+        if (companyId <= 0L) {
+            Toast.makeText(requireContext(), "Zarządzanie działami dostępne jest z poziomu firmy", Toast.LENGTH_SHORT).show()
+            findNavController().navigateUp()
+            return
+        }
+
         adapter = DepartmentsAdapter(emptyList()) { dept, anchor -> showOptions(dept, anchor) }
 
         binding.departmentsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -51,7 +60,7 @@ class DepartmentsFragment : Fragment() {
 
     private fun loadDepartments() {
         lifecycleScope.launch {
-            val list = departmentRepository.getAll()
+            val list = departmentRepository.getByCompany(companyId)
             adapter.submitList(list)
         }
     }
@@ -65,7 +74,7 @@ class DepartmentsFragment : Fragment() {
                 val name = input.text.toString().trim()
                 if (name.isNotBlank()) {
                     lifecycleScope.launch {
-                        departmentRepository.insert(name)
+                        departmentRepository.insert(companyId, name)
                         loadDepartments()
                         Toast.makeText(requireContext(), "Dodano dział", Toast.LENGTH_SHORT).show()
                     }

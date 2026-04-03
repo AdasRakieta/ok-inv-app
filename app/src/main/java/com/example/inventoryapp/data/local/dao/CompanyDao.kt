@@ -16,7 +16,7 @@ interface CompanyDao {
     suspend fun getById(id: Long): CompanyEntity?
 
     @Query("SELECT * FROM companies WHERE taxId = :taxId LIMIT 1")
-    suspend fun getByTaxId(taxId: String): CompanyEntity?
+    suspend fun getByTaxId(taxId: String?): CompanyEntity?
     
     @Query("""
         SELECT * FROM companies 

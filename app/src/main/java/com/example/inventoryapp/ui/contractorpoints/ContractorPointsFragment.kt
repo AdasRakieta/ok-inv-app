@@ -79,7 +79,6 @@ class ContractorPointsFragment : Fragment() {
     }
 
     private fun setupActions() {
-        binding.backButton.setOnClickListener { findNavController().navigateUp() }
         binding.filterTypeButton.setOnClickListener { openTypeFilter() }
         binding.filterCompanyButton.setOnClickListener { openCompanyFilter() }
         binding.addContractorPointFab.setOnClickListener {

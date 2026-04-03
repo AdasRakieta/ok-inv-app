@@ -12,8 +12,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -263,46 +262,46 @@ class ContractorPointDaoTest {
     }
 
     @Test
-    fun `unique code constraint blocks duplicates`() = runBlocking {
-        val companyId = insertCompany("Company A", "1111111111")
-        contractorPointDao.insert(
-            ContractorPointEntity(
-                code = "CP-001",
-                name = "Point One",
-                pointType = PointType.CP,
-                companyId = companyId
-            )
-        )
-
-        try {
+    fun `unique code constraint blocks duplicates`() {
+        val companyId = runBlocking { insertCompany("Company A", "1111111111") }
+        runBlocking {
             contractorPointDao.insert(
                 ContractorPointEntity(
                     code = "CP-001",
-                    name = "Point Two",
-                    pointType = PointType.CC,
+                    name = "Point One",
+                    pointType = PointType.CP,
                     companyId = companyId
                 )
             )
-            fail("Expected unique constraint violation for duplicate contractor point code")
-        } catch (ex: Exception) {
-            assertTrue(ex.message?.contains("UNIQUE", ignoreCase = true) == true)
+        }
+
+        assertThrows(android.database.sqlite.SQLiteConstraintException::class.java) {
+            runBlocking {
+                contractorPointDao.insert(
+                    ContractorPointEntity(
+                        code = "CP-001",
+                        name = "Point Two",
+                        pointType = PointType.CC,
+                        companyId = companyId
+                    )
+                )
+            }
         }
     }
 
     @Test
-    fun `foreign key constraint blocks point without company`() = runBlocking {
-        try {
-            contractorPointDao.insert(
-                ContractorPointEntity(
-                    code = "CP-999",
-                    name = "Orphan Point",
-                    pointType = PointType.CP,
-                    companyId = Long.MAX_VALUE
+    fun `foreign key constraint blocks point without company`() {
+        assertThrows(android.database.sqlite.SQLiteConstraintException::class.java) {
+            runBlocking {
+                contractorPointDao.insert(
+                    ContractorPointEntity(
+                        code = "CP-999",
+                        name = "Orphan Point",
+                        pointType = PointType.CP,
+                        companyId = Long.MAX_VALUE
+                    )
                 )
-            )
-            fail("Expected foreign key violation for missing company")
-        } catch (ex: Exception) {
-            assertTrue(ex.message?.contains("FOREIGN KEY", ignoreCase = true) == true)
+            }
         }
     }
 

@@ -321,7 +321,7 @@
         android:visibility="gone"
         app:cardElevation="4dp"
         app:cardCornerRadius="28dp"
-        app:cardBackgroundColor="#10B981"
+        app:cardBackgroundColor="@color/success"
         app:layout_constraintBottom_toTopOf="@id/singleAddCard"
         app:layout_constraintEnd_toEndOf="@id/addProductFab"
         android:layout_marginBottom="12dp">
@@ -366,7 +366,7 @@
         android:visibility="gone"
         app:cardElevation="4dp"
         app:cardCornerRadius="28dp"
-        app:cardBackgroundColor="#8B5CF6"
+        app:cardBackgroundColor="@color/home_primary"
         app:layout_constraintBottom_toTopOf="@id/addProductFab"
         app:layout_constraintEnd_toEndOf="@id/addProductFab"
         android:layout_marginBottom="12dp">
@@ -411,7 +411,7 @@
         android:src="@android:drawable/ic_input_add"
         android:contentDescription="Add Product"
         app:tint="@color/white"
-        app:backgroundTint="#0EA5E9"
+        app:backgroundTint="@color/home_primary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_margin="16dp" />

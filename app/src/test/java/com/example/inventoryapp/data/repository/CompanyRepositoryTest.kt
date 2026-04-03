@@ -80,6 +80,17 @@ class CompanyRepositoryTest {
     }
 
     @Test
+    fun `company taxId can be null`() = runBlocking {
+        val company = CompanyEntity(id = 10, name = "No Tax", taxId = null, address = null, city = null, postalCode = null)
+        whenever(companyDao.insert(company)).thenReturn(10L)
+
+        val result = repository.insertCompany(company)
+
+        assertEquals(10L, result)
+        verify(companyDao).insert(company)
+    }
+
+    @Test
     fun `searchCompanies delegates to dao`() = runBlocking {
         val matches = listOf(
             CompanyEntity(id = 1, name = "Tech Solutions", taxId = "1010101010", address = null, city = "Warsaw", postalCode = null)

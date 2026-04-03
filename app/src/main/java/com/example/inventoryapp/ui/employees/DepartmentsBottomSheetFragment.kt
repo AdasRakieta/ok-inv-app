@@ -25,6 +25,11 @@ import kotlinx.coroutines.withContext
 
 class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
 
+    private val companyId: Long
+        get() = requireArguments().getLong(ARG_COMPANY_ID, -1L)
+    private val companyName: String
+        get() = requireArguments().getString(ARG_COMPANY_NAME).orEmpty()
+
     private lateinit var departmentRepository: DepartmentRepository
     private val departments = mutableListOf<DepartmentEntity>()
     private lateinit var deptAdapter: DepartmentsAdapter
@@ -43,9 +48,20 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
         val app = requireActivity().application as InventoryApplication
         departmentRepository = app.departmentRepository
 
+        if (companyId <= 0L) {
+            dismissAllowingStateLoss()
+            return
+        }
+
         val recycler = view.findViewById<RecyclerView>(R.id.departmentRecyclerView)
         val addEdit = view.findViewById<EditText>(R.id.addDepartmentEdit)
         val addButton = view.findViewById<Button>(R.id.addDepartmentButton)
+        val title = view.findViewById<android.widget.TextView>(R.id.departmentsTitle)
+        title.text = if (companyName.isBlank()) {
+            "Zarządzaj działami"
+        } else {
+            "Działy • $companyName"
+        }
 
         deptAdapter = DepartmentsAdapter(emptyList()) { dept, anchor ->
             showOptions(dept, anchor)
@@ -66,7 +82,7 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
             val name = addEdit.text.toString().trim()
             if (name.isNotEmpty()) {
                 lifecycleScope.launch {
-                    departmentRepository.insert(name)
+                    departmentRepository.insert(companyId, name)
                     loadDepartments(deptAdapter)
                     addEdit.text.clear()
                     parentFragmentManager.setFragmentResult("departments_changed", bundleOf())
@@ -78,7 +94,7 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private suspend fun loadDepartments(deptAdapter: DepartmentsAdapter) {
-        val list = withContext(Dispatchers.IO) { departmentRepository.getAll() }
+        val list = withContext(Dispatchers.IO) { departmentRepository.getByCompany(companyId) }
         departments.clear()
         departments.addAll(list)
         withContext(Dispatchers.Main) {
@@ -137,5 +153,19 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
             }
             .setNegativeButton("Anuluj", null)
             .show()
+    }
+
+    companion object {
+        private const val ARG_COMPANY_ID = "companyId"
+        private const val ARG_COMPANY_NAME = "companyName"
+
+        fun newInstance(companyId: Long, companyName: String): DepartmentsBottomSheetFragment {
+            return DepartmentsBottomSheetFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_COMPANY_ID, companyId)
+                    putString(ARG_COMPANY_NAME, companyName)
+                }
+            }
+        }
     }
 }
