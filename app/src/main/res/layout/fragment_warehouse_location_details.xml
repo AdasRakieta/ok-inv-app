@@ -335,6 +335,15 @@
 
                             </LinearLayout>
 
+                            <com.google.android.material.switchmaterial.SwitchMaterial
+                                android:id="@+id/packedToggle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Pokaż jako kartony"
+                                android:textSize="12sp"
+                                android:layout_marginEnd="8dp"
+                                android:checked="false" />
+
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/assignProductButton"
                                 style="@style/Widget.MaterialComponents.Button.TextButton"
@@ -352,6 +361,16 @@
                                 android:text="SKANUJ"
                                 android:textAllCaps="true"
                                 android:textSize="11sp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/addBoxButton"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="DODAJ KARTON"
+                                android:textAllCaps="true"
+                                android:textSize="11sp"
+                                android:layout_marginStart="8dp" />
 
                         </LinearLayout>
 
@@ -400,7 +419,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:nestedScrollingEnabled="true"
+                            android:nestedScrollingEnabled="false"
                             tools:itemCount="3"
                             tools:listitem="@layout/item_assigned_product" />
 

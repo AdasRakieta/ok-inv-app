@@ -46,6 +46,7 @@ class InventoryApplication : Application() {
     
     // Warehouse repository
     val warehouseLocationRepository by lazy { WarehouseLocationRepository(database.warehouseLocationDao()) }
+    val boxRepository by lazy { com.example.inventoryapp.data.repository.BoxRepository(database.boxDao()) }
     
     // Tracking repository
     val scanHistoryRepository by lazy { ScanHistoryRepository(database.scanHistoryDao()) }

@@ -15,6 +15,7 @@ class AssignedProductsAdapter(
 
     private var fullList: List<ProductEntity> = emptyList()
     private var filteredList: List<ProductEntity> = emptyList()
+    private var boxesMap: Map<Long, String> = emptyMap()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val binding = ItemAssignedProductBinding.inflate(
@@ -37,6 +38,12 @@ class AssignedProductsAdapter(
         }
     }
 
+    fun setBoxesMap(map: Map<Long, String>) {
+        boxesMap = map
+        // Refresh visible list to show updated box names
+        submitList(filteredList.toList())
+    }
+
     fun filterByQuery(query: String) {
         filteredList = if (query.isBlank()) {
             fullList
@@ -56,7 +63,11 @@ class AssignedProductsAdapter(
         fun bind(product: ProductEntity) {
             binding.apply {
                 productName.text = product.name
-                productSerial.text = "S/N: ${product.serialNumber}"
+                // Append box name when available
+                val boxSuffix = product.boxId?.let { id ->
+                    boxesMap[id]?.let { name -> " • ${name}" } ?: " • Box#${id}"
+                } ?: ""
+                productSerial.text = "S/N: ${product.serialNumber}${boxSuffix}"
                 
                 root.setOnClickListener {
                     onProductClick(product)

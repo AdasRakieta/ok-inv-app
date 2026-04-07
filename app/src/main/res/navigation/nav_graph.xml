@@ -35,6 +35,28 @@
     </fragment>
 
     <fragment
+        android:id="@+id/addEditBoxFragment"
+        android:name="com.example.inventoryapp.ui.warehouse.AddEditBoxFragment"
+        android:label="Dodaj/Edytuj karton">
+
+        <argument
+            android:name="boxId"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <argument
+            android:name="warehouseLocationId"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <argument
+            android:name="locationName"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <fragment
         android:id="@+id/productsListFragment"
         android:name="com.example.inventoryapp.ui.products.ProductsListFragment"
         android:label="Produkty">
@@ -250,6 +272,39 @@
         <action
             android:id="@+id/action_warehouse_to_addLocation"
             app:destination="@id/addLocationFragment" />
+        <action
+            android:id="@+id/action_warehouse_to_boxList"
+            app:destination="@id/boxListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/boxListFragment"
+        android:name="com.example.inventoryapp.ui.warehouse.BoxListFragment"
+        android:label="Pudełka">
+
+        <action
+            android:id="@+id/action_boxList_to_details"
+            app:destination="@id/boxDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/boxDetailsFragment"
+        android:name="com.example.inventoryapp.ui.warehouse.BoxDetailsFragment"
+        android:label="Szczegóły pudełka">
+
+        <argument
+            android:name="boxId"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <argument
+            android:name="qrUid"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
+        <deepLink
+            app:uri="invapp://box/{qrUid}" />
     </fragment>
 
     <fragment

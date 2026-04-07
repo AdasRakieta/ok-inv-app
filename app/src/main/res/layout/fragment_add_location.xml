@@ -61,7 +61,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Półka"
+                        android:text="Lokalizacja"
                         android:layout_marginTop="12dp"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp"
@@ -69,50 +69,21 @@
                         android:letterSpacing="0.08" />
 
                     <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/shelfLayout"
+                        android:id="@+id/locationLayout"
                         style="@style/Widget.App.FormInput.Outlined"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:hint="Półka"
-                        app:placeholderText="np. A1, B2, C3">
+                        android:hint="Lokalizacja"
+                        app:placeholderText="np. A1 / 1">
 
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/shelfInput"
+                            android:id="@+id/locationInput"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textColor="@color/text_primary"
-                            android:inputType="textCapCharacters"
-                            android:hint="np. A1, B2, C3" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Box / Pojemnik"
-                        android:layout_marginTop="8dp"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.08" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/binLayout"
-                        style="@style/Widget.App.FormInput.Outlined"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:hint="Box / Pojemnik"
-                        app:placeholderText="np. LARGE, SMALL, 1, 2">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/binInput"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/text_primary"
-                            android:inputType="textCapCharacters"
-                            android:hint="np. LARGE, SMALL, 1, 2" />
+                            android:inputType="text"
+                            android:hint="np. A1 / 1" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 

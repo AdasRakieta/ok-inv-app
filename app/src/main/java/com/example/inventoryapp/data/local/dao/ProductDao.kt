@@ -24,6 +24,15 @@ interface ProductDao {
     
     @Query("SELECT * FROM products WHERE warehouseLocationId = :locationId")
     fun getProductsByLocation(locationId: Long): Flow<List<ProductEntity>>
+
+    @Query("""
+        SELECT * FROM products WHERE warehouseLocationId = :locationId
+        OR boxId IN (SELECT id FROM boxes WHERE warehouseLocationId = :locationId)
+    """)
+    fun getProductsByLocationIncludingBoxes(locationId: Long): Flow<List<ProductEntity>>
+
+    @Query("SELECT * FROM products WHERE boxId = :boxId")
+    fun getProductsByBoxId(boxId: Long): Flow<List<ProductEntity>>
     
     @Query("SELECT * FROM products WHERE assignedToEmployeeId = :employeeId")
     fun getProductsAssignedToEmployee(employeeId: Long): Flow<List<ProductEntity>>

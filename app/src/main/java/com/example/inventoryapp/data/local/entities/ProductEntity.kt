@@ -21,6 +21,7 @@ import java.util.Date
         Index(value = ["customId"], unique = true),
         Index(value = ["categoryId"]),
         Index(value = ["warehouseLocationId"]),
+        Index(value = ["boxId"]),
         Index(value = ["assignedToContractorPointId"])
     ]
 )
@@ -57,6 +58,9 @@ data class ProductEntity(
     val assignedToContractorPointId: Long? = null,
     val assignmentDate: Long? = null,
     
+    // Optional parent box - if product is stored inside a box
+    val boxId: Long? = null,
+
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     

@@ -49,6 +49,9 @@ class ScannerFragment : Fragment() {
     private val warehouseLocationRepository by lazy {
         (requireActivity().application as InventoryApplication).warehouseLocationRepository
     }
+    private val boxRepository by lazy {
+        (requireActivity().application as InventoryApplication).boxRepository
+    }
 
     private var cameraExecutor: ExecutorService? = null
     private var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>? = null
@@ -190,27 +193,40 @@ class ScannerFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                val loc = withContext(Dispatchers.IO) {
-                    warehouseLocationRepository.getLocationByQrUid(qrUid)
+                // first try to resolve as Box
+                val box = withContext(Dispatchers.IO) {
+                    try { boxRepository.getBoxByQrUid(qrUid) } catch (e: Exception) { null }
                 }
 
-                if (loc != null) {
-                    // navigate to details (pass both code and qrUid if available)
+                if (box != null) {
                     val bundle = bundleOf(
-                        "locationName" to loc.code,
+                        "boxId" to box.id,
                         "qrUid" to qrUid
                     )
-                    findNavController().navigate(
-                        com.example.inventoryapp.R.id.warehouseLocationDetailsFragment,
-                        bundle
-                    )
+                    findNavController().navigate(com.example.inventoryapp.R.id.boxDetailsFragment, bundle)
                 } else {
-                    // navigate to add location and prefill with qrUid
-                    val bundle = bundleOf("locationName" to qrUid)
-                    findNavController().navigate(
-                        com.example.inventoryapp.R.id.addLocationFragment,
-                        bundle
-                    )
+                    val loc = withContext(Dispatchers.IO) {
+                        warehouseLocationRepository.getLocationByQrUid(qrUid)
+                    }
+
+                    if (loc != null) {
+                        // navigate to details (pass both code and qrUid if available)
+                        val bundle = bundleOf(
+                            "locationName" to loc.code,
+                            "qrUid" to qrUid
+                        )
+                        findNavController().navigate(
+                            com.example.inventoryapp.R.id.warehouseLocationDetailsFragment,
+                            bundle
+                        )
+                    } else {
+                        // navigate to add location and prefill with qrUid
+                        val bundle = bundleOf("locationName" to qrUid)
+                        findNavController().navigate(
+                            com.example.inventoryapp.R.id.addLocationFragment,
+                            bundle
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("ScannerFragment", "Error resolving location", e)

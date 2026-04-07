@@ -20,6 +20,12 @@ class ProductRepository(private val productDao: ProductDao) {
     
     fun getProductsByLocation(locationId: Long): Flow<List<ProductEntity>> = 
         productDao.getProductsByLocation(locationId)
+
+    fun getProductsByLocationIncludingBoxes(locationId: Long): Flow<List<ProductEntity>> =
+        productDao.getProductsByLocationIncludingBoxes(locationId)
+
+    fun getProductsByBoxId(boxId: Long): Flow<List<ProductEntity>> =
+        productDao.getProductsByBoxId(boxId)
     
     fun getProductsAssignedToEmployee(employeeId: Long): Flow<List<ProductEntity>> = 
         productDao.getProductsAssignedToEmployee(employeeId)

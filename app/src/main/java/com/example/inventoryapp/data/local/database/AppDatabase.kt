@@ -28,8 +28,10 @@ import com.example.inventoryapp.data.local.entities.*
         EquipmentEntity::class,
         EquipmentAssignmentEntity::class,
         
-        // Warehouse
-        WarehouseLocationEntity::class,
+            // Warehouse
+            WarehouseLocationEntity::class,
+            // Boxes
+            com.example.inventoryapp.data.local.entities.BoxEntity::class,
         
         // Orders
         OrderEntity::class,
@@ -43,7 +45,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 39,
+    version = 40,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -68,6 +70,7 @@ abstract class AppDatabase : RoomDatabase() {
     
     // Warehouse DAOs
     abstract fun warehouseLocationDao(): WarehouseLocationDao
+    abstract fun boxDao(): com.example.inventoryapp.data.local.dao.BoxDao
     
     // Order DAOs
     abstract fun orderDao(): OrderDao
@@ -664,6 +667,34 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 39 -> 40: Add boxes table and boxId to products
+        private val MIGRATION_39_40 = object : Migration(39, 40) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create boxes table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS boxes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        code TEXT,
+                        qrUid TEXT,
+                        warehouseLocationId INTEGER,
+                        description TEXT,
+                        createdAt INTEGER NOT NULL
+                    )
+                """)
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_boxes_qrUid ON boxes(qrUid) WHERE qrUid IS NOT NULL")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_boxes_warehouseLocationId ON boxes(warehouseLocationId)")
+
+                // Add boxId column to products
+                try {
+                    database.execSQL("ALTER TABLE products ADD COLUMN boxId INTEGER")
+                } catch (e: Exception) {
+                    // Some SQLite implementations may throw if column exists; ignore
+                }
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_products_boxId ON products(boxId)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -672,7 +703,7 @@ abstract class AppDatabase : RoomDatabase() {
                     "inventory_database"
                 )
                     .addMigrations(
-                            MIGRATION_24_25,
+                                    MIGRATION_24_25,
                             MIGRATION_25_26,
                             MIGRATION_26_27,
                             MIGRATION_27_28,
@@ -687,6 +718,7 @@ abstract class AppDatabase : RoomDatabase() {
                             MIGRATION_36_38,
                                 MIGRATION_37_38,
                                 MIGRATION_38_39
+                                        ,MIGRATION_39_40
                     )
                     .fallbackToDestructiveMigration()
                     .build()

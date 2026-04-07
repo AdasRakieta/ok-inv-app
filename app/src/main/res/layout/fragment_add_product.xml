@@ -417,6 +417,74 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- Storage type selector: Lokalizacja or Karton -->
+                    <RadioGroup
+                        android:id="@+id/storageTypeGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="8dp">
+
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/storageTypeLocation"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Lokalizacja"
+                            android:checked="true"
+                            android:textColor="@color/text_primary" />
+
+                        <com.google.android.material.radiobutton.MaterialRadioButton
+                            android:id="@+id/storageTypeBox"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Karton"
+                            android:textColor="@color/text_primary" />
+
+                    </RadioGroup>
+
+                    <!-- Box selector (shown when "Karton" is chosen) -->
+                    <LinearLayout
+                        android:id="@+id/boxContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Karton"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/boxLayout"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:hint="Wybierz karton"
+                            app:placeholderText="Wybierz karton"
+                            app:boxBackgroundColor="@color/home_card_background"
+                            app:boxStrokeColor="@color/warning"
+                            app:hintTextColor="@color/text_secondary">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/boxInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:textColor="@color/text_primary"
+                                android:hint="Wybierz karton" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                    <!-- Warehouse location selector (shown when "Lokalizacja" is chosen) -->
                     <LinearLayout
                         android:id="@+id/warehouseLocationContainer"
                         android:layout_width="match_parent"
@@ -512,7 +580,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/cancelButton"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.App.Button.Outlined"
                 android:layout_width="0dp"
                 android:layout_height="52dp"
                 android:layout_weight="1"
@@ -520,7 +588,7 @@
                 android:textAllCaps="false"
                 app:strokeColor="@color/home_card_stroke"
                 app:cornerRadius="14dp"
-                android:textColor="@color/text_secondary" />
+                android:textColor="@color/text_primary" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveButton"

@@ -63,27 +63,24 @@ class AddLocationFragment : Fragment() {
             
             binding.titleText.text = "Edytuj lokalizację"
             binding.saveButton.text = "Zapisz zmiany"
-            
-            val shelf = locationName.substringBefore("/").trim()
-            val bin = locationName.substringAfter("/", "").trim()
-            
-            binding.shelfInput.setText(shelf)
-            binding.binInput.setText(bin)
+            // Show full location string in single input
+            binding.locationInput.setText(locationName)
         }
     }
     
     private fun saveLocation() {
-        val shelf = binding.shelfInput.text.toString().trim()
-        val bin = binding.binInput.text.toString().trim()
+        val locationText = binding.locationInput.text.toString().trim()
         val description = binding.descriptionInput.text.toString().trim()
-        
-        if (shelf.isEmpty()) {
-            binding.shelfLayout.error = "Półka jest wymagana"
+
+        if (locationText.isEmpty()) {
+            binding.locationLayout.error = "Lokalizacja jest wymagana"
             return
         }
-        
+
+        val shelf = locationText.substringBefore("/").trim()
+        val bin = locationText.substringAfter("/", "").trim()
         val newLocationName = shelf + (if (bin.isNotEmpty()) " / $bin" else "")
-        
+
         if (isEditMode) {
             updateLocation(currentLocationName!!, shelf, bin, description)
         } else {

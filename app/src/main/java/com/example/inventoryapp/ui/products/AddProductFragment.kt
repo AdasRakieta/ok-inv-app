@@ -14,6 +14,7 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
+import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.domain.validators.AssignmentValidator
 import com.example.inventoryapp.utils.MovementHistoryUtils
@@ -47,6 +48,10 @@ class AddProductFragment : Fragment() {
     private var currentProduct: ProductEntity? = null
     private var selectedEmployeeId: Long? = null
     private var selectedStatus: ProductStatus = ProductStatus.IN_STOCK
+    private val boxRepository by lazy { (requireActivity().application as InventoryApplication).boxRepository }
+    private var boxes: List<BoxEntity> = emptyList()
+    private var storageTypeIsBox: Boolean = false
+    private var selectedBoxId: Long? = null
     private val assignmentValidator = AssignmentValidator()
 
     override fun onCreateView(
@@ -76,8 +81,14 @@ class AddProductFragment : Fragment() {
         setupCategories()
         setupStatusDropdown()
         setupEmployeesDropdown()
+        setupBoxesDropdown()
         setupWarehouseLocationsDropdown()
         loadProductIfEditing()
+
+        binding.storageTypeGroup.setOnCheckedChangeListener { _, checkedId ->
+            storageTypeIsBox = checkedId == com.example.inventoryapp.R.id.storageTypeBox
+            toggleEmployeeField()
+        }
 
         // Clear layout errors when user edits inputs so error icon/message is removed
         binding.serialNumberInput.addTextChangedListener { _ -> binding.serialNumberLayout.error = null }
@@ -168,9 +179,49 @@ class AddProductFragment : Fragment() {
         }
         
         val showLocation = selectedStatus == ProductStatus.IN_STOCK
-        binding.warehouseLocationContainer.visibility = if (showLocation) View.VISIBLE else View.GONE
+        // Show/hide storage type selector (Lokalizacja/Karton) only for IN_STOCK
+        binding.storageTypeGroup.visibility = if (showLocation) View.VISIBLE else View.GONE
+
+        // Show warehouse location when storageType is set to Location
+        binding.warehouseLocationContainer.visibility = if (showLocation && !storageTypeIsBox) View.VISIBLE else View.GONE
+        // Show box selector when storageType is set to Box
+        binding.boxContainer.visibility = if (showLocation && storageTypeIsBox) View.VISIBLE else View.GONE
+
         if (!showLocation) {
+            // reset storage selection & clear inputs when not in warehouse status
+            storageTypeIsBox = false
+            // ensure default selection is 'Lokalizacja'
+            binding.storageTypeLocation.isChecked = true
             binding.warehouseLocationInput.setText("")
+            binding.boxInput.setText("")
+            selectedBoxId = null
+        }
+    }
+
+    private fun setupBoxesDropdown() {
+        lifecycleScope.launch {
+            boxRepository.getAllBoxes().collect { list ->
+                boxes = list
+                val names = boxes.map { it.name }
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, names)
+                binding.boxInput.setAdapter(adapter)
+
+                val product = currentProduct
+                if (product != null && product.boxId != null) {
+                    val box = boxes.firstOrNull { it.id == product.boxId }
+                    if (box != null) {
+                        binding.boxInput.setText(box.name, false)
+                        selectedBoxId = box.id
+                        storageTypeIsBox = true
+                        binding.storageTypeBox.isChecked = true
+                        toggleEmployeeField()
+                    }
+                }
+
+                binding.boxInput.setOnItemClickListener { _, _, position, _ ->
+                    selectedBoxId = boxes.getOrNull(position)?.id
+                }
+            }
         }
     }
 
@@ -241,10 +292,10 @@ class AddProductFragment : Fragment() {
         val model = binding.modelInput.text.toString().trim().ifEmpty { null }
         val description = binding.descriptionInput.text.toString().trim().ifEmpty { null }
         val warehouseLocation = binding.warehouseLocationInput.text.toString().trim().ifEmpty { null }
-        
         // Parse shelf and bin from warehouse location (format: "Shelf / Bin")
         val shelf = warehouseLocation?.substringBefore("/")?.trim()
         val bin = warehouseLocation?.substringAfter("/", "")?.trim()?.takeIf { it.isNotEmpty() }
+        val boxName = binding.boxInput.text.toString().trim().ifEmpty { null }
         
         // Get selected status
         val statusLabel = binding.statusInput.text.toString().trim()
@@ -329,8 +380,11 @@ class AddProductFragment : Fragment() {
                 manufacturer = manufacturer,
                 model = model,
                 description = description,
-                shelf = if (selectedStatus == ProductStatus.IN_STOCK) shelf else null,
-                bin = if (selectedStatus == ProductStatus.IN_STOCK) bin else null,
+                // Only set shelf/bin when storing directly in location
+                shelf = if (selectedStatus == ProductStatus.IN_STOCK && !storageTypeIsBox) shelf else null,
+                bin = if (selectedStatus == ProductStatus.IN_STOCK && !storageTypeIsBox) bin else null,
+                // If storing in box, set boxId; otherwise clear
+                boxId = if (selectedStatus == ProductStatus.IN_STOCK && storageTypeIsBox) selectedBoxId else null,
                 assignedToEmployeeId = if (selectedStatus == ProductStatus.ASSIGNED) selectedEmployeeId else null,
                 assignmentDate = assignmentDate,
                 createdAt = now,
@@ -346,8 +400,9 @@ class AddProductFragment : Fragment() {
                 manufacturer = manufacturer,
                 model = model,
                 description = description,
-                shelf = if (selectedStatus == ProductStatus.IN_STOCK) shelf else null,
-                bin = if (selectedStatus == ProductStatus.IN_STOCK) bin else null,
+                shelf = if (selectedStatus == ProductStatus.IN_STOCK && !storageTypeIsBox) shelf else null,
+                bin = if (selectedStatus == ProductStatus.IN_STOCK && !storageTypeIsBox) bin else null,
+                boxId = if (selectedStatus == ProductStatus.IN_STOCK && storageTypeIsBox) selectedBoxId else null,
                 assignedToEmployeeId = if (selectedStatus == ProductStatus.ASSIGNED) selectedEmployeeId else null,
                 assignmentDate = assignmentDate,
                 updatedAt = now
