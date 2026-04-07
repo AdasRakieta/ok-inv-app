@@ -15,6 +15,7 @@ import com.example.inventoryapp.ui.components.FilterBottomSheet
 import com.example.inventoryapp.ui.components.FilterOption
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -24,11 +25,13 @@ class BoxListFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val boxRepository by lazy { (requireActivity().application as InventoryApplication).boxRepository }
+    private val productRepository by lazy { (requireActivity().application as InventoryApplication).productRepository }
 
     private lateinit var boxesAdapter: BoxesAdapter
     private var allBoxes: List<com.example.inventoryapp.data.local.entities.BoxEntity> = emptyList()
     private var currentQuery: String = ""
     private var searchJob: Job? = null
+    private var countsJob: Job? = null
 
     private enum class SortOption { NEWEST, OLDEST, NAME_ASC, NAME_DESC }
     private var sortOption: SortOption = SortOption.NEWEST
@@ -87,7 +90,7 @@ class BoxListFragment : Fragment() {
                 FilterOption("NAME_ASC", "Nazwa A-Z", "🔤", sortOption == SortOption.NAME_ASC),
                 FilterOption("NAME_DESC", "Nazwa Z-A", "🔡", sortOption == SortOption.NAME_DESC)
             )
-            FilterBottomSheet.show(this, "↕️ Sortuj", options) { option ->
+            FilterBottomSheet.show(this, "Sortuj", options) { option ->
                 sortOption = when (option.id) {
                     "NEWEST" -> SortOption.NEWEST
                     "OLDEST" -> SortOption.OLDEST
@@ -109,6 +112,16 @@ class BoxListFragment : Fragment() {
                     binding.emptyStateLayout.visibility = View.GONE
                     binding.boxesRecyclerView.visibility = View.VISIBLE
                     applyFilterAndSort()
+                }
+
+                countsJob?.cancel()
+                countsJob = lifecycleScope.launch {
+                    val counts = mutableMapOf<Long, Int>()
+                    for (box in boxes) {
+                        val products = productRepository.getProductsByBoxId(box.id).firstOrNull().orEmpty()
+                        counts[box.id] = products.size
+                    }
+                    boxesAdapter.setCountsMap(counts)
                 }
             }
         }
@@ -134,6 +147,7 @@ class BoxListFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         searchJob?.cancel()
+        countsJob?.cancel()
         _binding = null
     }
 }

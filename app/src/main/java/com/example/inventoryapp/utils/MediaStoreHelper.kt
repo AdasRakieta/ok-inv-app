@@ -50,7 +50,7 @@ object MediaStoreHelper {
 
         // Fallback: write to external file using FileHelper
         return try {
-            val exportsDir: File = FileHelper.getExportsDirectory()
+            val exportsDir: File = FileHelper.getExportsDirectory(context)
             val file = File(exportsDir, "$displayName.png")
             file.outputStream().use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)

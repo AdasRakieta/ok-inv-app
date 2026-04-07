@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.inventoryapp.R
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.databinding.FragmentAddEditBoxBinding
@@ -37,7 +38,11 @@ class AddEditBoxFragment : Fragment() {
             binding.locationHint.text = "Lokalizacja: $locationName"
         }
 
+        binding.cancelBoxButton.text = getString(R.string.cancel_pl)
+        binding.saveBoxButton.text = getString(R.string.save_pl)
+
         if (boxId > 0L) {
+            binding.saveBoxButton.text = getString(R.string.edit_box)
             // Load existing
             lifecycleScope.launch {
                 val existing = boxRepository.getBoxByIdOnce(boxId)

@@ -357,9 +357,9 @@ object BrotherPrinterHelper {
      * @param macAddress Device MAC address (e.g. "A4:34:F1:7D:4A:B8")
      * @return BluetoothDevice or null if Bluetooth not available
      */
-    fun getBluetoothDeviceByAddress(macAddress: String): BluetoothDevice? {
+    fun getBluetoothDeviceByAddress(context: android.content.Context, macAddress: String): BluetoothDevice? {
         try {
-            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            val bluetoothAdapter = com.example.inventoryapp.utils.getBluetoothAdapter(context)
             if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
                 Log.e(TAG, "Bluetooth adapter not available or disabled")
                 return null

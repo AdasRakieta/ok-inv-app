@@ -37,7 +37,7 @@
     <fragment
         android:id="@+id/addEditBoxFragment"
         android:name="com.example.inventoryapp.ui.warehouse.AddEditBoxFragment"
-        android:label="Dodaj/Edytuj karton">
+        android:label="Karton">
 
         <argument
             android:name="boxId"
@@ -280,7 +280,7 @@
     <fragment
         android:id="@+id/boxListFragment"
         android:name="com.example.inventoryapp.ui.warehouse.BoxListFragment"
-        android:label="Pudełka">
+        android:label="Kartony">
 
         <action
             android:id="@+id/action_boxList_to_details"
@@ -290,7 +290,7 @@
     <fragment
         android:id="@+id/boxDetailsFragment"
         android:name="com.example.inventoryapp.ui.warehouse.BoxDetailsFragment"
-        android:label="Szczegóły pudełka">
+        android:label="Szczegóły kartonu">
 
         <argument
             android:name="boxId"

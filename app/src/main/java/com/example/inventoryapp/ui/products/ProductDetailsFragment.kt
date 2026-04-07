@@ -422,6 +422,7 @@ class ProductDetailsFragment : Fragment() {
                     com.example.inventoryapp.data.models.PrinterConfig.ConnectionMethod.BLUETOOTH -> {
                         // Get Bluetooth device by MAC - NO PAIRING REQUIRED!
                         val device = BrotherPrinterHelper.getBluetoothDeviceByAddress(
+                            requireContext(),
                             config.bluetoothAddress
                         )
                         

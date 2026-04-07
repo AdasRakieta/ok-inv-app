@@ -1,5 +1,6 @@
 package com.example.inventoryapp.utils
 
+import android.content.Context
 import android.os.Environment
 import java.io.File
 
@@ -14,8 +15,8 @@ object FileHelper {
     /**
      * Get the base Documents/inventory directory
      */
-    fun getAppDirectory(): File {
-        val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+    fun getAppDirectory(context: Context): File {
+        val documentsDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) ?: context.filesDir
         val appDir = File(documentsDir, APP_DIR)
         if (!appDir.exists()) {
             appDir.mkdirs()
@@ -26,8 +27,8 @@ object FileHelper {
     /**
      * Get the Documents/inventory/exports directory
      */
-    fun getExportsDirectory(): File {
-        val appDir = getAppDirectory()
+    fun getExportsDirectory(context: Context): File {
+        val appDir = getAppDirectory(context)
         val exportsDir = File(appDir, EXPORTS_DIR)
         if (!exportsDir.exists()) {
             exportsDir.mkdirs()
@@ -38,8 +39,8 @@ object FileHelper {
     /**
      * Get the Documents/inventory/logs directory
      */
-    fun getLogsDirectory(): File {
-        val appDir = getAppDirectory()
+    fun getLogsDirectory(context: Context): File {
+        val appDir = getAppDirectory(context)
         val logsDir = File(appDir, LOGS_DIR)
         if (!logsDir.exists()) {
             logsDir.mkdirs()
@@ -57,9 +58,9 @@ object FileHelper {
     /**
      * Get available space in bytes
      */
-    fun getAvailableSpace(): Long {
+    fun getAvailableSpace(context: Context): Long {
         return try {
-            val exportsDir = getExportsDirectory()
+            val exportsDir = getExportsDirectory(context)
             exportsDir.usableSpace
         } catch (e: Exception) {
             0L

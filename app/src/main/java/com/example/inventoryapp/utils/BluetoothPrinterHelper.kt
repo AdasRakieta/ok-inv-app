@@ -2,12 +2,14 @@ package com.example.inventoryapp.utils
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Environment
+import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.example.inventoryapp.data.models.PrinterModel
@@ -20,6 +22,7 @@ import java.io.PrintWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.inventoryapp.utils.getBluetoothAdapter
 import java.util.UUID
 
 /**
@@ -54,8 +57,8 @@ class BluetoothPrinterHelper {
          */
         private fun initFileLogging(context: Context) {
             try {
-                // Use same directory as AppLogger: /Documents/inventory/logs
-                val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+                // Prefer app-specific external files dir; fallback to internal files
+                val documentsDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) ?: context.filesDir
                 val logsDir = File(documentsDir, "inventory/logs")
                 if (!logsDir.exists()) {
                     logsDir.mkdirs()
@@ -117,7 +120,7 @@ class BluetoothPrinterHelper {
          */
         suspend fun scanPrinters(context: Context): List<BluetoothDevice> = withContext(Dispatchers.IO) {
             try {
-                val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+                val bluetoothAdapter = getBluetoothAdapter(context)
                 if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
                     Log.w(TAG, "Bluetooth not available or not enabled")
                     return@withContext emptyList()
@@ -128,9 +131,9 @@ class BluetoothPrinterHelper {
                 // Filter devices that might be printers
                 pairedDevices.filter { device ->
                     @Suppress("MissingPermission")
-                    val name = device.name?.toLowerCase() ?: ""
-                    name.contains("printer") || 
-                    name.contains("print") || 
+                    val name = device.name?.lowercase(Locale.getDefault()) ?: ""
+                    name.contains("printer") ||
+                    name.contains("print") ||
                     name.contains("pos") ||
                     name.contains("thermal")
                 }
@@ -161,7 +164,7 @@ class BluetoothPrinterHelper {
             Log.d(TAG, "Connecting to ${printerModel.displayName} at $macAddress")
             
             try {
-                val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+                val bluetoothAdapter = getBluetoothAdapter(context)
                 if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
                     logToFile(context, "WARN", "Bluetooth not available or not enabled")
                     Log.w(TAG, "Bluetooth not available or not enabled")
@@ -398,7 +401,7 @@ class BluetoothPrinterHelper {
             logToFile(context, "INFO", logMsg4)
             
             try {
-                val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+                val bluetoothAdapter = getBluetoothAdapter(context)
                 if (bluetoothAdapter == null) {
                     val msg = "❌ FATAL: Bluetooth adapter is NULL - device doesn't support Bluetooth"
                     Log.e(TAG, msg)

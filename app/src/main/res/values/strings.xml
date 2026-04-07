@@ -93,23 +93,23 @@
     <string name="bulk_scan_scanned_count">Scanned: %d products</string>
 
     <!-- Boxes / Cartons -->
-    <string name="boxes">Boxes</string>
-    <string name="box_name">Nazwa pudełka</string>
-    <string name="box_information">Box Information</string>
-    <string name="warehouse_location">Warehouse Location</string>
-    <string name="select_products">Select Products</string>
-    <string name="no_products_available">No products available</string>
-    <string name="no_products_in_box">No products in this box</string>
-    <string name="no_boxes_found">No boxes found</string>
-    <string name="search_boxes">Search boxes...</string>
-    <string name="add_box">Add Box</string>
-    <string name="box_created_successfully">Box created successfully</string>
+    <string name="boxes">Kartony</string>
+    <string name="box_name">Nazwa kartonu</string>
+    <string name="box_information">Informacje o kartonie</string>
+    <string name="warehouse_location">Lokalizacja magazynowa</string>
+    <string name="select_products">Wybierz produkty</string>
+    <string name="no_products_available">Brak dostępnych produktów</string>
+    <string name="no_products_in_box">Brak produktów w kartonie</string>
+    <string name="no_boxes_found">Brak kartonów</string>
+    <string name="search_boxes">Szukaj kartonów...</string>
+    <string name="add_box">Dodaj karton</string>
+    <string name="box_created_successfully">Karton został dodany</string>
     <string name="print_label">Print Label</string>
-    <string name="delete_boxes">Delete Boxes</string>
-    <string name="confirm_delete_boxes">Delete %d selected box(es)?</string>
+    <string name="delete_boxes">Usuń kartony</string>
+    <string name="confirm_delete_boxes">Usunąć %d zaznaczonych kartonów?</string>
     <string name="select_all">Select All</string>
     <string name="deselect_all">Deselect All</string>
-    <string name="location">Location</string>
+    <string name="location">Lokalizacja</string>
     <string name="search">Search</string>
     <string name="sort">Sortuj</string>
     <string name="search_by_sn">Search by serial number...</string>
@@ -117,19 +117,19 @@
     <!-- Polish localization for Boxes UI -->
     <string name="no_location">Brak lokalizacji</string>
     <string name="no_products">Brak produktów</string>
-    <string name="products_in_box">Produkty w pudełku</string>
+    <string name="products_in_box">Produkty w kartonie</string>
     <string name="modify">Modyfikuj</string>
     <string name="add">Dodaj</string>
     <string name="add_products_in_bulk">Dodaj produkty hurtowo</string>
-    <string name="edit_box">Edytuj pudełko</string>
+    <string name="edit_box">Edytuj</string>
     <string name="test_printer_connection">Testuj połączenie drukarki</string>
     <string name="qr_generate_failed">Nie udało się wygenerować QR</string>
     <string name="qr_saved">QR zapisano</string>
     <string name="qr_share">Udostępnij</string>
     <string name="qr_save_failed">Nie udało się zapisać obrazu</string>
-    <string name="box_qr_title">QR pudełka</string>
+    <string name="box_qr_title">QR kartonu</string>
     <string name="box_qr_close">Zamknij</string>
-    <string name="product_removed_from_box">Produkt usunięty z pudełka</string>
+    <string name="product_removed_from_box">Produkt usunięty z kartonu</string>
     
     <!-- Category Statistics -->
     <string name="category_statistics">Category Statistics</string>

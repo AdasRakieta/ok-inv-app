@@ -2,6 +2,7 @@ package com.example.inventoryapp.utils
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import com.example.inventoryapp.utils.getBluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -62,7 +63,7 @@ class NearbyDeviceManager(private val context: Context) {
     }
 
     init {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        bluetoothAdapter = getBluetoothAdapter(context)
         registerBluetoothReceiver()
     }
 

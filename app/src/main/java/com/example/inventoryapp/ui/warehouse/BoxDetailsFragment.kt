@@ -9,13 +9,17 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
+import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
+import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentBoxDetailsBinding
 import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
 import com.example.inventoryapp.utils.MediaStoreHelper
@@ -34,10 +38,12 @@ class BoxDetailsFragment : Fragment() {
 
     private val boxRepository by lazy { (requireActivity().application as InventoryApplication).boxRepository }
     private val productRepository by lazy { (requireActivity().application as InventoryApplication).productRepository }
+    private val warehouseLocationRepository by lazy { (requireActivity().application as InventoryApplication).warehouseLocationRepository }
 
     private lateinit var assignedProductsAdapter: AssignedProductsAdapter
 
     private var currentBox: BoxEntity? = null
+    private var currentProductsInBox: List<ProductEntity> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentBoxDetailsBinding.inflate(inflater, container, false)
@@ -51,8 +57,8 @@ class BoxDetailsFragment : Fragment() {
             // Unassign product from box
             lifecycleScope.launch {
                 val updated = product.copy(boxId = null)
-                productRepository.updateWithHistory(updated, "Removed from box")
-                Toast.makeText(requireContext(), "Produkt usunięty z pudełka", Toast.LENGTH_SHORT).show()
+                productRepository.updateWithHistory(updated, "Usunięto z kartonu ${currentBox?.name.orEmpty()}")
+                Toast.makeText(requireContext(), getString(R.string.product_removed_from_box), Toast.LENGTH_SHORT).show()
             }
         })
 
@@ -63,6 +69,11 @@ class BoxDetailsFragment : Fragment() {
         }
 
         binding.printLabelButton.setOnClickListener { generateAndShowQr() }
+        binding.editBoxButton.setOnClickListener { openEditScreen() }
+        binding.addProductsButton.setOnClickListener { showAddProductsDialog() }
+        binding.addBulkButton.setOnClickListener { showAddProductsDialog() }
+        binding.modifyProductsButton.setOnClickListener { showRemoveProductsDialog() }
+        binding.deleteBoxButton.setOnClickListener { showDeleteBoxConfirmation() }
 
         loadBox()
     }
@@ -78,27 +89,153 @@ class BoxDetailsFragment : Fragment() {
             } catch (e: Exception) { null }
 
             if (box == null) {
-                Toast.makeText(requireContext(), "Pudełko nie znalezione", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Karton nie znaleziony", Toast.LENGTH_SHORT).show()
                 return@launch
             }
 
             currentBox = box
             binding.boxName.text = box.name
-            binding.boxDescription.text = box.description ?: ""
-            binding.boxLocation.text = box.warehouseLocationId?.toString() ?: "Brak lokalizacji"
+            binding.boxDescription.text = box.description ?: "Brak opisu"
+            binding.boxDescription.visibility = if (box.description.isNullOrBlank()) View.GONE else View.VISIBLE
+            binding.boxLocation.text = resolveLocationLabel(box.warehouseLocationId)
             binding.boxCreatedDate.text = android.text.format.DateFormat.getDateFormat(requireContext()).format(java.util.Date(box.createdAt))
 
-            // Collect products in this box
-            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
-                productRepository.getProductsByBoxId(box.id).collect { products ->
+            observeProducts(box.id)
+        }
+    }
+
+    private fun observeProducts(boxId: Long) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                productRepository.getProductsByBoxId(boxId).collect { products ->
+                    currentProductsInBox = products
                     assignedProductsAdapter.setFullList(products)
                     val isEmpty = products.isEmpty()
                     binding.noProductsText.visibility = if (isEmpty) View.VISIBLE else View.GONE
                     binding.productsRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
-                    binding.productsHeader.text = "${products.size} ${if (products.size==1) "product" else "products"} assigned"
+                    val countLabel = resources.getQuantityString(R.plurals.products_count, products.size, products.size)
+                    binding.productsHeader.text = "$countLabel w kartonie"
                 }
             }
         }
+    }
+
+    private suspend fun resolveLocationLabel(locationId: Long?): String {
+        if (locationId == null) return getString(R.string.no_location)
+        val location = warehouseLocationRepository.getLocationById(locationId).firstOrNull()
+        return location?.code ?: "Lokalizacja #$locationId"
+    }
+
+    private fun openEditScreen() {
+        val box = currentBox ?: return
+        val bundle = Bundle().apply {
+            putLong("boxId", box.id)
+            putLong("warehouseLocationId", box.warehouseLocationId ?: 0L)
+        }
+        findNavController().navigate(R.id.addEditBoxFragment, bundle)
+    }
+
+    private fun showAddProductsDialog() {
+        val box = currentBox ?: return
+        lifecycleScope.launch {
+            val availableProducts = productRepository.getAllProducts().firstOrNull().orEmpty()
+                .filter { it.boxId == null && it.status == ProductStatus.IN_STOCK }
+                .sortedBy { it.name.lowercase() }
+
+            if (availableProducts.isEmpty()) {
+                Toast.makeText(requireContext(), "Brak dostępnych produktów do dodania", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            val labels = availableProducts.map { product ->
+                "${product.name} • ${product.serialNumber}"
+            }.toTypedArray()
+            val checked = BooleanArray(labels.size)
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Dodaj produkty do kartonu")
+                .setMultiChoiceItems(labels, checked) { _, which, isChecked ->
+                    checked[which] = isChecked
+                }
+                .setNegativeButton(getString(R.string.cancel_pl), null)
+                .setPositiveButton(getString(R.string.add)) { _, _ ->
+                    val selected = availableProducts.filterIndexed { index, _ -> checked[index] }
+                    if (selected.isEmpty()) return@setPositiveButton
+
+                    lifecycleScope.launch {
+                        selected.forEach { product ->
+                            val updated = product.copy(boxId = box.id)
+                            productRepository.updateWithHistory(updated, "Dodano do kartonu ${box.name}")
+                        }
+                        Toast.makeText(requireContext(), "Dodano ${selected.size} produktów", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .show()
+        }
+    }
+
+    private fun showRemoveProductsDialog() {
+        val box = currentBox ?: return
+        if (currentProductsInBox.isEmpty()) {
+            Toast.makeText(requireContext(), "Karton nie zawiera produktów", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val labels = currentProductsInBox.map { product ->
+            "${product.name} • ${product.serialNumber}"
+        }.toTypedArray()
+        val checked = BooleanArray(labels.size)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Usuń produkty z kartonu")
+            .setMultiChoiceItems(labels, checked) { _, which, isChecked ->
+                checked[which] = isChecked
+            }
+            .setNegativeButton(getString(R.string.cancel_pl), null)
+            .setPositiveButton("Usuń") { _, _ ->
+                val selected = currentProductsInBox.filterIndexed { index, _ -> checked[index] }
+                if (selected.isEmpty()) return@setPositiveButton
+
+                lifecycleScope.launch {
+                    selected.forEach { product ->
+                        val updated = product.copy(boxId = null)
+                        productRepository.updateWithHistory(updated, "Usunięto z kartonu ${box.name}")
+                    }
+                    Toast.makeText(requireContext(), "Usunięto ${selected.size} produktów", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .show()
+    }
+
+    private fun showDeleteBoxConfirmation() {
+        val box = currentBox ?: return
+
+        val message = if (currentProductsInBox.isEmpty()) {
+            "Czy na pewno chcesz usunąć karton ${box.name}?"
+        } else {
+            "Karton ${box.name} zawiera ${currentProductsInBox.size} produktów. Produkty zostaną odpięte od kartonu. Kontynuować?"
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Usuń karton")
+            .setMessage(message)
+            .setNegativeButton(getString(R.string.cancel_pl), null)
+            .setPositiveButton("Usuń") { _, _ ->
+                lifecycleScope.launch {
+                    try {
+                        currentProductsInBox.forEach { product ->
+                            val updated = product.copy(boxId = null)
+                            productRepository.updateWithHistory(updated, "Karton ${box.name} został usunięty")
+                        }
+                        boxRepository.deleteBox(box)
+                        Toast.makeText(requireContext(), "Karton usunięty", Toast.LENGTH_SHORT).show()
+                        findNavController().navigateUp()
+                    } catch (e: Exception) {
+                        Toast.makeText(requireContext(), "Nie udało się usunąć kartonu", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .show()
     }
 
     private fun generateAndShowQr() {
@@ -158,10 +295,10 @@ class BoxDetailsFragment : Fragment() {
         }
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("QR pudełka")
+            .setTitle(getString(R.string.box_qr_title))
             .setView(imageView)
-            .setPositiveButton("Zamknij", null)
-            .setNeutralButton("Udostępnij") { _, _ ->
+            .setPositiveButton(getString(R.string.box_qr_close), null)
+            .setNeutralButton(getString(R.string.qr_share)) { _, _ ->
                 val uri = MediaStoreHelper.saveBitmap(requireContext(), bitmap, "box_${System.currentTimeMillis()}")
                 if (uri != null) {
                     val share = Intent(Intent.ACTION_SEND).apply {

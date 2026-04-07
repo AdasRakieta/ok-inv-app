@@ -212,7 +212,7 @@ class PrinterSettingsViewModel(application: Application) : AndroidViewModel(appl
     private suspend fun testBluetoothConnection(macAddress: String) {
         try {
             // Get Bluetooth adapter
-            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            val bluetoothAdapter = com.example.inventoryapp.utils.getBluetoothAdapter(getApplication())
             if (bluetoothAdapter == null) {
                 _testPrintResult.value = TestPrintResult.Error(
                     "Bluetooth adapter not found on this device"
@@ -230,7 +230,7 @@ class PrinterSettingsViewModel(application: Application) : AndroidViewModel(appl
             }
 
             // Get device by MAC address - NO PAIRING CHECK!
-            val device = BrotherPrinterHelper.getBluetoothDeviceByAddress(macAddress)
+            val device = BrotherPrinterHelper.getBluetoothDeviceByAddress(getApplication(), macAddress)
 
             if (device == null) {
                 _testPrintResult.value = TestPrintResult.Error(

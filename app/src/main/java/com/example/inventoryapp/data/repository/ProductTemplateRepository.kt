@@ -114,6 +114,32 @@ class ProductTemplateRepository(private val productTemplateDao: ProductTemplateD
                 )
             )
         }
+
+        // Tablet templates (use variable to avoid unused warning)
+        tabletCategory?.let { category ->
+            templates.add(
+                ProductTemplateEntity(
+                    name = "Tablet Samsung",
+                    categoryId = category.id,
+                    defaultManufacturer = "Samsung",
+                    defaultModel = "Galaxy Tab",
+                    defaultDescription = "Tablet do prac mobilnych"
+                )
+            )
+        }
+
+        // Docking station templates
+        dockingCategory?.let { category ->
+            templates.add(
+                ProductTemplateEntity(
+                    name = "Stacja dokująca Dell",
+                    categoryId = category.id,
+                    defaultManufacturer = "Dell",
+                    defaultModel = "WD19",
+                    defaultDescription = "Stacja dokująca do laptopa"
+                )
+            )
+        }
         
         // Insert all templates
         templates.forEach { template ->

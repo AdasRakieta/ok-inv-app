@@ -20,6 +20,7 @@ import java.util.*
 object AppLogger {
     private const val TAG = "InventoryApp"
     private const val LOG_DIR = "inventory/logs"
+    private var appContext: Context? = null
     
     // Coroutine scope for async file logging
     private val logScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -31,8 +32,13 @@ object AppLogger {
     /**
      * Get the logs directory in Documents
      */
-    fun getLogsDirectory(): File {
-        val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+    fun init(context: Context) {
+        appContext = context.applicationContext
+    }
+
+    fun getLogsDirectory(context: Context? = appContext): File {
+        val ctx = context ?: throw IllegalStateException("AppLogger not initialized. Call AppLogger.init(context) before using.")
+        val documentsDir = ctx.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) ?: ctx.filesDir
         val logsDir = File(documentsDir, LOG_DIR)
         if (!logsDir.exists()) {
             logsDir.mkdirs()

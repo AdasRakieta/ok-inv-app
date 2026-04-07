@@ -53,7 +53,8 @@ class InventoryApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        
+        com.example.inventoryapp.utils.AppLogger.init(this)
+
         CoroutineScope(Dispatchers.IO).launch {
             categoryRepository.initializeDefaultCategories()
         }
