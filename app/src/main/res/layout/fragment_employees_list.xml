@@ -94,7 +94,27 @@
             android:gravity="center_vertical">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/filterButton"
+                android:id="@+id/departmentFilterButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:minHeight="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="Dział"
+                android:textSize="12sp"
+                android:maxLines="1"
+                android:textAllCaps="false"
+                app:backgroundTint="@color/home_card_background"
+                app:strokeColor="@color/home_card_stroke"
+                app:strokeWidth="1dp"
+                app:cornerRadius="10dp"
+                android:textColor="@color/text_primary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/companyFilterButton"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
@@ -103,19 +123,15 @@
                 android:minHeight="0dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="Dział/Firma"
+                android:text="Firma"
                 android:textSize="12sp"
                 android:maxLines="1"
                 android:textAllCaps="false"
-                app:icon="@drawable/ic_filter_custom"
-                app:iconPadding="6dp"
-                app:iconTint="@color/text_secondary"
                 app:backgroundTint="@color/home_card_background"
                 app:strokeColor="@color/home_card_stroke"
                 app:strokeWidth="1dp"
                 app:cornerRadius="10dp"
                 android:textColor="@color/text_primary" />
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/sortButton"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"

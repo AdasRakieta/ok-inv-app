@@ -52,4 +52,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Global FAB moved into view_bottom_nav for correct anchoring -->
+
 </androidx.constraintlayout.widget.ConstraintLayout>

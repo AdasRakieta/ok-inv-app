@@ -103,6 +103,64 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <HorizontalScrollView
+                android:id="@+id/filterSortBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:fillViewport="true"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/zoneFilterButton"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:minHeight="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="Strefa"
+                        android:textSize="12sp"
+                        android:maxLines="1"
+                        android:textAllCaps="false"
+                        app:backgroundTint="@color/home_card_background"
+                        app:strokeColor="@color/home_card_stroke"
+                        app:strokeWidth="1dp"
+                        app:cornerRadius="10dp"
+                        android:textColor="@color/text_primary" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/sortButton"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="8dp"
+                        android:padding="0dp"
+                        android:minHeight="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:contentDescription="Sortuj"
+                        app:icon="@android:drawable/ic_menu_sort_by_size"
+                        app:iconPadding="0dp"
+                        app:iconGravity="textStart"
+                        app:iconTint="@color/home_primary"
+                        app:backgroundTint="@color/home_card_background"
+                        app:strokeColor="@color/home_card_stroke"
+                        app:strokeWidth="1dp"
+                        app:cornerRadius="10dp" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/locationsRecyclerView"
                 android:layout_width="match_parent"

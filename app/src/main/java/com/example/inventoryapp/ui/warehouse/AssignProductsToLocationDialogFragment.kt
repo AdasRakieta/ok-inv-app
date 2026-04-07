@@ -15,9 +15,8 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.databinding.DialogAssignProductsToLocationBinding
-import com.example.inventoryapp.databinding.BottomSheetFilterBinding
-import com.example.inventoryapp.ui.products.FilterOption
-import com.example.inventoryapp.ui.products.FilterOptionsAdapter
+import com.example.inventoryapp.ui.components.FilterOption
+import com.example.inventoryapp.ui.components.FilterBottomSheet
 import com.example.inventoryapp.ui.employees.SelectableProductsAdapter
 import com.example.inventoryapp.ui.employees.SelectableProductItem
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -207,34 +206,14 @@ class AssignProductsToLocationDialogFragment(
             )
         }
 
-        showFilterBottomSheet("🗂️ Filtruj po kategorii", options) { option ->
+        FilterBottomSheet.show(this, "🗂️ Filtruj po kategorii", options) { option ->
             currentCategoryFilter = if (option.id == "all") null else option.id
             updateFilterLabels()
             filterProducts()
         }
     }
 
-    private fun showFilterBottomSheet(
-        title: String,
-        options: List<FilterOption>,
-        onOptionSelected: (FilterOption) -> Unit
-    ) {
-        val bottomSheet = BottomSheetDialog(requireContext())
-        val sheetBinding = BottomSheetFilterBinding.inflate(layoutInflater)
-
-        sheetBinding.sheetTitle.text = title
-
-        val adapter = FilterOptionsAdapter(options) { selected ->
-            bottomSheet.dismiss()
-            onOptionSelected(selected)
-        }
-
-        sheetBinding.optionsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        sheetBinding.optionsRecyclerView.adapter = adapter
-
-        bottomSheet.setContentView(sheetBinding.root)
-        bottomSheet.show()
-    }
+    
 
     private fun updateFilterLabels() {
         val categoryLabel = currentCategoryFilter ?: "Kategoria"

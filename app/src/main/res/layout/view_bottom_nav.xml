@@ -307,6 +307,20 @@
     </LinearLayout>
 
     <!-- Close Button (displayed when menu is open) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_global_add"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="18dp"
+        android:layout_marginBottom="64dp"
+        android:translationY="-9dp"
+        app:srcCompat="@drawable/ic_add"
+        android:contentDescription="@string/action_add"
+        android:tint="@color/white"
+        app:backgroundTint="@color/home_primary"
+        app:useCompatPadding="true" />
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/fabMenuClose"
         android:layout_width="56dp"

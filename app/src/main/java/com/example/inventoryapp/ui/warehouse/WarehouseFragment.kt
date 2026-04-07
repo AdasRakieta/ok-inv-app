@@ -9,6 +9,9 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.widget.AdapterView
+import android.widget.PopupMenu
 import androidx.core.graphics.ColorUtils
 import androidx.core.widget.doAfterTextChanged
 import androidx.core.view.isVisible
@@ -24,6 +27,9 @@ import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentWarehouseBinding
 import com.example.inventoryapp.databinding.BottomSheetDeleteLocationConfirmBinding
+import com.example.inventoryapp.ui.components.FilterBottomSheet
+import com.example.inventoryapp.ui.components.FilterOption
+import androidx.appcompat.widget.TooltipCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import kotlinx.coroutines.flow.firstOrNull
@@ -45,6 +51,12 @@ class WarehouseFragment : Fragment() {
     private lateinit var locationsAdapter: WarehouseLocationsListAdapter
     private var searchQuery: String = ""
     private var allLocationCards: List<WarehouseLocationCard> = emptyList()
+
+    private var zonesList: List<String> = emptyList()
+
+    private enum class SortOption { NAME_ASC, COUNT_DESC, FREE_DESC }
+    private var selectedZone: String? = null
+    private var sortOption: SortOption = SortOption.NAME_ASC
 
     private data class LowStockItem(val category: CategoryEntity, val count: Int)
 
@@ -100,6 +112,14 @@ class WarehouseFragment : Fragment() {
         binding.searchInput.doAfterTextChanged { text ->
             searchQuery = text?.toString()?.trim().orEmpty()
             applySearchFilter()
+        }
+
+        binding.zoneFilterButton.setOnClickListener {
+            openZoneFilter()
+        }
+
+        binding.sortButton.setOnClickListener {
+            openSortDialog()
         }
 
         binding.selectAllButton.setOnClickListener {
@@ -183,10 +203,18 @@ class WarehouseFragment : Fragment() {
                             .sortedBy { it.name }
 
                         allLocationCards = locationCards
-                        val filteredCards = filterLocations(locationCards, searchQuery)
 
-                        locationsAdapter.submitList(filteredCards)
-                        updateEmptyState(filteredCards.isEmpty())
+                        // populate zones spinner from location names (prefix before ' / ')
+                        val zones = locationCards.map { it.name.substringBefore(" /") }.distinct().sorted()
+                        val spinnerItems = listOf("Wszystkie") + zones
+
+                        zonesList = zones
+                        binding.zoneFilterButton.text = "Wszystkie"
+                        selectedZone = null
+
+                        // apply combined filters (search + zone + sort)
+                        applyFilters()
+                        updateFilterLabels()
 
                         if (locationsAdapter.selectionMode) {
                             updateSelectionPanel()
@@ -203,9 +231,67 @@ class WarehouseFragment : Fragment() {
     }
 
     private fun applySearchFilter() {
-        val filteredCards = filterLocations(allLocationCards, searchQuery)
-        locationsAdapter.submitList(filteredCards)
-        updateEmptyState(filteredCards.isEmpty())
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+        var filtered = filterLocations(allLocationCards, searchQuery)
+
+        val zone = selectedZone
+        if (!zone.isNullOrBlank()) {
+            filtered = filtered.filter { it.name.split(" /")[0] == zone }
+        }
+
+        filtered = when (sortOption) {
+            SortOption.NAME_ASC -> filtered.sortedBy { it.name }
+            SortOption.COUNT_DESC -> filtered.sortedByDescending { it.productCount }
+            SortOption.FREE_DESC -> filtered.sortedByDescending { 100 - it.progressPercent }
+        }
+
+        locationsAdapter.submitList(filtered)
+        updateEmptyState(filtered.isEmpty())
+    }
+
+    private fun openZoneFilter() {
+        val options = mutableListOf<FilterOption>()
+        options.add(FilterOption("all", "Wszystkie", "", selectedZone == null))
+        zonesList.forEach { z ->
+            options.add(FilterOption(z, z, "", selectedZone == z))
+        }
+
+        FilterBottomSheet.show(this, "🏷️ Filtruj po strefie", options) { option ->
+            selectedZone = if (option.id == "all") null else option.id
+            applyFilters()
+            updateFilterLabels()
+        }
+    }
+
+    private fun openSortDialog() {
+        val options = listOf(
+            FilterOption("NAME_ASC", "Nazwa", "🔤", sortOption == SortOption.NAME_ASC),
+            FilterOption("COUNT_DESC", "Ilość produktów", "📦", sortOption == SortOption.COUNT_DESC),
+            FilterOption("FREE_DESC", "Wolne miejsce", "📤", sortOption == SortOption.FREE_DESC)
+        )
+
+        FilterBottomSheet.show(this, "↕️ Sortuj", options) { option ->
+            sortOption = SortOption.valueOf(option.id)
+            applyFilters()
+            updateFilterLabels()
+        }
+    }
+
+    private fun updateFilterLabels() {
+        val zoneText = selectedZone ?: "Strefa"
+        binding.zoneFilterButton.text = zoneText
+
+        val sortDescription = when (sortOption) {
+            SortOption.NAME_ASC -> "Nazwa"
+            SortOption.COUNT_DESC -> "Ilość produktów"
+            SortOption.FREE_DESC -> "Wolne miejsce"
+        }
+
+        binding.sortButton.contentDescription = "Sortowanie: $sortDescription"
+        TooltipCompat.setTooltipText(binding.sortButton, sortDescription)
     }
 
     private fun filterLocations(cards: List<WarehouseLocationCard>, queryRaw: String): List<WarehouseLocationCard> {

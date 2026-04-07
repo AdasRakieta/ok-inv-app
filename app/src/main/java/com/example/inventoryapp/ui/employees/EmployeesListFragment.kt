@@ -15,8 +15,10 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
 import com.example.inventoryapp.databinding.FragmentEmployeesListBinding
 import com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding
+import com.example.inventoryapp.ui.components.FilterBottomSheet
+import com.example.inventoryapp.ui.components.FilterOption
+import com.example.inventoryapp.ui.components.FilterOptionsAdapter
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -56,7 +58,7 @@ class EmployeesListFragment : Fragment() {
 
         setupRecyclerView()
         setupSearchBar()
-        setupFilterButton()
+        setupFilterButtons()
         setupSortButton()
         setupFab()
         setupSelectionPanel()
@@ -91,9 +93,13 @@ class EmployeesListFragment : Fragment() {
         }
     }
 
-    private fun setupFilterButton() {
-        binding.filterButton.setOnClickListener {
-            showFilterDialog()
+    private fun setupFilterButtons() {
+        binding.departmentFilterButton.setOnClickListener {
+            showDepartmentFilterDialog()
+        }
+
+        binding.companyFilterButton.setOnClickListener {
+            showCompanyFilterDialog()
         }
     }
 
@@ -104,90 +110,77 @@ class EmployeesListFragment : Fragment() {
     }
 
     private fun showFilterDialog() {
-        val options = arrayOf("Dział", "Firma")
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Filtruj po")
-            .setItems(options) { dialog, which ->
-                when (which) {
-                    0 -> showDepartmentFilterDialog()
-                    1 -> showCompanyFilterDialog()
-                }
-                dialog.dismiss()
+        val options = listOf(
+            FilterOption("department", "Dział", "🏢", false),
+            FilterOption("company", "Firma", "🏬", false)
+        )
+
+        FilterBottomSheet.show(this, "Filtruj po", options) { option ->
+            when (option.id) {
+                "department" -> showDepartmentFilterDialog()
+                "company" -> showCompanyFilterDialog()
             }
-            .setNegativeButton("Anuluj", null)
-            .show()
+        }
     }
 
     private fun showDepartmentFilterDialog() {
         lifecycleScope.launch {
             val departments = employeeRepository.getAllDepartments()
-            val options = listOf("Wszystkie") + departments
-            val selectedIndex = if (departmentFilterFlow.value == null) 0 
-                else departments.indexOf(departmentFilterFlow.value) + 1
+            val options = mutableListOf<FilterOption>()
+            options.add(FilterOption("all", "Wszystkie", "", departmentFilterFlow.value == null))
+            departments.forEach { dep ->
+                options.add(FilterOption(dep, dep, "", departmentFilterFlow.value == dep))
+            }
 
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Filtruj po dziale")
-                .setSingleChoiceItems(options.toTypedArray(), selectedIndex) { dialog, which ->
-                    departmentFilterFlow.value = if (which == 0) null else departments[which - 1]
-                    if (which == 0 && companyFilterFlow.value == null) {
-                        binding.filterButton.text = "Dział/Firma"
-                    } else {
-                        binding.filterButton.text = if (which == 0) "Firma" else departments[which - 1]
-                    }
-                    dialog.dismiss()
+            FilterBottomSheet.show(this@EmployeesListFragment, "Filtruj po dziale", options) { option ->
+                if (option.id == "all") {
+                    departmentFilterFlow.value = null
+                    binding.departmentFilterButton.text = "Dział"
+                } else {
+                    departmentFilterFlow.value = option.id
+                    binding.departmentFilterButton.text = option.label
                 }
-                .setNegativeButton("Anuluj", null)
-                .show()
+            }
         }
     }
 
     private fun showCompanyFilterDialog() {
         lifecycleScope.launch {
             val companies = companyRepository.getAllCompanies()
-            val options = listOf("Wszystkie", "Bez firmy") + companies.map { it.name }
-            val selectedIndex = when (val selected = companyFilterFlow.value) {
-                null -> if (departmentFilterFlow.value == null) 0 else -1
-                -1L -> 1
-                else -> companies.indexOfFirst { it.id == selected }.takeIf { it >= 0 }?.plus(2) ?: 0
-            }.coerceAtLeast(0)
+            val options = mutableListOf<FilterOption>()
+            options.add(FilterOption("all", "Wszystkie", "", companyFilterFlow.value == null))
+            options.add(FilterOption("no_company", "Bez firmy", "", companyFilterFlow.value == -1L))
+            companies.forEach { c ->
+                options.add(FilterOption(c.id.toString(), c.name, "", companyFilterFlow.value == c.id))
+            }
 
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Filtruj po firmie")
-                .setSingleChoiceItems(options.toTypedArray(), selectedIndex) { dialog, which ->
-                    companyFilterFlow.value = when (which) {
-                        0 -> null
-                        1 -> -1L
-                        else -> companies[which - 2].id
-                    }
-                    if (which == 0 && departmentFilterFlow.value == null) {
-                        binding.filterButton.text = "Dział/Firma"
-                    } else {
-                        binding.filterButton.text = options[which]
-                    }
-                    dialog.dismiss()
+            FilterBottomSheet.show(this@EmployeesListFragment, "Filtruj po firmie", options) { option ->
+                companyFilterFlow.value = when (option.id) {
+                    "all" -> null
+                    "no_company" -> -1L
+                    else -> option.id.toLong()
                 }
-                .setNegativeButton("Anuluj", null)
-                .show()
+                if (option.id == "all") {
+                    binding.companyFilterButton.text = "Firma"
+                } else {
+                    binding.companyFilterButton.text = option.label
+                }
+            }
         }
     }
 
     private fun showSortDialog() {
-        val options = arrayOf(
-            "Alfabetycznie (A-Z)",
-            "Alfabetycznie (Z-A)",
-            "Najnowsi",
-            "Najstarsi"
+        val options = listOf(
+            FilterOption("az", "Alfabetycznie (A-Z)", "", false),
+            FilterOption("za", "Alfabetycznie (Z-A)", "", false),
+            FilterOption("newest", "Najnowsi", "", false),
+            FilterOption("oldest", "Najstarsi", "", false)
         )
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Sortuj")
-            .setItems(options) { dialog, which ->
-                // TODO: Implement sorting
-                Toast.makeText(requireContext(), "Sortowanie: ${options[which]}", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-            }
-            .setNegativeButton("Anuluj", null)
-            .show()
+        FilterBottomSheet.show(this, "Sortuj", options) { option ->
+            // TODO: Implement sorting behavior
+            Toast.makeText(requireContext(), "Sortowanie: ${option.label}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupFab() {

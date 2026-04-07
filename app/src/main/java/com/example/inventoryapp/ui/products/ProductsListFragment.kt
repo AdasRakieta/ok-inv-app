@@ -21,7 +21,8 @@ import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentProductsListBinding
 import com.example.inventoryapp.databinding.BottomSheetStatsBinding
-import com.example.inventoryapp.databinding.BottomSheetFilterBinding
+import com.example.inventoryapp.ui.components.FilterBottomSheet
+import com.example.inventoryapp.ui.components.FilterOption
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -416,7 +417,7 @@ class ProductsListFragment : Fragment() {
             }
         }
 
-        showFilterBottomSheet("🗂️ Filtruj po kategorii", options) { option ->
+        FilterBottomSheet.show(this, "🗂️ Filtruj po kategorii", options) { option ->
             selectedCategoryId = if (option.id == "all") null else option.id.toLong()
             applyFilters()
         }
@@ -463,7 +464,7 @@ class ProductsListFragment : Fragment() {
             )
         )
 
-        showFilterBottomSheet("🏷️ Filtruj po statusie", options) { option ->
+        FilterBottomSheet.show(this, "🏷️ Filtruj po statusie", options) { option ->
             selectedStatus = if (option.id == "all") {
                 null
             } else {
@@ -482,33 +483,13 @@ class ProductsListFragment : Fragment() {
             FilterOption("SERIAL", "Numer seryjny", "🔢", sortOption == SortOption.SERIAL)
         )
 
-        showFilterBottomSheet("↕️ Sortuj", options) { option ->
+        FilterBottomSheet.show(this, "↕️ Sortuj", options) { option ->
             sortOption = SortOption.valueOf(option.id)
             applyFilters()
         }
     }
     
-    private fun showFilterBottomSheet(
-        title: String,
-        options: List<FilterOption>,
-        onOptionSelected: (FilterOption) -> Unit
-    ) {
-        val bottomSheet = BottomSheetDialog(requireContext())
-        val sheetBinding = BottomSheetFilterBinding.inflate(layoutInflater)
-        
-        sheetBinding.sheetTitle.text = title
-        
-        val adapter = FilterOptionsAdapter(options) { selectedOption ->
-            bottomSheet.dismiss()
-            onOptionSelected(selectedOption)
-        }
-        
-        sheetBinding.optionsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        sheetBinding.optionsRecyclerView.adapter = adapter
-        
-        bottomSheet.setContentView(sheetBinding.root)
-        bottomSheet.show()
-    }
+    
 
     private fun statusLabel(status: ProductStatus): String {
         return when (status) {

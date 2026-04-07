@@ -18,10 +18,9 @@ import com.example.inventoryapp.data.local.entities.ContractorPointEntity
 import com.example.inventoryapp.data.local.entities.PointType
 import com.example.inventoryapp.data.repository.CompanyRepository
 import com.example.inventoryapp.data.repository.ContractorPointRepository
-import com.example.inventoryapp.databinding.BottomSheetFilterBinding
 import com.example.inventoryapp.databinding.FragmentContractorPointsBinding
-import com.example.inventoryapp.ui.products.FilterOption
-import com.example.inventoryapp.ui.products.FilterOptionsAdapter
+import com.example.inventoryapp.ui.components.FilterBottomSheet
+import com.example.inventoryapp.ui.components.FilterOption
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -175,7 +174,7 @@ class ContractorPointsFragment : Fragment() {
             FilterOption(PointType.DC.name, "DC", "🚚", selectedPointType == PointType.DC)
         )
 
-        showFilterBottomSheet(getString(R.string.contractor_points_filter_type_title), options) { option ->
+        FilterBottomSheet.show(getParentFragment() ?: this, getString(R.string.contractor_points_filter_type_title), options) { option ->
             selectedPointType = if (option.id == "all") null else PointType.valueOf(option.id)
             updateFilterLabels()
             loadContractorPoints(binding.searchEditText.text?.toString()?.trim().orEmpty().ifBlank { null })
@@ -198,32 +197,14 @@ class ContractorPointsFragment : Fragment() {
             )
         }
 
-        showFilterBottomSheet(getString(R.string.contractor_points_filter_company_title), options) { option ->
+        FilterBottomSheet.show(getParentFragment() ?: this, getString(R.string.contractor_points_filter_company_title), options) { option ->
             selectedCompanyId = if (option.id == "all") null else option.id.toLong()
             updateFilterLabels()
             loadContractorPoints(binding.searchEditText.text?.toString()?.trim().orEmpty().ifBlank { null })
         }
     }
 
-    private fun showFilterBottomSheet(
-        title: String,
-        options: List<FilterOption>,
-        onOptionSelected: (FilterOption) -> Unit
-    ) {
-        val bottomSheet = BottomSheetDialog(requireContext())
-        val sheetBinding = BottomSheetFilterBinding.inflate(layoutInflater)
-
-        sheetBinding.sheetTitle.text = title
-        val sheetAdapter = FilterOptionsAdapter(options) { selected ->
-            bottomSheet.dismiss()
-            onOptionSelected(selected)
-        }
-        sheetBinding.optionsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        sheetBinding.optionsRecyclerView.adapter = sheetAdapter
-
-        bottomSheet.setContentView(sheetBinding.root)
-        bottomSheet.show()
-    }
+    
 
     private fun updateFilterLabels() {
         binding.filterTypeButton.text =

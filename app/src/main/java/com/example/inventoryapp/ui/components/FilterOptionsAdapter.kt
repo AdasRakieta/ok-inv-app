@@ -1,4 +1,4 @@
-package com.example.inventoryapp.ui.products
+package com.example.inventoryapp.ui.components
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,13 +7,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.inventoryapp.R
 import com.example.inventoryapp.databinding.ItemFilterOptionBinding
-
-data class FilterOption(
-    val id: String,
-    val label: String,
-    val icon: String,
-    val isSelected: Boolean = false
-)
 
 class FilterOptionsAdapter(
     private val options: List<FilterOption>,
@@ -44,7 +37,6 @@ class FilterOptionsAdapter(
             binding.optionIcon.text = option.icon
             binding.selectedIcon.visibility = if (option.isSelected) View.VISIBLE else View.GONE
 
-            // Highlight selected option
             if (option.isSelected) {
                 binding.optionCard.strokeColor = ContextCompat.getColor(
                     binding.root.context,
@@ -60,7 +52,6 @@ class FilterOptionsAdapter(
                 )
             }
 
-            // Animate on click
             binding.root.setOnClickListener {
                 it.animate()
                     .scaleX(0.95f)

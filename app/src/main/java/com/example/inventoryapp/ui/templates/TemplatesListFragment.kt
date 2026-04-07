@@ -13,11 +13,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.ProductTemplateEntity
-import com.example.inventoryapp.databinding.BottomSheetFilterBinding
+import com.example.inventoryapp.ui.components.FilterBottomSheet
+import com.example.inventoryapp.ui.components.FilterOption
+import com.example.inventoryapp.ui.components.FilterOptionsAdapter
 import com.example.inventoryapp.databinding.FragmentTemplatesListBinding
-import com.example.inventoryapp.ui.products.FilterOption
-import com.example.inventoryapp.ui.products.FilterOptionsAdapter
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.launch
 
 class TemplatesListFragment : Fragment() {
@@ -130,12 +129,7 @@ class TemplatesListFragment : Fragment() {
             )
         }
 
-        val bottomSheet = BottomSheetDialog(requireContext())
-        val sheetBinding = BottomSheetFilterBinding.inflate(layoutInflater)
-        sheetBinding.sheetTitle.text = "Filtruj po kategorii"
-
-        val adapter = FilterOptionsAdapter(options) { selectedOption ->
-            bottomSheet.dismiss()
+        FilterBottomSheet.show(this, "Filtruj po kategorii", options) { selectedOption ->
             selectedCategoryId = if (selectedOption.id == "all") {
                 null
             } else {
@@ -143,11 +137,6 @@ class TemplatesListFragment : Fragment() {
             }
             applyFilters()
         }
-
-        sheetBinding.optionsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        sheetBinding.optionsRecyclerView.adapter = adapter
-        bottomSheet.setContentView(sheetBinding.root)
-        bottomSheet.show()
     }
 
     private fun applyFilters() {

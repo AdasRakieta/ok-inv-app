@@ -37,6 +37,7 @@
     <!-- General -->
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="action_add">Dodaj</string>
     <string name="delete">Delete</string>
     <string name="edit">Edit</string>
     <string name="ok">OK</string>
