@@ -13,10 +13,30 @@ class BoxesAdapter(
 ) : ListAdapter<BoxEntity, BoxesAdapter.BoxViewHolder>(BoxDiffCallback()) {
 
     private var countsMap: Map<Long, Int> = emptyMap()
+    private var fullList: List<BoxEntity> = emptyList()
+    private var filteredList: List<BoxEntity> = emptyList()
 
     fun setCountsMap(map: Map<Long, Int>) {
         countsMap = map
-        notifyDataSetChanged()
+        submitList(filteredList.toList())
+    }
+
+    fun setFullList(list: List<BoxEntity>) {
+        fullList = list
+        filteredList = list
+        submitList(list.toList())
+    }
+
+    fun filterByQuery(query: String) {
+        filteredList = if (query.isBlank()) {
+            fullList
+        } else {
+            fullList.filter { box ->
+                box.name.contains(query, ignoreCase = true) ||
+                    (box.description ?: "").contains(query, ignoreCase = true)
+            }
+        }
+        submitList(filteredList.toList())
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BoxViewHolder {

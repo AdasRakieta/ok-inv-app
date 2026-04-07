@@ -19,7 +19,6 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
-import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.databinding.FragmentBoxDetailsBinding
 import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
 import com.example.inventoryapp.utils.MediaStoreHelper
@@ -70,8 +69,8 @@ class BoxDetailsFragment : Fragment() {
 
         binding.printLabelButton.setOnClickListener { generateAndShowQr() }
         binding.editBoxButton.setOnClickListener { openEditScreen() }
-        binding.addProductsButton.setOnClickListener { showAddProductsDialog() }
-        binding.addBulkButton.setOnClickListener { showAddProductsDialog() }
+        binding.addProductsButton.setOnClickListener { showAssignProductsDialog() }
+        binding.addBulkButton.setOnClickListener { showAssignProductsDialog() }
         binding.modifyProductsButton.setOnClickListener { showRemoveProductsDialog() }
         binding.deleteBoxButton.setOnClickListener { showDeleteBoxConfirmation() }
 
@@ -135,42 +134,25 @@ class BoxDetailsFragment : Fragment() {
         findNavController().navigate(R.id.addEditBoxFragment, bundle)
     }
 
-    private fun showAddProductsDialog() {
+    private fun showAssignProductsDialog() {
         val box = currentBox ?: return
+        val dialog = AssignProductsToBoxDialogFragment(box.id) { selectedProducts ->
+            assignProductsToBox(selectedProducts, box)
+        }
+        dialog.show(childFragmentManager, "AssignProductsToBoxDialog")
+    }
+
+    private fun assignProductsToBox(products: List<ProductEntity>, box: BoxEntity) {
         lifecycleScope.launch {
-            val availableProducts = productRepository.getAllProducts().firstOrNull().orEmpty()
-                .filter { it.boxId == null && it.status == ProductStatus.IN_STOCK }
-                .sortedBy { it.name.lowercase() }
-
-            if (availableProducts.isEmpty()) {
-                Toast.makeText(requireContext(), "Brak dostępnych produktów do dodania", Toast.LENGTH_SHORT).show()
-                return@launch
+            try {
+                products.forEach { product ->
+                    val updated = product.copy(boxId = box.id)
+                    productRepository.updateWithHistory(updated, "Dodano do kartonu ${box.name}")
+                }
+                Toast.makeText(requireContext(), "Dodano ${products.size} produktów", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-
-            val labels = availableProducts.map { product ->
-                "${product.name} • ${product.serialNumber}"
-            }.toTypedArray()
-            val checked = BooleanArray(labels.size)
-
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Dodaj produkty do kartonu")
-                .setMultiChoiceItems(labels, checked) { _, which, isChecked ->
-                    checked[which] = isChecked
-                }
-                .setNegativeButton(getString(R.string.cancel_pl), null)
-                .setPositiveButton(getString(R.string.add)) { _, _ ->
-                    val selected = availableProducts.filterIndexed { index, _ -> checked[index] }
-                    if (selected.isEmpty()) return@setPositiveButton
-
-                    lifecycleScope.launch {
-                        selected.forEach { product ->
-                            val updated = product.copy(boxId = box.id)
-                            productRepository.updateWithHistory(updated, "Dodano do kartonu ${box.name}")
-                        }
-                        Toast.makeText(requireContext(), "Dodano ${selected.size} produktów", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                .show()
         }
     }
 

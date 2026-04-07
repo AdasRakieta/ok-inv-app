@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
+import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.ui.warehouse.LocationStorage
@@ -50,6 +51,9 @@ class WarehouseLocationDetailsFragment : Fragment() {
     private lateinit var assignedProductsAdapter: AssignedProductsAdapter
     private lateinit var boxesAdapter: BoxesAdapter
     private var showingPackedOnly: Boolean = false
+    private var currentSearchQuery: String = ""
+    private var latestProductsInLocation: List<ProductEntity> = emptyList()
+    private var latestBoxesInLocation: List<BoxEntity> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -65,6 +69,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
 
         setupRecyclerView()
         setupActions()
+        applyFiltersAndRender()
         loadLocationDetails()
     }
 
@@ -123,14 +128,16 @@ class WarehouseLocationDetailsFragment : Fragment() {
         binding.searchProductsEditText.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                assignedProductsAdapter.filterByQuery(s?.toString() ?: "")
+                currentSearchQuery = s?.toString().orEmpty()
+                applyFiltersAndRender()
             }
             override fun afterTextChanged(s: android.text.Editable?) {}
         })
 
-        binding.packedToggle.setOnCheckedChangeListener { _, checked ->
-            showingPackedOnly = checked
-            // Adapter will be switched inside data collectors in loadLocationDetails
+        binding.viewToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            showingPackedOnly = checkedId == com.example.inventoryapp.R.id.boxesModeButton
+            applyFiltersAndRender()
         }
     }
 
@@ -153,10 +160,12 @@ class WarehouseLocationDetailsFragment : Fragment() {
 
             // Update header
             binding.locationName.text = displayName
-            binding.locationShelf.text = displayName.substringBefore("/").trim()
-            binding.locationBin.text = displayName.substringAfter("/", "").trim().takeIf { it.isNotEmpty() } ?: "-"
+            binding.locationShelf.text = displayName.substringBefore("/").trim().ifBlank { "-" }
+            binding.locationBin.text = displayName.substringAfter("/", "").trim().ifBlank { "-" }
+            val locationDescription = locationStorage.getLocationDescription(displayName)
+            binding.locationDescriptionText.text = locationDescription.takeIf { it.isNotEmpty() } ?: "Brak opisu"
 
-                    viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+            viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                 // Try to resolve a real location entity to use DB-level aggregation (including boxes)
                 val locationEntity = try {
                     // Try by qrUid if available
@@ -186,13 +195,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
                     // Collect boxes for this location to support packed view and box name mapping
                     launch {
                         boxRepository.getBoxesByLocation(locationEntity.id).collect { boxes ->
-                            // When showing packed-only, display boxes list
-                            if (showingPackedOnly) {
-                                binding.assignedProductsRecyclerView.adapter = boxesAdapter
-                                boxesAdapter.submitList(boxes)
-                                binding.noProductsText.visibility = if (boxes.isEmpty()) View.VISIBLE else View.GONE
-                                binding.assignedProductsRecyclerView.visibility = if (boxes.isEmpty()) View.GONE else View.VISIBLE
-                            }
+                            latestBoxesInLocation = boxes
 
                             // Also prepare a map of boxId -> name for product annotations
                             val boxesMap = boxes.associate { it.id to it.name }
@@ -208,11 +211,14 @@ class WarehouseLocationDetailsFragment : Fragment() {
                                 }
                             }
                             boxesAdapter.setCountsMap(counts)
+                            updateOverviewCounters()
+                            applyFiltersAndRender()
                         }
                     }
 
                     // Use optimized DAO query that includes products inside boxes placed in this location
                     productRepository.getProductsByLocationIncludingBoxes(locationEntity.id).collect { productsInLocation ->
+                        latestProductsInLocation = productsInLocation
                         val categories = categoryRepository.getAllCategories().firstOrNull() ?: emptyList()
                         val categoriesInLocation = productsInLocation.mapNotNull { it.categoryId }.distinct()
                         val categoryEmojis = categories.filter { it.id in categoriesInLocation }
@@ -220,21 +226,8 @@ class WarehouseLocationDetailsFragment : Fragment() {
                             .distinct()
                             .joinToString(" ")
                         binding.locationCategories.text = categoryEmojis.takeIf { it.isNotEmpty() } ?: "-"
-
-                        val locationDescription = locationStorage.getLocationDescription(displayName)
-                        binding.locationDescriptionText.text = locationDescription.takeIf { it.isNotEmpty() } ?: "Brak opisu"
-
-                        if (showingPackedOnly) {
-                            // When packed view is enabled, we already set boxesAdapter above; nothing to do here
-                        } else {
-                            assignedProductsAdapter.setFullList(productsInLocation)
-
-                            val isEmpty = productsInLocation.isEmpty()
-                            binding.noProductsText.visibility = if (isEmpty) View.VISIBLE else View.GONE
-                            binding.assignedProductsRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
-
-                            binding.assignedCountText.text = "${productsInLocation.size} ${pluralForm(productsInLocation.size, "produkt", "produkty", "produktów")} w tej lokalizacji"
-                        }
+                        updateOverviewCounters()
+                        applyFiltersAndRender()
                     }
                 } else {
                     // Non-persisted location: create box but pass the display name to prefill
@@ -245,6 +238,8 @@ class WarehouseLocationDetailsFragment : Fragment() {
                         }
                         findNavController().navigate(com.example.inventoryapp.R.id.addEditBoxFragment, bundle)
                     }
+                    latestBoxesInLocation = emptyList()
+                    updateOverviewCounters()
                     // Fallback: existing string-based matching (for non-persisted locations)
                     productRepository.getAllProducts().collect { allProducts ->
                         val productsInLocation = allProducts.filter { product ->
@@ -256,6 +251,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
                             )
                             productLocation == normalizedLocationName
                         }
+                        latestProductsInLocation = productsInLocation
 
                         val categories = categoryRepository.getAllCategories().firstOrNull() ?: emptyList()
                         val categoriesInLocation = productsInLocation.mapNotNull { it.categoryId }.distinct()
@@ -264,21 +260,59 @@ class WarehouseLocationDetailsFragment : Fragment() {
                             .distinct()
                             .joinToString(" ")
                         binding.locationCategories.text = categoryEmojis.takeIf { it.isNotEmpty() } ?: "-"
-
-                        val locationDescription = locationStorage.getLocationDescription(displayName)
-                        binding.locationDescriptionText.text = locationDescription.takeIf { it.isNotEmpty() } ?: "Brak opisu"
-
-                        assignedProductsAdapter.setFullList(productsInLocation)
-
-                        val isEmpty = productsInLocation.isEmpty()
-                        binding.noProductsText.visibility = if (isEmpty) View.VISIBLE else View.GONE
-                        binding.assignedProductsRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
-
-                        binding.assignedCountText.text = "${productsInLocation.size} ${pluralForm(productsInLocation.size, "produkt", "produkty", "produktów")} w tej lokalizacji"
+                        updateOverviewCounters()
+                        applyFiltersAndRender()
                     }
                 }
             }
         }
+    }
+
+    private fun applyFiltersAndRender() {
+        if (!::assignedProductsAdapter.isInitialized || !::boxesAdapter.isInitialized) return
+
+        assignedProductsAdapter.setFullList(latestProductsInLocation)
+        assignedProductsAdapter.filterByQuery(currentSearchQuery)
+
+        boxesAdapter.setFullList(latestBoxesInLocation)
+        boxesAdapter.filterByQuery(currentSearchQuery)
+
+        val isBoxesMode = showingPackedOnly
+        binding.assignedProductsRecyclerView.adapter = if (isBoxesMode) boxesAdapter else assignedProductsAdapter
+
+        val visibleItemsCount = if (isBoxesMode) boxesAdapter.itemCount else assignedProductsAdapter.itemCount
+        binding.assignedCountText.text = if (isBoxesMode) {
+            "$visibleItemsCount ${pluralForm(visibleItemsCount, "karton", "kartony", "kartonów")} w tej lokalizacji"
+        } else {
+            "$visibleItemsCount ${pluralForm(visibleItemsCount, "produkt", "produkty", "produktów")} w tej lokalizacji"
+        }
+
+        binding.searchProductsEditText.hint = if (isBoxesMode) {
+            "Szukaj kartonu (nazwa, opis)..."
+        } else {
+            "Szukaj produktu (nazwa, S/N)..."
+        }
+
+        binding.noProductsText.text = if (isBoxesMode) {
+            "Brak kartonów w tej lokalizacji"
+        } else {
+            "Brak produktów w tej lokalizacji"
+        }
+
+        val isEmpty = visibleItemsCount == 0
+        binding.noProductsText.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.assignedProductsRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
+    }
+
+    private fun updateOverviewCounters() {
+        binding.totalProductsValue.text = latestProductsInLocation.size.toString()
+        binding.totalBoxesValue.text = latestBoxesInLocation.size.toString()
+    }
+
+    private fun resolvedLocationName(): String {
+        val fromHeader = binding.locationName.text?.toString()?.trim().orEmpty()
+        if (fromHeader.isNotEmpty()) return fromHeader
+        return args.locationName.orEmpty()
     }
 
     private fun generateAndShowQr() {
@@ -376,7 +410,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
     }
 
     private fun showAssignProductDialog() {
-        val dialog = AssignProductsToLocationDialogFragment(args.locationName ?: "") { selectedProducts ->
+        val dialog = AssignProductsToLocationDialogFragment(resolvedLocationName()) { selectedProducts ->
             assignProducts(selectedProducts)
         }
         dialog.show(childFragmentManager, "AssignProductsDialog")
@@ -385,7 +419,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
     private fun assignProducts(products: List<ProductEntity>) {
         lifecycleScope.launch {
             try {
-                val locationName = args.locationName ?: ""
+                val locationName = resolvedLocationName()
                 val shelf = locationName.substringBefore("/").trim()
                 val bin = locationName.substringAfter("/", "").trim().takeIf { it.isNotEmpty() }
                 
@@ -416,12 +450,12 @@ class WarehouseLocationDetailsFragment : Fragment() {
     }
 
     private fun showEditLocationDialog() {
-        val action = WarehouseLocationDetailsFragmentDirections.actionLocationDetailsToEdit(args.locationName ?: "")
+        val action = WarehouseLocationDetailsFragmentDirections.actionLocationDetailsToEdit(resolvedLocationName())
         findNavController().navigate(action)
     }
 
     private fun showDeleteConfirmation() {
-        val locationName = args.locationName ?: ""
+        val locationName = resolvedLocationName()
         
         lifecycleScope.launch {
             val allProducts = productRepository.getAllProducts().firstOrNull() ?: return@launch
