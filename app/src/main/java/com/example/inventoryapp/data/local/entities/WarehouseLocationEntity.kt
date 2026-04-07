@@ -13,6 +13,9 @@ data class WarehouseLocationEntity(
     val id: Long = 0,
     
     val code: String, // e.g., "A-01", "B-12"
+    // qrUid: stable identifier stored in DB and encoded into QR codes/deep links
+    // Backfill migration will populate this for existing rows
+    val qrUid: String? = null,
     val name: String,
     val zone: String? = null, // e.g., "Zone A", "Receiving"
     val type: LocationType = LocationType.SHELF,

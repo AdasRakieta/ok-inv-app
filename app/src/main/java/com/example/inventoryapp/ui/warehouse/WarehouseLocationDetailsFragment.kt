@@ -21,6 +21,12 @@ import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.content.Intent
+import android.graphics.Bitmap
+import android.widget.ImageView
+import com.example.inventoryapp.utils.QRCodeGenerator
+import com.example.inventoryapp.utils.MediaStoreHelper
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -37,6 +43,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
     private val categoryRepository by lazy {
         (requireActivity().application as InventoryApplication).categoryRepository
     }
+    private val warehouseLocationRepository by lazy { (requireActivity().application as InventoryApplication).warehouseLocationRepository }
     private val locationStorage by lazy { LocationStorage(requireContext()) }
 
     private lateinit var assignedProductsAdapter: AssignedProductsAdapter
@@ -101,6 +108,10 @@ class WarehouseLocationDetailsFragment : Fragment() {
             showDeleteConfirmation()
         }
 
+        binding.qrButton.setOnClickListener {
+            generateAndShowQr()
+        }
+
         binding.searchProductsEditText.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -111,18 +122,29 @@ class WarehouseLocationDetailsFragment : Fragment() {
     }
 
     private fun loadLocationDetails() {
-        val locationName = args.locationName
-        val normalizedLocationName = normalizeLocationName(locationName)
-
-        // Update header immediately
-        binding.locationName.text = locationName
-        binding.locationShelf.text = locationName.substringBefore("/").trim()
-        binding.locationBin.text = locationName.substringAfter("/", "").trim().takeIf { it.isNotEmpty() } ?: "-"
-
         viewLifecycleOwner.lifecycleScope.launch {
+            var locationName = args.locationName
+
+            // If invoked via deep link with qrUid, resolve to location code/name
+            if (locationName.isNullOrBlank() && !args.qrUid.isNullOrBlank()) {
+                try {
+                    val loc = warehouseLocationRepository.getLocationByQrUid(args.qrUid!!)
+                    locationName = loc?.code ?: args.qrUid
+                } catch (e: Exception) {
+                    locationName = args.qrUid
+                }
+            }
+
+            val displayName = locationName ?: ""
+            val normalizedLocationName = normalizeLocationName(displayName)
+
+            // Update header
+            binding.locationName.text = displayName
+            binding.locationShelf.text = displayName.substringBefore("/").trim()
+            binding.locationBin.text = displayName.substringAfter("/", "").trim().takeIf { it.isNotEmpty() } ?: "-"
+
             viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                 productRepository.getAllProducts().collect { allProducts ->
-                    // Get products in this location - MUST match the format used in WarehouseFragment
                     val productsInLocation = allProducts.filter { product ->
                         if (product.status != ProductStatus.IN_STOCK) return@filter false
                         val shelf = product.shelf ?: "Magazyn"
@@ -133,7 +155,6 @@ class WarehouseLocationDetailsFragment : Fragment() {
                         productLocation == normalizedLocationName
                     }
 
-                    // Get categories
                     val categories = categoryRepository.getAllCategories().firstOrNull() ?: emptyList()
                     val categoriesInLocation = productsInLocation.mapNotNull { it.categoryId }.distinct()
                     val categoryEmojis = categories.filter { it.id in categoriesInLocation }
@@ -142,14 +163,11 @@ class WarehouseLocationDetailsFragment : Fragment() {
                         .joinToString(" ")
                     binding.locationCategories.text = categoryEmojis.takeIf { it.isNotEmpty() } ?: "-"
 
-                    // Get and display description
-                    val locationDescription = locationStorage.getLocationDescription(locationName)
+                    val locationDescription = locationStorage.getLocationDescription(displayName)
                     binding.locationDescriptionText.text = locationDescription.takeIf { it.isNotEmpty() } ?: "Brak opisu"
 
-                    // Update products list
                     assignedProductsAdapter.setFullList(productsInLocation)
 
-                    // Update empty state
                     val isEmpty = productsInLocation.isEmpty()
                     binding.noProductsText.visibility = if (isEmpty) View.VISIBLE else View.GONE
                     binding.assignedProductsRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
@@ -160,8 +178,102 @@ class WarehouseLocationDetailsFragment : Fragment() {
         }
     }
 
+    private fun generateAndShowQr() {
+        lifecycleScope.launch {
+            try {
+                var qrUid = args.qrUid
+
+                if (qrUid.isNullOrBlank()) {
+                    val code = args.locationName ?: binding.locationName.text?.toString() ?: ""
+                    if (code.isBlank()) {
+                        Toast.makeText(requireContext(), "Brak nazwy lokalizacji i qrUid", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    val loc = warehouseLocationRepository.getLocationByCode(code)
+                    if (loc == null) {
+                        val newQr = java.util.UUID.randomUUID().toString()
+                        val entity = com.example.inventoryapp.data.local.entities.WarehouseLocationEntity(
+                            code = code,
+                            qrUid = newQr,
+                            name = code
+                        )
+                        warehouseLocationRepository.insertLocation(entity)
+                        qrUid = newQr
+                    } else {
+                        qrUid = loc.qrUid
+                        if (qrUid.isNullOrBlank()) {
+                            val newQr = java.util.UUID.randomUUID().toString()
+                            val updated = loc.copy(qrUid = newQr)
+                            warehouseLocationRepository.updateLocation(updated)
+                            qrUid = newQr
+                        }
+                    }
+                }
+
+                qrUid?.let { uid ->
+                    val payload = "invapp://location/$uid"
+                    val bitmap = QRCodeGenerator.generateFromString(payload, 1024, 1024)
+                    if (bitmap == null) {
+                        Toast.makeText(requireContext(), "Nie udało się wygenerować QR", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    showQrDialog(bitmap)
+
+                    val displayName = "location_$uid"
+                    val uri = MediaStoreHelper.saveBitmap(requireContext(), bitmap, displayName)
+                    if (uri != null) {
+                        Snackbar.make(binding.root, "QR zapisano", Snackbar.LENGTH_LONG)
+                            .setAction("Udostępnij") {
+                                val share = Intent(Intent.ACTION_SEND).apply {
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    type = "image/png"
+                                }
+                                startActivity(Intent.createChooser(share, "Udostępnij QR"))
+                            }
+                            .show()
+                    } else {
+                        Toast.makeText(requireContext(), "Nie udało się zapisać obrazu", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showQrDialog(bitmap: Bitmap) {
+        val imageView = ImageView(requireContext()).apply {
+            setImageBitmap(bitmap)
+            adjustViewBounds = true
+            val padding = (16 * resources.displayMetrics.density).toInt()
+            setPadding(padding, padding, padding, padding)
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("QR lokalizacji")
+            .setView(imageView)
+            .setPositiveButton("Zamknij", null)
+            .setNeutralButton("Udostępnij") { _, _ ->
+                val uri = MediaStoreHelper.saveBitmap(requireContext(), bitmap, "location_${System.currentTimeMillis()}")
+                if (uri != null) {
+                    val share = Intent(Intent.ACTION_SEND).apply {
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        putExtra(Intent.EXTRA_STREAM, uri)
+                        type = "image/png"
+                    }
+                    startActivity(Intent.createChooser(share, "Udostępnij QR"))
+                } else {
+                    Toast.makeText(requireContext(), "Nie udało się zapisać obrazu", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .show()
+    }
+
     private fun showAssignProductDialog() {
-        val dialog = AssignProductsToLocationDialogFragment(args.locationName) { selectedProducts ->
+        val dialog = AssignProductsToLocationDialogFragment(args.locationName ?: "") { selectedProducts ->
             assignProducts(selectedProducts)
         }
         dialog.show(childFragmentManager, "AssignProductsDialog")
@@ -170,7 +282,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
     private fun assignProducts(products: List<ProductEntity>) {
         lifecycleScope.launch {
             try {
-                val locationName = args.locationName
+                val locationName = args.locationName ?: ""
                 val shelf = locationName.substringBefore("/").trim()
                 val bin = locationName.substringAfter("/", "").trim().takeIf { it.isNotEmpty() }
                 
@@ -201,12 +313,12 @@ class WarehouseLocationDetailsFragment : Fragment() {
     }
 
     private fun showEditLocationDialog() {
-        val action = WarehouseLocationDetailsFragmentDirections.actionLocationDetailsToEdit(args.locationName)
+        val action = WarehouseLocationDetailsFragmentDirections.actionLocationDetailsToEdit(args.locationName ?: "")
         findNavController().navigate(action)
     }
 
     private fun showDeleteConfirmation() {
-        val locationName = args.locationName
+        val locationName = args.locationName ?: ""
         
         lifecycleScope.launch {
             val allProducts = productRepository.getAllProducts().firstOrNull() ?: return@launch

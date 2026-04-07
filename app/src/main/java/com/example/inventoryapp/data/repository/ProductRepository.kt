@@ -61,6 +61,7 @@ class ProductRepository(private val productDao: ProductDao) {
         val product = productDao.getProductByIdOnce(productId) ?: return
         val updated = product.copy(
             assignedToEmployeeId = employeeId,
+            assignedToContractorPointId = null,
             assignmentDate = now,
             status = ProductStatus.ASSIGNED,
             shelf = null,

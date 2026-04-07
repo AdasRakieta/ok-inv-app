@@ -43,7 +43,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 38,
+    version = 39,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -641,6 +641,29 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 38 -> 39: add qrUid column to warehouse_locations and backfill deterministically from existing code
+        private val MIGRATION_38_39 = object : Migration(38, 39) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add nullable column
+                database.execSQL("ALTER TABLE warehouse_locations ADD COLUMN qrUid TEXT")
+
+                // Backfill qrUid = UUID.nameUUIDFromBytes(code.toByteArray()).toString()
+                val cursor = database.query("SELECT id, code FROM warehouse_locations")
+                try {
+                    val idIndex = cursor.getColumnIndex("id")
+                    val codeIndex = cursor.getColumnIndex("code")
+                    while (cursor.moveToNext()) {
+                        val id = if (idIndex >= 0) cursor.getLong(idIndex) else continue
+                        val code = if (codeIndex >= 0) cursor.getString(codeIndex) ?: "" else ""
+                        val qr = java.util.UUID.nameUUIDFromBytes(code.toByteArray()).toString()
+                        database.execSQL("UPDATE warehouse_locations SET qrUid = ? WHERE id = ?", arrayOf(qr, id))
+                    }
+                } finally {
+                    cursor.close()
+                }
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -662,7 +685,8 @@ abstract class AppDatabase : RoomDatabase() {
                             MIGRATION_34_35,
                             MIGRATION_35_36,
                             MIGRATION_36_38,
-                            MIGRATION_37_38
+                                MIGRATION_37_38,
+                                MIGRATION_38_39
                     )
                     .fallbackToDestructiveMigration()
                     .build()

@@ -41,82 +41,90 @@ class ProductRepositoryTest {
     }
 
     @Test
-    fun `getAssignedProductsCount delegates to dao`() = runBlocking {
-        whenever(productDao.getAssignedProductsCount(22L)).thenReturn(3)
+    fun `getAssignedProductsCount delegates to dao`() {
+        runBlocking {
+            whenever(productDao.getAssignedProductsCount(22L)).thenReturn(3)
 
-        val result = repository.getAssignedProductsCount(22L)
+            val result = repository.getAssignedProductsCount(22L)
 
-        assertEquals(3, result)
-        verify(productDao).getAssignedProductsCount(22L)
+            assertEquals(3, result)
+            verify(productDao).getAssignedProductsCount(22L)
+        }
     }
 
     @Test
-    fun `assignToEmployee updates assignment fields and clears contractor assignment`() = runBlocking {
-        val product = ProductEntity(
-            id = 9,
-            name = "Laptop",
-            serialNumber = "SN-9",
-            assignedToEmployeeId = null,
-            assignedToContractorPointId = 77L,
-            assignmentDate = null,
-            status = ProductStatus.IN_STOCK,
-            shelf = "A1",
-            bin = "B1",
-            movementHistory = null,
-            updatedAt = 1000L
-        )
-        whenever(productDao.getProductByIdOnce(9L)).thenReturn(product)
-        doNothing().whenever(productDao).updateProduct(any())
+    fun `assignToEmployee updates assignment fields and clears contractor assignment`() {
+        runBlocking {
+            val product = ProductEntity(
+                id = 9,
+                name = "Laptop",
+                serialNumber = "SN-9",
+                assignedToEmployeeId = null,
+                assignedToContractorPointId = 77L,
+                assignmentDate = null,
+                status = ProductStatus.IN_STOCK,
+                shelf = "A1",
+                bin = "B1",
+                movementHistory = null,
+                updatedAt = 1000L
+            )
+            whenever(productDao.getProductByIdOnce(9L)).thenReturn(product)
+        
 
-        repository.assignToEmployee(9L, 42L)
+            repository.assignToEmployee(9L, 42L)
 
-        val captor = argumentCaptor<ProductEntity>()
-        verify(productDao).updateProduct(captor.capture())
-        val updated = captor.firstValue
-        assertEquals(42L, updated.assignedToEmployeeId)
-        assertNull(updated.assignedToContractorPointId)
-        assertEquals(ProductStatus.ASSIGNED, updated.status)
-        assertNull(updated.shelf)
-        assertNull(updated.bin)
-        assertTrue(updated.assignmentDate != null)
-        assertTrue(updated.updatedAt >= product.updatedAt)
-        assertTrue(updated.movementHistory?.contains("Pracownik: ID 42") == true)
+            val captor = argumentCaptor<ProductEntity>()
+            verify(productDao).updateProduct(captor.capture())
+            val updated = captor.firstValue
+            assertEquals(42L, updated.assignedToEmployeeId)
+            assertNull(updated.assignedToContractorPointId)
+            assertEquals(ProductStatus.ASSIGNED, updated.status)
+            assertNull(updated.shelf)
+            assertNull(updated.bin)
+            assertTrue(updated.assignmentDate != null)
+            assertTrue(updated.updatedAt >= product.updatedAt)
+            assertTrue(updated.movementHistory?.contains("Pracownik: ID 42") == true)
+        }
     }
 
     @Test
-    fun `assignToEmployee does nothing when product not found`() = runBlocking {
-        whenever(productDao.getProductByIdOnce(404L)).thenReturn(null)
+    fun `assignToEmployee does nothing when product not found`() {
+        runBlocking {
+            whenever(productDao.getProductByIdOnce(404L)).thenReturn(null)
 
-        repository.assignToEmployee(404L, 1L)
+            repository.assignToEmployee(404L, 1L)
 
-        verify(productDao).getProductByIdOnce(404L)
-        verify(productDao, never()).updateProduct(any())
+            verify(productDao).getProductByIdOnce(404L)
+            verify(productDao, never()).updateProduct(any())
+        }
     }
 
     @Test
-    fun `unassignFromEmployee clears assignment and sets unassigned status`() = runBlocking {
-        val product = ProductEntity(
-            id = 8,
-            name = "Monitor",
-            serialNumber = "SN-8",
-            assignedToEmployeeId = 7L,
-            assignmentDate = 1500L,
-            status = ProductStatus.ASSIGNED,
-            movementHistory = null,
-            updatedAt = 1000L
-        )
-        whenever(productDao.getProductByIdOnce(8L)).thenReturn(product)
-        doNothing().whenever(productDao).updateProduct(any())
+    fun `unassignFromEmployee clears assignment and sets unassigned status`() {
+        runBlocking {
+            val product = ProductEntity(
+                id = 8,
+                name = "Monitor",
+                serialNumber = "SN-8",
+                assignedToEmployeeId = 7L,
+                assignmentDate = 1500L,
+                status = ProductStatus.ASSIGNED,
+                movementHistory = null,
+                updatedAt = 1000L
+            )
+            whenever(productDao.getProductByIdOnce(8L)).thenReturn(product)
+        
 
-        repository.unassignFromEmployee(8L)
+            repository.unassignFromEmployee(8L)
 
-        val captor = argumentCaptor<ProductEntity>()
-        verify(productDao).updateProduct(captor.capture())
-        val updated = captor.firstValue
-        assertNull(updated.assignedToEmployeeId)
-        assertNull(updated.assignmentDate)
-        assertEquals(ProductStatus.UNASSIGNED, updated.status)
-        assertTrue(updated.updatedAt >= product.updatedAt)
-        assertTrue(updated.movementHistory?.contains("Brak przypisania") == true)
+            val captor = argumentCaptor<ProductEntity>()
+            verify(productDao).updateProduct(captor.capture())
+            val updated = captor.firstValue
+            assertNull(updated.assignedToEmployeeId)
+            assertNull(updated.assignmentDate)
+            assertEquals(ProductStatus.UNASSIGNED, updated.status)
+            assertTrue(updated.updatedAt >= product.updatedAt)
+            assertTrue(updated.movementHistory?.contains("Brak przypisania") == true)
+        }
     }
 }

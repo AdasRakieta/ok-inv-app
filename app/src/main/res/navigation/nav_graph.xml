@@ -259,7 +259,18 @@
         
         <argument
             android:name="locationName"
-            app:argType="string" />
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
+        <argument
+            android:name="qrUid"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
+        <deepLink
+            app:uri="invapp://location/{qrUid}" />
         
         <action
             android:id="@+id/action_locationDetails_to_edit"

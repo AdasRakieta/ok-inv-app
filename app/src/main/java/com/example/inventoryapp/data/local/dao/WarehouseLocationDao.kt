@@ -14,6 +14,9 @@ interface WarehouseLocationDao {
     
     @Query("SELECT * FROM warehouse_locations WHERE code = :code LIMIT 1")
     suspend fun getLocationByCode(code: String): WarehouseLocationEntity?
+
+    @Query("SELECT * FROM warehouse_locations WHERE qrUid = :qrUid LIMIT 1")
+    suspend fun getLocationByQrUid(qrUid: String): WarehouseLocationEntity?
     
     @Query("SELECT * FROM warehouse_locations WHERE zone = :zone ORDER BY code ASC")
     fun getLocationsByZone(zone: String): Flow<List<WarehouseLocationEntity>>

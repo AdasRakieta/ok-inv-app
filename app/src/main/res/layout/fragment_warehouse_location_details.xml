@@ -425,30 +425,40 @@
                     android:orientation="horizontal"
                     android:layout_marginBottom="8dp">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/editButton"
-                        style="@style/Widget.App.Button"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_weight="1"
-                        android:text="Edytuj"
-                        android:textSize="13sp"
-                        android:textAllCaps="false"
-                        android:layout_marginEnd="6dp" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/editButton"
+                            style="@style/Widget.App.Button"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="Edytuj"
+                            android:textSize="13sp"
+                            android:textAllCaps="false"
+                            android:layout_marginEnd="6dp" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/deleteButton"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_weight="1"
-                        android:text="Usuń"
-                        android:textSize="13sp"
-                        android:textColor="@color/white"
-                        android:backgroundTint="@color/error"
-                        android:textAllCaps="false"
-                        android:layout_marginStart="6dp"
-                        app:cornerRadius="12dp"
-                        app:elevation="2dp" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/qrButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="48dp"
+                            android:text="QR"
+                            android:textAllCaps="false"
+                            android:textSize="13sp"
+                            android:layout_marginEnd="6dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/deleteButton"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:text="Usuń"
+                            android:textSize="13sp"
+                            android:textColor="@color/white"
+                            android:backgroundTint="@color/error"
+                            android:textAllCaps="false"
+                            android:layout_marginStart="6dp"
+                            app:cornerRadius="12dp"
+                            app:elevation="2dp" />
 
                 </LinearLayout>
 

@@ -56,6 +56,19 @@ object QRCodeGenerator {
             null
         }
     }
+
+    /**
+     * Generate QR code from a raw string payload (no JSON wrapping).
+     * Useful for deep link payloads like "invapp://location/{qrUid}".
+     */
+    fun generateFromString(data: String, width: Int = 512, height: Int = 512): Bitmap? {
+        return try {
+            generateQRCodeFromString(data, width, height)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
     
     /**
      * Generate multiple QR codes for extremely large datasets (pagination)

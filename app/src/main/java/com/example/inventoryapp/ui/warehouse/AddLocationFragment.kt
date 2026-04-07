@@ -10,6 +10,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.inventoryapp.InventoryApplication
+import com.example.inventoryapp.data.local.entities.WarehouseLocationEntity
+import java.util.UUID
 import com.example.inventoryapp.databinding.FragmentAddLocationBinding
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -25,6 +27,7 @@ class AddLocationFragment : Fragment() {
         (requireActivity().application as InventoryApplication).productRepository
     }
     private val locationStorage by lazy { LocationStorage(requireContext()) }
+    private val warehouseLocationRepository by lazy { (requireActivity().application as InventoryApplication).warehouseLocationRepository }
 
     private var isEditMode = false
     private var currentLocationName: String? = null
@@ -89,11 +92,27 @@ class AddLocationFragment : Fragment() {
     }
     
     private fun createLocation(locationName: String, description: String = "") {
+        // Add to local prefs storage
         locationStorage.addLocation(locationName, description)
+
+        // Also persist to Room DB with generated qrUid so QR generation works immediately
+        lifecycleScope.launch {
+            try {
+                val entity = WarehouseLocationEntity(
+                    code = locationName,
+                    qrUid = UUID.randomUUID().toString(),
+                    name = locationName
+                )
+                warehouseLocationRepository.insertLocation(entity)
+            } catch (e: Exception) {
+                // ignore DB errors - we still proceed with UI flow
+            }
+        }
+
         // Navigate to location details - lokalizacja zostanie "utworzona" gdy przypiszemy do niej pierwszy produkt
         val action = AddLocationFragmentDirections.actionAddLocationToLocationDetails(locationName)
         findNavController().navigate(action)
-        
+
         Toast.makeText(
             requireContext(),
             "Lokalizacja $locationName utworzona. Przypisz produkty aby była widoczna na liście.",
