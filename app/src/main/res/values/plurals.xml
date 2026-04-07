@@ -13,4 +13,11 @@
         <item quantity="many">%d punktów</item>
         <item quantity="other">%d punktów</item>
     </plurals>
+    
+    <plurals name="products_count">
+        <item quantity="one">%d produkt</item>
+        <item quantity="few">%d produkty</item>
+        <item quantity="many">%d produktów</item>
+        <item quantity="other">%d produktów</item>
+    </plurals>
 </resources>

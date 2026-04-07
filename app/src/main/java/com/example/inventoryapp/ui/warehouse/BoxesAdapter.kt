@@ -33,10 +33,15 @@ class BoxesAdapter(
             binding.boxName.text = box.name
             binding.boxCreatedDate.text = android.text.format.DateFormat.getDateFormat(binding.root.context)
                 .format(java.util.Date(box.createdAt))
-            binding.boxLocation.text = box.warehouseLocationId?.toString() ?: "No location"
+            val ctx = binding.root.context
+            binding.boxLocation.text = box.warehouseLocationId?.toString() ?: ctx.getString(com.example.inventoryapp.R.string.no_location)
             binding.boxDescription.text = box.description ?: ""
             val count = countsMap[box.id] ?: 0
-            binding.boxProductCount.text = if (count == 0) "Brak produktów" else "${count} ${if (count==1) "produkt" else "produkty"}"
+            binding.boxProductCount.text = if (count == 0) {
+                ctx.getString(com.example.inventoryapp.R.string.no_products)
+            } else {
+                ctx.resources.getQuantityString(com.example.inventoryapp.R.plurals.products_count, count, count)
+            }
 
             binding.root.setOnClickListener { onBoxClick(box) }
         }

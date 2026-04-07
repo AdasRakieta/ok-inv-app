@@ -77,7 +77,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Products in Box"
+            android:text="@string/products_in_box"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -139,7 +139,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Modify"
+                        android:text="@string/modify"
                         android:textAllCaps="false"
                         android:layout_marginEnd="4dp" />
 
@@ -150,7 +150,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Add"
+                        android:text="@string/add"
                         android:textAllCaps="false"
                         android:layout_marginStart="4dp" />
 
@@ -162,7 +162,7 @@
                     style="@style/Widget.App.Button.Outlined"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Add Products in Bulk"
+                    android:text="@string/add_products_in_bulk"
                     android:textAllCaps="false"
                     android:layout_marginTop="8dp" />
 
@@ -184,7 +184,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Edit Box"
+                android:text="@string/edit_box"
                 android:textAllCaps="false"
                 android:layout_marginEnd="8dp" />
 
@@ -195,7 +195,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Print Label"
+                android:text="@string/print_label"
                 android:textAllCaps="false" />
 
         </LinearLayout>

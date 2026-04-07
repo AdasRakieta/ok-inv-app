@@ -122,6 +122,10 @@ class WarehouseFragment : Fragment() {
             openSortDialog()
         }
 
+        binding.boxesButton.setOnClickListener {
+            findNavController().navigate(com.example.inventoryapp.R.id.boxListFragment)
+        }
+
         binding.selectAllButton.setOnClickListener {
             locationsAdapter.selectAll()
             updateSelectionPanel()
