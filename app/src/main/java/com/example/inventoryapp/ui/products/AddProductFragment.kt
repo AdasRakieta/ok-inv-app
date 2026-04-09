@@ -15,6 +15,7 @@ import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.EmployeeEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.BoxEntity
+import com.example.inventoryapp.data.local.entities.ContractorPointEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.domain.validators.AssignmentValidator
 import com.example.inventoryapp.domain.validators.StorageTargetValidator
@@ -46,11 +47,14 @@ class AddProductFragment : Fragment() {
     private var categories: List<CategoryEntity> = emptyList()
     private var leafCategories: List<CategoryEntity> = emptyList()
     private var employees: List<EmployeeEntity> = emptyList()
+    private var contractorPoints: List<ContractorPointEntity> = emptyList()
     private var currentProduct: ProductEntity? = null
     private var selectedEmployeeId: Long? = null
+    private var selectedContractorPointId: Long? = null
     private var selectedStatus: ProductStatus = ProductStatus.IN_STOCK
     private val boxRepository by lazy { (requireActivity().application as InventoryApplication).boxRepository }
     private var boxes: List<BoxEntity> = emptyList()
+    private val contractorPointRepository by lazy { (requireActivity().application as InventoryApplication).contractorPointRepository }
     private var storageTypeIsBox: Boolean = false
     private var selectedBoxId: Long? = null
     private val assignmentValidator = AssignmentValidator()
@@ -83,6 +87,7 @@ class AddProductFragment : Fragment() {
         setupCategories()
         setupStatusDropdown()
         setupEmployeesDropdown()
+        setupContractorPointsDropdown()
         setupBoxesDropdown()
         setupWarehouseLocationsDropdown()
         loadProductIfEditing()
@@ -131,12 +136,36 @@ class AddProductFragment : Fragment() {
                 toggleFixedIdField()
             }
         }
+
+        if (selectedStatus == ProductStatus.CONTRACTOR && selectedContractorPointId == null) {
+            Toast.makeText(requireContext(), "Wybierz punkt kontrahenta dla statusu Wydane do kontrahenta", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (selectedStatus == ProductStatus.CONTRACTOR) {
+            val category = categories.firstOrNull { it.id == categoryId }
+            val productForValidation = ProductEntity(
+                id = currentProduct?.id ?: 0L,
+                name = name,
+                serialNumber = serialNumber,
+                categoryId = categoryId
+            )
+
+            when (val result = assignmentValidator.canAssignToContractorPoint(productForValidation, category)) {
+                is AssignmentValidator.ValidationResult.Success -> Unit
+                is AssignmentValidator.ValidationResult.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                    return
+                }
+            }
+        }
     }
     
     private fun setupStatusDropdown() {
         val statusLabels = mapOf(
             ProductStatus.IN_STOCK to "Magazyn",
             ProductStatus.ASSIGNED to "Przypisane",
+            ProductStatus.CONTRACTOR to "Wydane do kontrahenta",
             ProductStatus.UNASSIGNED to "Brak przypisania",
             ProductStatus.IN_REPAIR to "Serwis",
             ProductStatus.RETIRED to "Wycofane",
@@ -181,12 +210,40 @@ class AddProductFragment : Fragment() {
         }
     }
 
+    private fun setupContractorPointsDropdown() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            contractorPointRepository.getAllContractorPointsFlow().collect { list ->
+                contractorPoints = list
+                val names = list.map { it.name }
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, names)
+                binding.assignedContractorInput.setAdapter(adapter)
+
+                selectedContractorPointId?.let { id ->
+                    val idx = contractorPoints.indexOfFirst { it.id == id }
+                    if (idx >= 0) {
+                        binding.assignedContractorInput.setText(contractorPoints[idx].name, false)
+                    }
+                }
+
+                binding.assignedContractorInput.setOnItemClickListener { _, _, position, _ ->
+                    selectedContractorPointId = contractorPoints.getOrNull(position)?.id
+                }
+            }
+        }
+    }
+
     private fun toggleEmployeeField() {
         val showEmployee = selectedStatus == ProductStatus.ASSIGNED
         binding.assignedEmployeeContainer.visibility = if (showEmployee) View.VISIBLE else View.GONE
         if (!showEmployee) {
             selectedEmployeeId = null
             binding.assignedEmployeeInput.setText("")
+        }
+        val showContractor = selectedStatus == ProductStatus.CONTRACTOR
+        binding.assignedContractorContainer.visibility = if (showContractor) View.VISIBLE else View.GONE
+        if (!showContractor) {
+            selectedContractorPointId = null
+            binding.assignedContractorInput.setText("")
         }
         
         val showLocation = selectedStatus == ProductStatus.IN_STOCK
@@ -290,6 +347,7 @@ class AddProductFragment : Fragment() {
 
                 selectedStatus = product.status
                 selectedEmployeeId = product.assignedToEmployeeId
+                selectedContractorPointId = product.assignedToContractorPointId
 
                 // Set category text when categories already loaded
                 val targetCategory = categories.firstOrNull { it.id == product.categoryId }
@@ -323,6 +381,7 @@ class AddProductFragment : Fragment() {
         selectedStatus = when (statusLabel) {
             "Magazyn" -> ProductStatus.IN_STOCK
             "Przypisane" -> ProductStatus.ASSIGNED
+            "Wydane do kontrahenta" -> ProductStatus.CONTRACTOR
             "Brak przypisania" -> ProductStatus.UNASSIGNED
             "Serwis" -> ProductStatus.IN_REPAIR
             "Wycofane" -> ProductStatus.RETIRED
@@ -425,6 +484,7 @@ class AddProductFragment : Fragment() {
                 // If storing in box, set boxId; otherwise clear
                 boxId = if (selectedStatus == ProductStatus.IN_STOCK && storageTypeIsBox) selectedBoxId else null,
                 assignedToEmployeeId = if (selectedStatus == ProductStatus.ASSIGNED) selectedEmployeeId else null,
+                assignedToContractorPointId = if (selectedStatus == ProductStatus.CONTRACTOR) selectedContractorPointId else null,
                 assignmentDate = assignmentDate,
                 createdAt = now,
                 updatedAt = now
@@ -444,6 +504,7 @@ class AddProductFragment : Fragment() {
                 bin = if (selectedStatus == ProductStatus.IN_STOCK && !storageTypeIsBox) bin else null,
                 boxId = if (selectedStatus == ProductStatus.IN_STOCK && storageTypeIsBox) selectedBoxId else null,
                 assignedToEmployeeId = if (selectedStatus == ProductStatus.ASSIGNED) selectedEmployeeId else null,
+                assignedToContractorPointId = if (selectedStatus == ProductStatus.CONTRACTOR) selectedContractorPointId else null,
                 assignmentDate = assignmentDate,
                 updatedAt = now
             )
@@ -456,10 +517,12 @@ class AddProductFragment : Fragment() {
         }
 
         val employeeName = employees.firstOrNull { it.id == selectedEmployeeId }?.fullName
+        val contractorName = contractorPoints.firstOrNull { it.id == selectedContractorPointId }?.name
 
         val statusEntry = when (selectedStatus) {
             ProductStatus.IN_STOCK -> MovementHistoryUtils.entryForLocation(locationName)
             ProductStatus.ASSIGNED -> MovementHistoryUtils.entryForEmployee(employeeName)
+            ProductStatus.CONTRACTOR -> MovementHistoryUtils.entryForContractorPoint(contractorName)
             ProductStatus.UNASSIGNED -> MovementHistoryUtils.entryUnassigned()
             ProductStatus.IN_REPAIR -> MovementHistoryUtils.entryForStatus("Serwis")
             ProductStatus.RETIRED -> MovementHistoryUtils.entryForStatus("Wycofane")
@@ -470,6 +533,7 @@ class AddProductFragment : Fragment() {
             existing == null -> statusEntry
             selectedStatus != existing.status -> statusEntry
             selectedStatus == ProductStatus.ASSIGNED && selectedEmployeeId != existing.assignedToEmployeeId -> statusEntry
+            selectedStatus == ProductStatus.CONTRACTOR && selectedContractorPointId != existing.assignedToContractorPointId -> statusEntry
             selectedStatus == ProductStatus.IN_STOCK && (existing.shelf != shelf || existing.bin != bin) -> statusEntry
             else -> null
         }

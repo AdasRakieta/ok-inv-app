@@ -467,10 +467,10 @@ class ProductDetailsFragment : Fragment() {
         saveButton.setOnClickListener {
             lifecycleScope.launch {
                 val name = "kod_${serial}_${System.currentTimeMillis()}"
-                val uri = withContext(Dispatchers.IO) { MediaStoreHelper.saveBitmap(requireContext(), bitmap, name) }
+                val uri = withContext(Dispatchers.IO) { MediaStoreHelper.saveBitmap(requireContext(), bitmap, name, "Eksport Ean Produkty") }
                 if (uri != null) {
                     savedUri = uri
-                    toast("Zapisano do galerii")
+                    toast("Zapisano do Documents/ok_inv_app/Eksport Ean Produkty")
                 } else {
                     toast("Błąd zapisu")
                 }
@@ -480,7 +480,7 @@ class ProductDetailsFragment : Fragment() {
         shareButton.setOnClickListener {
             lifecycleScope.launch {
                 val uri = savedUri ?: withContext(Dispatchers.IO) {
-                    MediaStoreHelper.saveBitmap(requireContext(), bitmap, "kod_${serial}_${System.currentTimeMillis()}")
+                    MediaStoreHelper.saveBitmap(requireContext(), bitmap, "kod_${serial}_${System.currentTimeMillis()}", "Eksport Ean Produkty")
                 }
 
                 if (uri == null) {

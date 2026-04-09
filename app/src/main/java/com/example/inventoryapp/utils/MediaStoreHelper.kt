@@ -5,8 +5,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
 import java.io.File
+import java.io.IOException
 
 object MediaStoreHelper {
 
@@ -14,8 +16,35 @@ object MediaStoreHelper {
      * Save bitmap to MediaStore (preferred) and return Uri. If MediaStore is not available
      * or operation fails, fallback to writing file via FileHelper and return file Uri.
      */
-    fun saveBitmap(context: Context, bitmap: Bitmap, displayName: String): Uri? {
+    fun saveBitmap(context: Context, bitmap: Bitmap, displayName: String, exportSubdir: String? = null): Uri? {
         try {
+            // If a specific export subdirectory was provided, prefer saving into
+            // public Documents/ok_inv_app/<exportSubdir> folder. Fall back to MediaStore
+            // if direct file write fails.
+            if (!exportSubdir.isNullOrBlank()) {
+                try {
+                    if (FileHelper.isExternalStorageWritable()) {
+                        val publicDocs = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+                        val appDir = File(publicDocs, "ok_inv_app")
+                        if (!appDir.exists()) appDir.mkdirs()
+                        val targetDir = File(appDir, exportSubdir)
+                        if (!targetDir.exists()) targetDir.mkdirs()
+
+                        val outFile = File(targetDir, "$displayName.png")
+                        outFile.outputStream().use { out ->
+                            if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
+                                throw IOException("Failed to compress bitmap to file")
+                            }
+                        }
+
+                        return Uri.fromFile(outFile)
+                    }
+                } catch (e: Exception) {
+                    // failed to write to public documents, continue to MediaStore fallback
+                    e.printStackTrace()
+                }
+            }
+
             val resolver = context.contentResolver
             val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
