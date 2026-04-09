@@ -175,3 +175,19 @@ Notes & security
 - Keep your keystore and passwords private; never commit them into source control.
 
 If you want, I can also add a small README section with the exact `gh` commands pre-filled for this repository.
+
+## Debug: instalacja z danymi testowymi
+
+W buildzie `debug` aplikacja pokazuje prosty ekran startowy pozwalający wybrać instalację z przykładowymi danymi testowymi — to przyspiesza testowanie funkcjonalności.
+
+Jak użyć:
+
+- Zbuduj i zainstaluj build `debug`:
+```
+./gradlew assembleDebug
+./gradlew installDebug
+```
+- Uruchom aplikację na urządzeniu/emulatorze. W buildzie `debug` pojawi się dialog z opcją "Tak — z danymi" lub "Nie — bez danych".
+- Wybierz "Tak — z danymi" aby wstępnie zasilić bazę danymi testowymi (seedery używają `EquipmentDataSeeder` i `ProductDataSeeder`).
+
+Uwaga: funkcja jest dostępna tylko w buildzie `debug` (plik `src/debug/AndroidManifest.xml` i `src/debug/java/.../DebugInstallActivity.kt`).

@@ -11,7 +11,6 @@ object ProductDataSeeder {
     suspend fun seedSampleProducts(app: InventoryApplication) {
         try {
             val productRepository = app.productRepository
-            val categoryRepository = app.categoryRepository
             
             // Get categories (we know they exist from initializeDefaultCategories)
             val now = System.currentTimeMillis()
@@ -171,7 +170,7 @@ object ProductDataSeeder {
             sampleProducts.forEach { product ->
                 try {
                     productRepository.insertProduct(product)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Ignore duplicates (if already exists)
                     Log.w("ProductSeeder", "Product ${product.serialNumber} might already exist")
                 }

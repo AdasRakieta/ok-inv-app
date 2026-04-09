@@ -146,9 +146,10 @@ class ProductDetailsFragment : Fragment() {
                                     loc?.code ?: "Nie przypisano"
                                 } else if (it.boxId != null) {
                                     val box = boxRepository.getBoxById(it.boxId).firstOrNull()
-                                    if (box?.warehouseLocationId != null) {
+                                    val boxWarehouseLocationId = box?.warehouseLocationId
+                                    if (boxWarehouseLocationId != null) {
                                         val loc = (requireActivity().application as InventoryApplication)
-                                            .warehouseLocationRepository.getLocationById(box.warehouseLocationId!!).firstOrNull()
+                                            .warehouseLocationRepository.getLocationById(boxWarehouseLocationId).firstOrNull()
                                         loc?.code ?: "Nie przypisano"
                                     } else {
                                         "Nie przypisano"

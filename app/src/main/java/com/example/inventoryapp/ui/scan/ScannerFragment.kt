@@ -195,7 +195,7 @@ class ScannerFragment : Fragment() {
             try {
                 // first try to resolve as Box
                 val box = withContext(Dispatchers.IO) {
-                    try { boxRepository.getBoxByQrUid(qrUid) } catch (e: Exception) { null }
+                    try { boxRepository.getBoxByQrUid(qrUid) } catch (_: Exception) { null }
                 }
 
                 if (box != null) {

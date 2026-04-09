@@ -75,6 +75,7 @@ data class ProductEntity(
 enum class ProductStatus {
     IN_STOCK,
     ASSIGNED,
+    CONTRACTOR,
     UNASSIGNED,
     IN_REPAIR,
     RETIRED,

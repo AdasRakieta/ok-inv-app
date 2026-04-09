@@ -171,8 +171,8 @@ class AssignByScanFragment : Fragment() {
             }
 
             addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun beforeTextChanged(_s: CharSequence?, _start: Int, _count: Int, _after: Int) {}
+                override fun onTextChanged(_s: CharSequence?, _start: Int, _before: Int, _count: Int) {}
                 override fun afterTextChanged(s: Editable?) {
                     val text = s.toString().trim()
                     if (text.isNotEmpty() && text.length >= 5) {

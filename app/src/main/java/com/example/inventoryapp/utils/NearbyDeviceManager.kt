@@ -112,8 +112,9 @@ class NearbyDeviceManager(private val context: Context) {
             }
         }
 
-        if (bluetoothAdapter?.isEnabled == true && !bluetoothAdapter!!.isDiscovering) {
-            bluetoothAdapter?.startDiscovery()
+        val adapter = bluetoothAdapter
+        if (adapter?.isEnabled == true && !adapter.isDiscovering) {
+            adapter.startDiscovery()
         }
     }
 

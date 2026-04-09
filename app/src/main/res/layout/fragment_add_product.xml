@@ -618,6 +618,48 @@
 
                     </LinearLayout>
 
+                    <!-- Contractor point selector (shown when status = Wydane do kontrahenta) -->
+                    <LinearLayout
+                        android:id="@+id/assignedContractorContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Punkt kontrahenta"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/assignedContractorLayout"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:hint="Punkt kontrahenta"
+                            app:placeholderText="np. CP 1"
+                            app:boxBackgroundColor="@color/home_card_background"
+                            app:boxStrokeColor="@color/warning"
+                            app:hintTextColor="@color/text_secondary">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/assignedContractorInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:textColor="@color/text_primary"
+                                android:hint="np. CP 1" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
             </LinearLayout>
