@@ -7,7 +7,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
+import android.net.Uri
+import kotlinx.coroutines.withContext
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -24,6 +27,7 @@ import com.example.inventoryapp.databinding.FragmentBoxDetailsBinding
 import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
 import com.example.inventoryapp.utils.MediaStoreHelper
 import com.example.inventoryapp.utils.QRCodeGenerator
+import com.example.inventoryapp.utils.FileHelper
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.firstOrNull
@@ -250,24 +254,11 @@ class BoxDetailsFragment : Fragment() {
                         return@launch
                     }
 
-                    showQrDialog(bitmap)
-
-                    val displayName = "box_$uid"
-                    val uri = MediaStoreHelper.saveBitmap(requireContext(), bitmap, displayName)
-                    if (uri != null) {
-                        Snackbar.make(binding.root, "QR zapisano", Snackbar.LENGTH_LONG)
-                            .setAction("Udostępnij") {
-                                val share = Intent(Intent.ACTION_SEND).apply {
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    putExtra(Intent.EXTRA_STREAM, uri)
-                                    type = "image/png"
-                                }
-                                startActivity(Intent.createChooser(share, "Udostępnij QR"))
-                            }
-                            .show()
-                    } else {
-                        Toast.makeText(requireContext(), "Nie udało się zapisać obrazu", Toast.LENGTH_SHORT).show()
-                    }
+                        val sanitized = FileHelper.sanitizeFileName(currentBox?.name ?: uid.take(8))
+                        val displayName = "Box_${sanitized}"
+                        // Show preview bottom sheet with Save / Share / Cancel. Saving will write to
+                        // Documents/ok_inv_app/Eksport QR Lokalizacja
+                        showQrDialog(bitmap, displayName)
                 }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -275,32 +266,61 @@ class BoxDetailsFragment : Fragment() {
         }
     }
 
-    private fun showQrDialog(bitmap: Bitmap) {
-        val imageView = ImageView(requireContext()).apply {
-            setImageBitmap(bitmap)
-            adjustViewBounds = true
-            val padding = (16 * resources.displayMetrics.density).toInt()
-            setPadding(padding, padding, padding, padding)
-        }
+    private fun showQrDialog(bitmap: Bitmap, displayName: String) {
+        val bottomSheet = com.google.android.material.bottomsheet.BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.dialog_barcode_preview, null)
+        val previewImage = view.findViewById<ImageView>(R.id.previewImage)
+        val previewText = view.findViewById<TextView>(R.id.previewText)
+        val saveButton = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.saveButton)
+        val shareButton = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.shareButton)
+        val cancelButton = view.findViewById<com.google.android.material.button.MaterialButton>(R.id.cancelButton)
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(getString(R.string.box_qr_title))
-            .setView(imageView)
-            .setPositiveButton(getString(R.string.box_qr_close), null)
-            .setNeutralButton(getString(R.string.qr_share)) { _, _ ->
-                val uri = MediaStoreHelper.saveBitmap(requireContext(), bitmap, "box_${System.currentTimeMillis()}")
+        previewImage.setImageBitmap(bitmap)
+        previewText.text = displayName
+
+        var savedUri: Uri? = null
+
+        saveButton.setOnClickListener {
+            lifecycleScope.launch {
+                val uri = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    MediaStoreHelper.saveBitmap(requireContext(), bitmap, displayName, "Eksport QR Lokalizacja")
+                }
+
                 if (uri != null) {
-                    val share = Intent(Intent.ACTION_SEND).apply {
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        type = "image/png"
-                    }
-                    startActivity(Intent.createChooser(share, "Udostępnij QR"))
+                    savedUri = uri
+                    Toast.makeText(requireContext(), "Zapisano do Documents/ok_inv_app/Eksport QR Lokalizacja", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(requireContext(), "Nie udało się zapisać obrazu", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Błąd zapisu", Toast.LENGTH_SHORT).show()
                 }
             }
-            .show()
+        }
+
+        shareButton.setOnClickListener {
+            lifecycleScope.launch {
+                val localUri: Uri? = savedUri ?: withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    MediaStoreHelper.saveBitmap(requireContext(), bitmap, displayName, "Eksport QR Lokalizacja")
+                }
+
+                if (localUri == null) {
+                    Toast.makeText(requireContext(), "Nie udało się przygotować pliku do udostępnienia", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val share = Intent(Intent.ACTION_SEND).apply {
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    putExtra(Intent.EXTRA_STREAM, localUri as android.os.Parcelable)
+                    type = "image/png"
+                }
+                startActivity(Intent.createChooser(share, "Udostępnij QR"))
+            }
+        }
+
+        cancelButton?.setOnClickListener {
+            bottomSheet.dismiss()
+        }
+
+        bottomSheet.setContentView(view)
+        bottomSheet.show()
     }
 
     override fun onDestroyView() {

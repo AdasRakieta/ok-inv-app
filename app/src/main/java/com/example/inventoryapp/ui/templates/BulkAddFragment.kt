@@ -113,6 +113,7 @@ class BulkAddFragment : Fragment() {
         val statusLabels = mapOf(
             ProductStatus.IN_STOCK to "Magazyn",
             ProductStatus.ASSIGNED to "Przypisane",
+            ProductStatus.CONTRACTOR to "Wydane do kontrahenta",
             ProductStatus.UNASSIGNED to "Brak przypisania",
             ProductStatus.IN_REPAIR to "Serwis",
             ProductStatus.RETIRED to "Wycofane",
@@ -444,6 +445,7 @@ class BulkAddFragment : Fragment() {
                 val employeeName = employees.firstOrNull { it.id == selectedEmployeeId }?.fullName
                 val historyEntry = when (selectedStatus) {
                     ProductStatus.ASSIGNED -> MovementHistoryUtils.entryForEmployee(employeeName)
+                    ProductStatus.CONTRACTOR -> MovementHistoryUtils.entryForContractorPoint(employeeName)
                     ProductStatus.IN_STOCK -> MovementHistoryUtils.entryForLocation(locationName)
                     ProductStatus.UNASSIGNED -> MovementHistoryUtils.entryUnassigned()
                     ProductStatus.IN_REPAIR -> MovementHistoryUtils.entryForStatus("Serwis")

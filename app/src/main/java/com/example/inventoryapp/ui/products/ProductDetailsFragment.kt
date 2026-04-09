@@ -42,6 +42,7 @@ import com.example.inventoryapp.utils.MediaStoreHelper
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.utils.BrotherPrinterHelper
 import com.example.inventoryapp.utils.PrinterPreferences
+import com.example.inventoryapp.utils.FileHelper
 import com.google.android.material.snackbar.Snackbar
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import kotlinx.coroutines.flow.firstOrNull
@@ -250,6 +251,7 @@ class ProductDetailsFragment : Fragment() {
     private fun statusLabel(status: ProductStatus): String = when (status) {
         ProductStatus.IN_STOCK -> "Magazyn"
         ProductStatus.ASSIGNED -> "Przypisane"
+        ProductStatus.CONTRACTOR -> "Wydane do kontrahenta"
         ProductStatus.UNASSIGNED -> "Brak przypisania"
         ProductStatus.IN_REPAIR -> "Serwis"
         ProductStatus.RETIRED -> "Wycofane"
@@ -259,6 +261,7 @@ class ProductDetailsFragment : Fragment() {
     private fun statusColor(status: ProductStatus): Int = when (status) {
         ProductStatus.IN_STOCK -> R.color.success
         ProductStatus.ASSIGNED -> R.color.info
+        ProductStatus.CONTRACTOR -> R.color.warehouse_accent
         ProductStatus.UNASSIGNED -> R.color.warning
         ProductStatus.IN_REPAIR -> R.color.warning
         ProductStatus.RETIRED -> R.color.text_tertiary
@@ -466,7 +469,8 @@ class ProductDetailsFragment : Fragment() {
 
         saveButton.setOnClickListener {
             lifecycleScope.launch {
-                val name = "kod_${serial}_${System.currentTimeMillis()}"
+                val sanitized = FileHelper.sanitizeFileName(product.name ?: "product")
+                val name = "EAN_${sanitized}_${serial}_${System.currentTimeMillis()}"
                 val uri = withContext(Dispatchers.IO) { MediaStoreHelper.saveBitmap(requireContext(), bitmap, name, "Eksport Ean Produkty") }
                 if (uri != null) {
                     savedUri = uri
@@ -480,7 +484,9 @@ class ProductDetailsFragment : Fragment() {
         shareButton.setOnClickListener {
             lifecycleScope.launch {
                 val uri = savedUri ?: withContext(Dispatchers.IO) {
-                    MediaStoreHelper.saveBitmap(requireContext(), bitmap, "kod_${serial}_${System.currentTimeMillis()}", "Eksport Ean Produkty")
+                    val sanitized = FileHelper.sanitizeFileName(product.name ?: "product")
+                    val name = "EAN_${sanitized}_${serial}_${System.currentTimeMillis()}"
+                    MediaStoreHelper.saveBitmap(requireContext(), bitmap, name, "Eksport Ean Produkty")
                 }
 
                 if (uri == null) {

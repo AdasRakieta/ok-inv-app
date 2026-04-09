@@ -160,17 +160,13 @@ class AddEditContractorPointFragment : Fragment() {
 
         if (hasError) return
 
-        // Capture non-null values to avoid repeated '!!' assertions
-        val pointTypeNonNull = selectedPointType!!
-        val companyIdNonNull = selectedCompanyId!!
-
         val now = System.currentTimeMillis()
         val current = existingContractorPoint
         val contractorPoint = if (current == null) {
             ContractorPointEntity(
                 name = name,
-                pointType = pointTypeNonNull,
-                companyId = companyIdNonNull,
+                pointType = selectedPointType!!,
+                companyId = selectedCompanyId!!,
                 marketNumber = marketNumber,
                 address = address,
                 city = city,
@@ -182,8 +178,8 @@ class AddEditContractorPointFragment : Fragment() {
         } else {
             current.copy(
                 name = name,
-                pointType = pointTypeNonNull,
-                companyId = companyIdNonNull,
+                pointType = selectedPointType!!,
+                companyId = selectedCompanyId!!,
                 marketNumber = marketNumber,
                 address = address,
                 city = city,
@@ -194,11 +190,10 @@ class AddEditContractorPointFragment : Fragment() {
         }
 
         lifecycleScope.launch {
-                try {
+            try {
                 val savedId = if (current == null) {
-                    val id = contractorPointRepository.insertContractorPoint(contractorPoint)
+                    contractorPointRepository.insertContractorPoint(contractorPoint)
                     Toast.makeText(requireContext(), getString(R.string.contractor_point_created), Toast.LENGTH_SHORT).show()
-                    id
                 } else {
                     contractorPointRepository.updateContractorPoint(contractorPoint)
                     Toast.makeText(requireContext(), getString(R.string.contractor_point_updated), Toast.LENGTH_SHORT).show()

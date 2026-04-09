@@ -104,7 +104,7 @@ class ProductRepository(private val productDao: ProductDao) {
             assignedToEmployeeId = null,
             assignedToContractorPointId = contractorPointId,
             assignmentDate = now,
-            status = ProductStatus.ASSIGNED,
+            status = ProductStatus.CONTRACTOR,
             shelf = null,
             bin = null,
             warehouseLocationId = null,

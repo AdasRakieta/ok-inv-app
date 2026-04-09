@@ -280,6 +280,7 @@ class AssignProductsToBoxDialogFragment(
         return when (status) {
             ProductStatus.IN_STOCK -> "Magazyn"
             ProductStatus.ASSIGNED -> "Przypisane"
+            ProductStatus.CONTRACTOR -> "Wydane do kontrahenta"
             ProductStatus.UNASSIGNED -> "Brak przypisania"
             ProductStatus.IN_REPAIR -> "Serwis"
             ProductStatus.RETIRED -> "Wycofane"

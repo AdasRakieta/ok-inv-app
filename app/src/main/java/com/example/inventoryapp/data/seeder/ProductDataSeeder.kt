@@ -3,7 +3,9 @@ package com.example.inventoryapp.data.seeder
 import android.util.Log
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.ProductEntity
+import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.ui.warehouse.LocationStorage
 import java.util.*
 
 object ProductDataSeeder {
@@ -15,10 +17,25 @@ object ProductDataSeeder {
             // Get categories (we know they exist from initializeDefaultCategories)
             val now = System.currentTimeMillis()
             
-            // Use default category IDs (1=Elektronika, 2=Meble, 3=Narzędzia)
-            val electronicsId = 1L
-            val furnitureId = 2L
-            val toolsId = 3L
+            // Use a single generic demo category so seeded products don't expose
+            // application-specific child categories like "Drukarka mobilna".
+            val categoryRepo = app.categoryRepository
+            val genericCategoryName = "Urządzenia Biurowe"
+            val genericCategory = categoryRepo.getCategoryByName(genericCategoryName)
+            val genericCategoryId = if (genericCategory != null) {
+                genericCategory.id
+            } else {
+                // Insert a simple generic category for demo products
+                categoryRepo.insertCategory(
+                    CategoryEntity(
+                        name = genericCategoryName,
+                        description = "Kategoria demo",
+                        color = "#6B7280",
+                        icon = "📦",
+                        parentId = null
+                    )
+                )
+            }
         
 
 
@@ -28,7 +45,7 @@ object ProductDataSeeder {
                 ProductEntity(
                     name = "Laptop Dell Latitude 5420",
                     serialNumber = "DL5420-2024-001",
-                    categoryId = electronicsId,
+                    categoryId = genericCategoryId,
                     manufacturer = "Dell",
                     model = "Latitude 5420",
                     description = "Intel Core i5, 16GB RAM, 512GB SSD",
@@ -45,7 +62,7 @@ object ProductDataSeeder {
                 ProductEntity(
                     name = "Monitor Samsung 27\"",
                     serialNumber = "SAM27-2024-045",
-                    categoryId = electronicsId,
+                    categoryId = genericCategoryId,
                     manufacturer = "Samsung",
                     model = "S27A600",
                     description = "27 cali, QHD, 75Hz",
@@ -62,7 +79,7 @@ object ProductDataSeeder {
                 ProductEntity(
                     name = "Klawiatura Logitech MX Keys",
                     serialNumber = "LGT-MXK-2024-123",
-                    categoryId = electronicsId,
+                    categoryId = genericCategoryId,
                     manufacturer = "Logitech",
                     model = "MX Keys",
                     description = "Klawiatura bezprzewodowa, podświetlana",
@@ -80,7 +97,7 @@ object ProductDataSeeder {
                 ProductEntity(
                     name = "Biurko regulowane elektrycznie",
                     serialNumber = "DESK-ERG-2024-010",
-                    categoryId = furnitureId,
+                    categoryId = genericCategoryId,
                     manufacturer = "Ergon",
                     model = "ElectroDesk Pro",
                     description = "Biurko z regulacją wysokości 65-130cm",
@@ -93,11 +110,12 @@ object ProductDataSeeder {
                     bin = "LARGE",
                     createdAt = now,
                     updatedAt = now
+
                 ),
                 ProductEntity(
                     name = "Fotel biurowy Herman Miller",
                     serialNumber = "HM-AERON-2024-005",
-                    categoryId = furnitureId,
+                    categoryId = genericCategoryId,
                     manufacturer = "Herman Miller",
                     model = "Aeron Remastered",
                     description = "Fotel ergonomiczny, rozmiar B",
@@ -116,7 +134,7 @@ object ProductDataSeeder {
                 ProductEntity(
                     name = "Wiertarka Makita DHP484",
                     serialNumber = "MAK-DHP484-2024-078",
-                    categoryId = toolsId,
+                    categoryId = genericCategoryId,
                     manufacturer = "Makita",
                     model = "DHP484",
                     description = "Wiertarko-wkrętarka akumulatorowa 18V",
@@ -133,7 +151,7 @@ object ProductDataSeeder {
                 ProductEntity(
                     name = "Zestaw kluczy nasadowych",
                     serialNumber = "TOOL-SET-2024-234",
-                    categoryId = toolsId,
+                    categoryId = genericCategoryId,
                     manufacturer = "Yato",
                     model = "YT-38841",
                     description = "Zestaw 94 elementów w walizce",
@@ -150,7 +168,7 @@ object ProductDataSeeder {
                 ProductEntity(
                     name = "Drukarka HP LaserJet Pro",
                     serialNumber = "HP-LJ-PRO-2024-012",
-                    categoryId = electronicsId,
+                    categoryId = genericCategoryId,
                     manufacturer = "HP",
                     model = "LaserJet Pro M404dn",
                     description = "Drukarka laserowa mono, duplex",
@@ -166,6 +184,24 @@ object ProductDataSeeder {
                 )
             )
             
+            // Persist any shelf/bin locations from seeded products so demo locations remain available
+            try {
+                val locations = sampleProducts.mapNotNull { p ->
+                    p.shelf?.trim()?.takeIf { it.isNotEmpty() }?.let { shelf ->
+                        val bin = p.bin?.trim().orEmpty()
+                        if (bin.isNotEmpty()) "$shelf / $bin" else shelf
+                    }
+                }.distinct()
+
+                val storage = LocationStorage(app)
+                locations.forEach { loc ->
+                    storage.addLocation(loc)
+                }
+                Log.d("ProductSeeder", "Persisted ${locations.size} seeded locations")
+            } catch (e: Exception) {
+                Log.w("ProductSeeder", "Failed to persist seeded locations: ${e.message}")
+            }
+
             // Insert products
             sampleProducts.forEach { product ->
                 try {

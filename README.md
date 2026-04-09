@@ -190,4 +190,16 @@ Jak użyć:
 - Uruchom aplikację na urządzeniu/emulatorze. W buildzie `debug` pojawi się dialog z opcją "Tak — z danymi" lub "Nie — bez danych".
 - Wybierz "Tak — z danymi" aby wstępnie zasilić bazę danymi testowymi (seedery używają `EquipmentDataSeeder` i `ProductDataSeeder`).
 
+### Demo flavor (bez pytania)
+
+Jeśli wolisz instalować aplikację już od razu z danymi (bez dialogu), użyj przygotowanego flavora `demo`. Task `installDemo` instaluje wariant demo, który automatycznie wykonuje seed danych przy pierwszym uruchomieniu:
+
+```powershell
+.\gradlew.bat installDemo
+# lub z uruchomieniem po instalacji:
+.\gradlew.bat deployDemo
+```
+
+Wariant `demo` ma `applicationId` z sufiksem `.demo` (np. `com.ok.inv.demo`) i automatycznie seeduje istniejące seedery (`EquipmentDataSeeder`, `ProductDataSeeder`).
+
 Uwaga: funkcja jest dostępna tylko w buildzie `debug` (plik `src/debug/AndroidManifest.xml` i `src/debug/java/.../DebugInstallActivity.kt`).

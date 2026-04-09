@@ -23,8 +23,8 @@ android {
         applicationId = "com.ok.inv"
         minSdkVersion(26)
         targetSdkVersion(31)
-            versionCode = 9
-            versionName = "1.4.5"
+                versionCode = 12
+                versionName = "1.4.8"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -48,6 +48,16 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+
+    // Demo flavor for pre-seeded demo builds
+    flavorDimensions("mode")
+    productFlavors {
+        create("demo") {
+            dimension = "mode"
+            applicationIdSuffix = ".demo"
+            versionNameSuffix = "-demo"
         }
     }
 
@@ -190,6 +200,25 @@ tasks.register("runOnDevice") {
         exec {
             workingDir = project.rootDir
             commandLine("cmd", "/c", "C:/Users/%USERNAME%/AppData/Local/Android/Sdk/platform-tools/adb.exe", "shell", "am", "start", "-n", "com.ok.inv/com.example.inventoryapp.ui.main.SplashActivity")
+        }
+    }
+}
+
+// Convenience task: install demo (demoDebug) variant via `gradlew installDemo`
+tasks.register("installDemo") {
+    group = "custom"
+    description = "Install demo build (installDemoDebug)"
+    dependsOn("installDemoDebug")
+}
+
+tasks.register("deployDemo") {
+    group = "custom"
+    description = "Install demo APK and launch the demo application on device"
+    dependsOn("installDemoDebug")
+    doLast {
+        exec {
+            workingDir = project.rootDir
+            commandLine("cmd", "/c", "C:/Users/%USERNAME%/AppData/Local/Android/Sdk/platform-tools/adb.exe", "shell", "am", "start", "-n", "com.ok.inv.demo/com.example.inventoryapp.ui.main.SplashActivity")
         }
     }
 }

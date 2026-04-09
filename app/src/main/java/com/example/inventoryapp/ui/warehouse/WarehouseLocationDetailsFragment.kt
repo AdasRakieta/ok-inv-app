@@ -26,11 +26,15 @@ import android.content.Intent
 import android.widget.PopupMenu
 import android.graphics.Bitmap
 import android.widget.ImageView
+import android.widget.TextView
+import android.net.Uri
 import com.example.inventoryapp.utils.QRCodeGenerator
 import com.example.inventoryapp.utils.MediaStoreHelper
+import com.example.inventoryapp.utils.FileHelper
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class WarehouseLocationDetailsFragment : Fragment() {
 
@@ -379,7 +383,26 @@ class WarehouseLocationDetailsFragment : Fragment() {
 
     private fun applyFiltersAndRender() {
         if (!::assignedProductsAdapter.isInitialized || !::boxesAdapter.isInitialized) return
+        // Compute filtered lists locally (synchronously) to avoid relying on async ListAdapter updates
+        val filteredProducts = if (currentSearchQuery.isBlank()) {
+            latestProductsInLocation
+        } else {
+            latestProductsInLocation.filter { product ->
+                product.name.contains(currentSearchQuery, ignoreCase = true) ||
+                    product.serialNumber.contains(currentSearchQuery, ignoreCase = true)
+            }
+        }
 
+        val filteredBoxes = if (currentSearchQuery.isBlank()) {
+            latestBoxesInLocation
+        } else {
+            latestBoxesInLocation.filter { box ->
+                box.name.contains(currentSearchQuery, ignoreCase = true) ||
+                    (box.description ?: "").contains(currentSearchQuery, ignoreCase = true)
+            }
+        }
+
+        // Update adapters (they will update asynchronously via submitList internally)
         assignedProductsAdapter.setFullList(latestProductsInLocation)
         assignedProductsAdapter.filterByQuery(currentSearchQuery)
 
@@ -389,7 +412,8 @@ class WarehouseLocationDetailsFragment : Fragment() {
         val isBoxesMode = showingPackedOnly
         binding.assignedProductsRecyclerView.adapter = if (isBoxesMode) boxesAdapter else assignedProductsAdapter
 
-        val visibleItemsCount = if (isBoxesMode) boxesAdapter.itemCount else assignedProductsAdapter.itemCount
+        // Use the locally computed filtered sizes to decide empty state immediately
+        val visibleItemsCount = if (isBoxesMode) filteredBoxes.size else filteredProducts.size
         binding.assignedCountText.text = if (isBoxesMode) {
             "$visibleItemsCount ${pluralForm(visibleItemsCount, "karton", "kartony", "kartonów")} w tej lokalizacji"
         } else {
@@ -465,24 +489,12 @@ class WarehouseLocationDetailsFragment : Fragment() {
                         return@launch
                     }
 
-                    showQrDialog(bitmap)
-
-                    val displayName = "location_$uid"
-                    val uri = MediaStoreHelper.saveBitmap(requireContext(), bitmap, displayName)
-                    if (uri != null) {
-                        Snackbar.make(binding.root, "QR zapisano", Snackbar.LENGTH_LONG)
-                            .setAction("Udostępnij") {
-                                val share = Intent(Intent.ACTION_SEND).apply {
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    putExtra(Intent.EXTRA_STREAM, uri)
-                                    type = "image/png"
-                                }
-                                startActivity(Intent.createChooser(share, "Udostępnij QR"))
-                            }
-                            .show()
-                    } else {
-                        Toast.makeText(requireContext(), "Nie udało się zapisać obrazu", Toast.LENGTH_SHORT).show()
-                    }
+                    val resolvedName = args.locationName ?: binding.locationName.text?.toString() ?: ""
+                    val sanitized = if (resolvedName.isNotBlank()) FileHelper.sanitizeFileName(resolvedName) else FileHelper.sanitizeFileName(uid.take(8))
+                    val displayName = "Location_${sanitized}"
+                    // Show preview bottom sheet with Save / Share / Cancel. Saving will write to
+                    // Documents/ok_inv_app/Eksport QR Lokalizacja
+                    showQrDialog(bitmap, displayName)
                 }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -490,32 +502,62 @@ class WarehouseLocationDetailsFragment : Fragment() {
         }
     }
 
-    private fun showQrDialog(bitmap: Bitmap) {
-        val imageView = ImageView(requireContext()).apply {
-            setImageBitmap(bitmap)
-            adjustViewBounds = true
-            val padding = (16 * resources.displayMetrics.density).toInt()
-            setPadding(padding, padding, padding, padding)
-        }
+    private fun showQrDialog(bitmap: Bitmap, displayName: String) {
+        val bottomSheet = com.google.android.material.bottomsheet.BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(com.example.inventoryapp.R.layout.dialog_barcode_preview, null)
+        val previewImage = view.findViewById<ImageView>(com.example.inventoryapp.R.id.previewImage)
+        val previewText = view.findViewById<TextView>(com.example.inventoryapp.R.id.previewText)
+        val saveButton = view.findViewById<com.google.android.material.button.MaterialButton>(com.example.inventoryapp.R.id.saveButton)
+        val shareButton = view.findViewById<com.google.android.material.button.MaterialButton>(com.example.inventoryapp.R.id.shareButton)
+        val cancelButton = view.findViewById<com.google.android.material.button.MaterialButton>(com.example.inventoryapp.R.id.cancelButton)
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("QR lokalizacji")
-            .setView(imageView)
-            .setPositiveButton("Zamknij", null)
-            .setNeutralButton("Udostępnij") { _, _ ->
-                val uri = MediaStoreHelper.saveBitmap(requireContext(), bitmap, "location_${System.currentTimeMillis()}")
+        previewImage.setImageBitmap(bitmap)
+        previewText.text = displayName
+
+        var savedUri: Uri? = null
+
+        saveButton.setOnClickListener {
+            lifecycleScope.launch {
+                val uri = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    MediaStoreHelper.saveBitmap(requireContext(), bitmap, displayName, "Eksport QR Lokalizacja")
+                }
                 if (uri != null) {
-                    val share = Intent(Intent.ACTION_SEND).apply {
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        type = "image/png"
-                    }
-                    startActivity(Intent.createChooser(share, "Udostępnij QR"))
+                    savedUri = uri
+                    Toast.makeText(requireContext(), "Zapisano do Documents/ok_inv_app/Eksport QR Lokalizacja", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(requireContext(), "Nie udało się zapisać obrazu", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Błąd zapisu", Toast.LENGTH_SHORT).show()
                 }
             }
-            .show()
+        }
+
+        shareButton.setOnClickListener {
+            lifecycleScope.launch {
+                val localUri: Uri? = savedUri ?: withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    MediaStoreHelper.saveBitmap(requireContext(), bitmap, displayName, "Eksport QR Lokalizacja")
+                }
+
+                if (localUri == null) {
+                    Toast.makeText(requireContext(), "Nie udało się przygotować pliku do udostępnienia", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val share = Intent(Intent.ACTION_SEND).apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, localUri as android.os.Parcelable)
+                    type = "image/png"
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+
+                startActivity(Intent.createChooser(share, "Udostępnij QR"))
+            }
+        }
+
+        cancelButton?.setOnClickListener {
+            bottomSheet.dismiss()
+        }
+
+        bottomSheet.setContentView(view)
+        bottomSheet.show()
     }
 
     private fun showAssignProductDialog() {

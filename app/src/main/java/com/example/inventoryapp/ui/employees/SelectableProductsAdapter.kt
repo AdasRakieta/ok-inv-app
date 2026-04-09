@@ -73,6 +73,7 @@ class SelectableProductsAdapter(
                 val (statusLabel, statusColor) = when (item.product.status) {
                     ProductStatus.IN_STOCK -> "Magazyn" to "#10B981"
                     ProductStatus.ASSIGNED -> "Przypisane" to "#3B82F6"
+                    ProductStatus.CONTRACTOR -> "Wydane do kontrahenta" to "#8B5CF6"
                     ProductStatus.UNASSIGNED -> "Brak przypisania" to "#6B7280"
                     ProductStatus.IN_REPAIR -> "Serwis" to "#F59E0B"
                     ProductStatus.RETIRED -> "Wycofane" to "#6B7280"

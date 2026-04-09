@@ -9,7 +9,7 @@ import androidx.room.Room
 import com.example.inventoryapp.data.local.database.AppDatabase
 import com.example.inventoryapp.data.repository.*
 
-class InventoryApplication : Application() {
+open class InventoryApplication : Application() {
 
     private val database by lazy {
         try {
@@ -56,6 +56,9 @@ class InventoryApplication : Application() {
         com.example.inventoryapp.utils.AppLogger.init(this)
 
         CoroutineScope(Dispatchers.IO).launch {
+            // create app-level public export folders on first run
+            com.example.inventoryapp.utils.FileHelper.ensurePublicExportFoldersCreated()
+
             categoryRepository.initializeDefaultCategories()
         }
     }

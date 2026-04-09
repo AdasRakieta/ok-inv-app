@@ -136,29 +136,8 @@ class AddProductFragment : Fragment() {
                 toggleFixedIdField()
             }
         }
-
-        if (selectedStatus == ProductStatus.CONTRACTOR && selectedContractorPointId == null) {
-            Toast.makeText(requireContext(), "Wybierz punkt kontrahenta dla statusu Wydane do kontrahenta", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (selectedStatus == ProductStatus.CONTRACTOR) {
-            val category = categories.firstOrNull { it.id == categoryId }
-            val productForValidation = ProductEntity(
-                id = currentProduct?.id ?: 0L,
-                name = name,
-                serialNumber = serialNumber,
-                categoryId = categoryId
-            )
-
-            when (val result = assignmentValidator.canAssignToContractorPoint(productForValidation, category)) {
-                is AssignmentValidator.ValidationResult.Success -> Unit
-                is AssignmentValidator.ValidationResult.Error -> {
-                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
-                    return
-                }
-            }
-        }
+        // category dropdown and fixed-id toggling handled above; contractor-specific
+        // assignment validation is performed in saveProduct() where user inputs exist.
     }
     
     private fun setupStatusDropdown() {
@@ -410,6 +389,31 @@ class AddProductFragment : Fragment() {
             )
 
             when (val result = assignmentValidator.canAssignToEmployee(productForValidation, employee, category)) {
+                is AssignmentValidator.ValidationResult.Success -> Unit
+                is AssignmentValidator.ValidationResult.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
+                    return
+                }
+            }
+        }
+
+        // Contractor assignment validation: ensure a contractor point is selected
+        // and the product can be assigned to that contractor point.
+        if (selectedStatus == ProductStatus.CONTRACTOR && selectedContractorPointId == null) {
+            Toast.makeText(requireContext(), "Wybierz punkt kontrahenta dla statusu Wydane do kontrahenta", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (selectedStatus == ProductStatus.CONTRACTOR) {
+            val category = categories.firstOrNull { it.id == categoryId }
+            val productForValidation = ProductEntity(
+                id = currentProduct?.id ?: 0L,
+                name = name,
+                serialNumber = serialNumber,
+                categoryId = categoryId
+            )
+
+            when (val result = assignmentValidator.canAssignToContractorPoint(productForValidation, category)) {
                 is AssignmentValidator.ValidationResult.Success -> Unit
                 is AssignmentValidator.ValidationResult.Error -> {
                     Toast.makeText(requireContext(), result.message, Toast.LENGTH_LONG).show()
