@@ -25,6 +25,7 @@
             android:layout_marginBottom="16dp" />
 
         <TextView
+            android:id="@+id/titleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Usuń produkt"
@@ -62,6 +63,7 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/warningTitleText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Czy na pewno chcesz usunąć ten produkt?"
@@ -71,6 +73,7 @@
                 android:layout_marginBottom="8dp" />
 
             <TextView
+                android:id="@+id/warningDetailsText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="• Produkt zostanie trwale usunięty\n• Historia ruchów zostanie utracona\n• Tej operacji nie można cofnąć"

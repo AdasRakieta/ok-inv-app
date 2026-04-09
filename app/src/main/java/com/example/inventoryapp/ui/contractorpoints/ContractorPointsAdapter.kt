@@ -81,7 +81,7 @@ class ContractorPointsAdapter(
             val context = binding.root.context
 
             binding.pointName.text = point.name
-            binding.pointCode.text = point.code
+            binding.pointMarketNumber.text = point.marketNumber ?: ""
             binding.pointTypeBadge.text = point.pointType.name
             binding.pointCompany.text = item.companyName
 

@@ -215,7 +215,8 @@ class EmployeeDetailsFragment : Fragment() {
                             assignmentDate = System.currentTimeMillis(),
                             status = ProductStatus.ASSIGNED,
                             shelf = null,
-                            bin = null
+                            bin = null,
+                            boxId = null
                         )
                         productRepository.updateWithHistory(
                             base,

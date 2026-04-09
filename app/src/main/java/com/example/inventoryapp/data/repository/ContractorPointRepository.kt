@@ -19,10 +19,6 @@ class ContractorPointRepository(private val contractorPointDao: ContractorPointD
         contractorPointDao.getById(id)
     }
 
-    suspend fun getContractorPointByCode(code: String): ContractorPointEntity? = withContext(Dispatchers.IO) {
-        contractorPointDao.getByCode(code)
-    }
-
     suspend fun getContractorPointsByType(pointType: PointType): List<ContractorPointEntity> = withContext(Dispatchers.IO) {
         contractorPointDao.getByPointType(pointType)
     }

@@ -347,6 +347,7 @@ class AssignByScanFragment : Fragment() {
                             status = ProductStatus.ASSIGNED,
                             shelf = null,
                             bin = null,
+                            boxId = null,
                             updatedAt = now
                         )
                         productRepository.updateWithHistory(
@@ -363,6 +364,7 @@ class AssignByScanFragment : Fragment() {
                         val updated = product.copy(
                             shelf = shelf,
                             bin = bin,
+                            boxId = null,
                             assignedToEmployeeId = null,
                             assignmentDate = null,
                             status = ProductStatus.IN_STOCK,

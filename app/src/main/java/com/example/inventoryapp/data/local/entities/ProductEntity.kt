@@ -19,6 +19,7 @@ import java.util.Date
     indices = [
         Index(value = ["serialNumber"], unique = true),
         Index(value = ["customId"], unique = true),
+        Index(value = ["fixedId"]),
         Index(value = ["categoryId"]),
         Index(value = ["warehouseLocationId"]),
         Index(value = ["boxId"]),
@@ -31,6 +32,7 @@ data class ProductEntity(
     
     val name: String,
     val customId: String? = null,  // Custom ID like "LapOK10"
+    val fixedId: String? = null, // ID Stałe for devices like scanners
     val serialNumber: String,
     val categoryId: Long? = null,
     

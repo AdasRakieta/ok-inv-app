@@ -102,45 +102,54 @@ class TemplatesListFragment : Fragment() {
     }
 
     private fun openFabMenu() {
-        isFabMenuOpen = true
-        // No global FAB to hide — using fragment-local FAB only
+        // Capture views locally to avoid referencing `binding` from animation callbacks
+        val overlay = _binding?.templatesFabMenuOverlay ?: return
+        val singleCard = _binding?.templatesSingleAddCard ?: return
+        val bulkCard = _binding?.templatesBulkAddCard ?: return
 
-        binding.templatesFabMenuOverlay.visibility = View.VISIBLE
-        binding.templatesFabMenuOverlay.alpha = 0f
-        binding.templatesFabMenuOverlay.animate()
+        isFabMenuOpen = true
+
+        overlay.visibility = View.VISIBLE
+        overlay.alpha = 0f
+        overlay.animate()
             .alpha(1f)
             .setDuration(200)
             .start()
 
-        showCard(binding.templatesSingleAddCard, 0)
-        showCard(binding.templatesBulkAddCard, 50)
+        showCard(singleCard, 0)
+        showCard(bulkCard, 50)
 
-        binding.templatesFabMenuOverlay.setOnClickListener { closeFabMenu() }
+        overlay.setOnClickListener { closeFabMenu() }
 
-        binding.templatesSingleAddCard.setOnClickListener {
+        singleCard.setOnClickListener {
             closeFabMenu()
             openTemplateDetails(0L)
         }
 
-        binding.templatesBulkAddCard.setOnClickListener {
+        bulkCard.setOnClickListener {
             closeFabMenu()
             Toast.makeText(requireContext(), "Import szablonów: funkcja w przygotowaniu", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun closeFabMenu() {
+        // Capture views locally to avoid dereferencing cleared binding inside animation callbacks
+        val overlay = _binding?.templatesFabMenuOverlay ?: return
+        val singleCard = _binding?.templatesSingleAddCard ?: return
+        val bulkCard = _binding?.templatesBulkAddCard ?: return
+
         isFabMenuOpen = false
-        binding.templatesFabMenuOverlay.animate()
+
+        overlay.animate()
             .alpha(0f)
             .setDuration(200)
-            .withEndAction { binding.templatesFabMenuOverlay.visibility = View.GONE }
+            .withEndAction { overlay.visibility = View.GONE }
             .start()
 
-        hideCard(binding.templatesSingleAddCard)
-        hideCard(binding.templatesBulkAddCard)
+        hideCard(singleCard)
+        hideCard(bulkCard)
 
-        // Show global FAB again
-        // No global FAB to show
+        // Show global FAB again — none in this fragment
     }
 
     private fun showCard(card: View, delay: Long) {

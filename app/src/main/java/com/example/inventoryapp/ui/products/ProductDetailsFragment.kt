@@ -63,6 +63,9 @@ class ProductDetailsFragment : Fragment() {
     private val employeeRepository by lazy {
         (requireActivity().application as InventoryApplication).employeeRepository
     }
+    private val boxRepository by lazy {
+        (requireActivity().application as InventoryApplication).boxRepository
+    }
 
     private var currentProduct: ProductEntity? = null
     private var categories: List<CategoryEntity> = emptyList()
@@ -133,13 +136,23 @@ class ProductDetailsFragment : Fragment() {
                             if (status == ProductStatus.IN_STOCK) {
                                 statusExtraContainer.visibility = View.VISIBLE
                                 statusLocationContainer.visibility = View.VISIBLE
-                                // compute location display
+                                // compute location display. prefer explicit shelf/bin, then product location,
+                                // then fallback to box -> box.location when product is in a box
                                 val locText = if (!it.shelf.isNullOrBlank()) {
                                     it.shelf + (if (!it.bin.isNullOrBlank()) " / ${it.bin}" else "")
                                 } else if (it.warehouseLocationId != null) {
                                     val loc = (requireActivity().application as InventoryApplication)
                                         .warehouseLocationRepository.getLocationById(it.warehouseLocationId).firstOrNull()
                                     loc?.code ?: "Nie przypisano"
+                                } else if (it.boxId != null) {
+                                    val box = boxRepository.getBoxById(it.boxId).firstOrNull()
+                                    if (box?.warehouseLocationId != null) {
+                                        val loc = (requireActivity().application as InventoryApplication)
+                                            .warehouseLocationRepository.getLocationById(box.warehouseLocationId!!).firstOrNull()
+                                        loc?.code ?: "Nie przypisano"
+                                    } else {
+                                        "Nie przypisano"
+                                    }
                                 } else {
                                     "Nie przypisano"
                                 }
@@ -202,7 +215,8 @@ class ProductDetailsFragment : Fragment() {
         }
         binding.moreButton.setOnClickListener { showOptionsMenu(it) }
         binding.editSerialButton.setOnClickListener { promptEditSerial() }
-        binding.printEanButton.setOnClickListener { printBarcodeLabel() }
+        // Show share/save dialog for EAN instead of printing directly
+        binding.printEanButton.setOnClickListener { showEanDialog() }
     }
 
     private fun showOptionsMenu(anchor: View) {
@@ -305,15 +319,18 @@ class ProductDetailsFragment : Fragment() {
         
         val bottomSheet = BottomSheetDialog(requireContext())
         val sheetBinding = BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
-        
-        // Set product name
+
+        // Set product name and contextual messages
+        sheetBinding.titleText.text = "Usuń produkt"
         sheetBinding.productNameText.text = product.name
-        
+        sheetBinding.warningTitleText.text = "Czy na pewno chcesz usunąć ten produkt?"
+        sheetBinding.warningDetailsText.text = "• Produkt zostanie trwale usunięty\n• Historia ruchów zostanie utracona\n• Tej operacji nie można cofnąć"
+
         // Cancel button
         sheetBinding.cancelButton.setOnClickListener {
             bottomSheet.dismiss()
         }
-        
+
         // Delete button with animation
         sheetBinding.deleteButton.setOnClickListener {
             it.animate()
@@ -336,7 +353,7 @@ class ProductDetailsFragment : Fragment() {
                 }
                 .start()
         }
-        
+
         bottomSheet.setContentView(sheetBinding.root)
         bottomSheet.show()
     }
@@ -479,6 +496,11 @@ class ProductDetailsFragment : Fragment() {
 
                 startActivity(Intent.createChooser(share, "Udostępnij kod"))
             }
+        }
+
+        val cancelButton = view.findViewById<MaterialButton>(R.id.cancelButton)
+        cancelButton?.setOnClickListener {
+            bottomSheet.dismiss()
         }
 
         bottomSheet.setContentView(view)

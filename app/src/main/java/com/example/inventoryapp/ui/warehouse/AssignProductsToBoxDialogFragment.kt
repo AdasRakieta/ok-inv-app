@@ -142,7 +142,6 @@ class AssignProductsToBoxDialogFragment(
             val products = productRepository.getAllProducts().first()
             val availableProducts = products.filter { product ->
                 product.boxId == null &&
-                    product.id != boxId &&
                     product.assignedToEmployeeId == null &&
                     product.assignedToContractorPointId == null
             }

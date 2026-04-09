@@ -32,7 +32,7 @@ class ContractorPointRepositoryTest {
     @Test
     fun `getAllContractorPointsFlow delegates to dao`() {
         val points = listOf(
-            ContractorPointEntity(id = 1, code = "FLOW-001", name = "Flow Point", pointType = PointType.CP, companyId = 10)
+            ContractorPointEntity(id = 1, marketNumber = "FLOW-001", name = "Flow Point", pointType = PointType.CP, companyId = 10)
         )
         val flow = flowOf(points)
         whenever(contractorPointDao.getAllFlow()).thenReturn(flow)
@@ -47,8 +47,8 @@ class ContractorPointRepositoryTest {
     fun `getAllContractorPoints delegates to dao`() {
         runBlocking {
             val points = listOf(
-                ContractorPointEntity(id = 1, code = "CP-001", name = "Point A", pointType = PointType.CP, companyId = 10),
-                ContractorPointEntity(id = 2, code = "CC-001", name = "Point B", pointType = PointType.CC, companyId = 11)
+                ContractorPointEntity(id = 1, marketNumber = "CP-001", name = "Point A", pointType = PointType.CP, companyId = 10),
+                ContractorPointEntity(id = 2, marketNumber = "CC-001", name = "Point B", pointType = PointType.CC, companyId = 11)
             )
             whenever(contractorPointDao.getAll()).thenReturn(points)
 
@@ -62,42 +62,31 @@ class ContractorPointRepositoryTest {
     @Test
     fun `getContractorPointById delegates to dao`() {
         runBlocking {
-            val point = ContractorPointEntity(id = 5, code = "DC-005", name = "DC Point", pointType = PointType.DC, companyId = 99)
+            val point = ContractorPointEntity(id = 5, marketNumber = "DC-005", name = "DC Point", pointType = PointType.DC, companyId = 99)
             whenever(contractorPointDao.getById(5)).thenReturn(point)
 
             val result = repository.getContractorPointById(5)
 
             assertNotNull(result)
-            assertEquals("DC-005", result?.code)
+            assertEquals("DC-005", result?.marketNumber)
             verify(contractorPointDao).getById(5)
         }
     }
 
-    @Test
-    fun `getContractorPointByCode delegates to dao`() {
-        runBlocking {
-            val point = ContractorPointEntity(id = 9, code = "CP-009", name = "Code Point", pointType = PointType.CP, companyId = 1)
-            whenever(contractorPointDao.getByCode("CP-009")).thenReturn(point)
-
-            val result = repository.getContractorPointByCode("CP-009")
-
-            assertEquals(point, result)
-            verify(contractorPointDao).getByCode("CP-009")
-        }
-    }
+    
 
     @Test
     fun `getContractorPointsByType delegates to dao`() {
         runBlocking {
             val points = listOf(
-                ContractorPointEntity(id = 1, code = "CP-001", name = "CP 1", pointType = PointType.CP, companyId = 1)
+                ContractorPointEntity(id = 1, marketNumber = "CP-001", name = "CP 1", pointType = PointType.CP, companyId = 1)
             )
             whenever(contractorPointDao.getByPointType(PointType.CP)).thenReturn(points)
 
             val result = repository.getContractorPointsByType(PointType.CP)
 
             assertEquals(1, result.size)
-            assertEquals("CP-001", result.first().code)
+            assertEquals("CP-001", result.first().marketNumber)
             verify(contractorPointDao).getByPointType(PointType.CP)
         }
     }
@@ -106,14 +95,14 @@ class ContractorPointRepositoryTest {
     fun `getContractorPointsByCompany delegates to dao`() {
         runBlocking {
             val points = listOf(
-                ContractorPointEntity(id = 1, code = "CP-010", name = "Company point", pointType = PointType.CP, companyId = 77)
+                ContractorPointEntity(id = 1, marketNumber = "CP-010", name = "Company point", pointType = PointType.CP, companyId = 77)
             )
             whenever(contractorPointDao.getByCompany(77)).thenReturn(points)
 
             val result = repository.getContractorPointsByCompany(77)
 
             assertEquals(1, result.size)
-            assertEquals("CP-010", result.first().code)
+            assertEquals("CP-010", result.first().marketNumber)
             verify(contractorPointDao).getByCompany(77)
         }
     }
@@ -122,14 +111,14 @@ class ContractorPointRepositoryTest {
     fun `searchContractorPoints delegates to dao`() {
         runBlocking {
             val points = listOf(
-                ContractorPointEntity(id = 1, code = "DC-100", name = "Distribution Center", pointType = PointType.DC, companyId = 8, city = "Krakow")
+                ContractorPointEntity(id = 1, marketNumber = "DC-100", name = "Distribution Center", pointType = PointType.DC, companyId = 8, city = "Krakow")
             )
             whenever(contractorPointDao.search("Krakow")).thenReturn(points)
 
             val result = repository.searchContractorPoints("Krakow")
 
             assertEquals(1, result.size)
-            assertEquals("DC-100", result[0].code)
+            assertEquals("DC-100", result[0].marketNumber)
             verify(contractorPointDao).search("Krakow")
         }
     }
@@ -137,7 +126,7 @@ class ContractorPointRepositoryTest {
     @Test
     fun `insertContractorPoint delegates to dao and returns id`() {
         runBlocking {
-            val point = ContractorPointEntity(code = "CP-200", name = "Insert Point", pointType = PointType.CP, companyId = 3)
+            val point = ContractorPointEntity(marketNumber = "CP-200", name = "Insert Point", pointType = PointType.CP, companyId = 3)
             whenever(contractorPointDao.insert(point)).thenReturn(42L)
 
             val result = repository.insertContractorPoint(point)
@@ -152,7 +141,7 @@ class ContractorPointRepositoryTest {
         runBlocking {
             val original = ContractorPointEntity(
                 id = 7,
-                code = "CC-007",
+                marketNumber = "CC-007",
                 name = "Update Point",
                 pointType = PointType.CC,
                 companyId = 4,
@@ -167,7 +156,7 @@ class ContractorPointRepositoryTest {
             verify(contractorPointDao).update(captor.capture())
             val updated = captor.firstValue
             assertEquals(original.id, updated.id)
-            assertEquals(original.code, updated.code)
+            assertEquals(original.marketNumber, updated.marketNumber)
             assertEquals(original.name, updated.name)
             assertTrue(updated.updatedAt >= original.updatedAt)
         }
@@ -176,7 +165,7 @@ class ContractorPointRepositoryTest {
     @Test
     fun `deleteContractorPoint delegates to dao`() {
         runBlocking {
-            val point = ContractorPointEntity(id = 3, code = "CP-003", name = "Delete Point", pointType = PointType.CP, companyId = 2)
+            val point = ContractorPointEntity(id = 3, marketNumber = "CP-003", name = "Delete Point", pointType = PointType.CP, companyId = 2)
         
 
             repository.deleteContractorPoint(point)

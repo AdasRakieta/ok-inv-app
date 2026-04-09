@@ -6,6 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import androidx.core.widget.addTextChangedListener
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ActionMode
+import android.view.Menu
+import android.view.MenuItem
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -31,8 +35,39 @@ class BoxListFragment : Fragment() {
 
     private val boxRepository by lazy { (requireActivity().application as InventoryApplication).boxRepository }
     private val productRepository by lazy { (requireActivity().application as InventoryApplication).productRepository }
+    private val warehouseLocationRepository by lazy { (requireActivity().application as InventoryApplication).warehouseLocationRepository }
 
     private lateinit var boxesAdapter: BoxesAdapter
+    private var actionMode: ActionMode? = null
+    private val selectionActionModeCallback = object : ActionMode.Callback {
+        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+            (requireActivity() as AppCompatActivity).menuInflater.inflate(com.example.inventoryapp.R.menu.selection_menu, menu)
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean = false
+
+        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            return when (item.itemId) {
+                com.example.inventoryapp.R.id.action_delete -> {
+                    confirmBulkDelete()
+                    mode.finish()
+                    true
+                }
+                com.example.inventoryapp.R.id.action_select_all -> {
+                    boxesAdapter.selectAll()
+                    updateSelectionPanel()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode) {
+            actionMode = null
+            hideSelectionPanel()
+        }
+    }
     private var allBoxes: List<com.example.inventoryapp.data.local.entities.BoxEntity> = emptyList()
     private var currentQuery: String = ""
     private var searchJob: Job? = null
@@ -67,6 +102,10 @@ class BoxListFragment : Fragment() {
                     boxesAdapter.selectionMode = true
                     boxesAdapter.toggleSelection(box.id)
                     showSelectionPanel()
+                    if (actionMode == null) {
+                        actionMode = (requireActivity() as AppCompatActivity).startSupportActionMode(selectionActionModeCallback)
+                    }
+                    actionMode?.title = "Zaznaczono: ${boxesAdapter.getSelectedCount()}"
                 }
             },
             onOptionsClick = { box, anchor ->
@@ -94,6 +133,16 @@ class BoxListFragment : Fragment() {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = boxesAdapter
             setHasFixedSize(false)
+        }
+
+        // Load warehouse locations so adapter can display location codes (e.g., P1)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                warehouseLocationRepository.getAllLocations().collect { locations ->
+                    val locMap = locations.associate { it.id to (it.code ?: "") }
+                    boxesAdapter.setLocationsMap(locMap)
+                }
+            }
         }
 
         // FAB opens Add/Edit Box screen
@@ -198,9 +247,10 @@ class BoxListFragment : Fragment() {
     }
 
     private fun showSelectionPanel() {
-        binding.selectionPanel.visibility = View.VISIBLE
-        binding.selectionPanel.alpha = 0f
-        binding.selectionPanel.animate()
+        val panel = _binding?.selectionPanel ?: return
+        panel.visibility = View.VISIBLE
+        panel.alpha = 0f
+        panel.animate()
             .alpha(1f)
             .setDuration(200)
             .start()
@@ -208,11 +258,12 @@ class BoxListFragment : Fragment() {
     }
 
     private fun hideSelectionPanel() {
-        binding.selectionPanel.animate()
+        val panel = _binding?.selectionPanel ?: return
+        panel.animate()
             .alpha(0f)
             .setDuration(200)
             .withEndAction {
-                binding.selectionPanel.visibility = View.GONE
+                panel.visibility = View.GONE
             }
             .start()
         boxesAdapter.selectionMode = false
@@ -223,8 +274,11 @@ class BoxListFragment : Fragment() {
         val selectedCount = boxesAdapter.getSelectedCount()
         binding.selectionCountText.text = "Zaznaczono: $selectedCount"
 
+        actionMode?.title = "Zaznaczono: $selectedCount"
+
         if (selectedCount == 0) {
             hideSelectionPanel()
+            actionMode?.finish()
         }
     }
 
@@ -237,12 +291,20 @@ class BoxListFragment : Fragment() {
         val bottomSheet = BottomSheetDialog(requireContext())
         val sheetBinding = com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
 
+        sheetBinding.titleText.text = "Usuń kartony"
         sheetBinding.productNameText.text = "$count ${pluralForm(count, "karton", "kartony", "kartonów")}"
+        sheetBinding.warningTitleText.text = "Czy na pewno chcesz usunąć wybrane kartony?"
+        sheetBinding.warningDetailsText.text = buildString {
+            append("• Usuniętych kartonów: $count\n")
+            append("• Produkty zostaną odpięte od kartonów\n")
+            append("• Tej operacji nie można cofnąć")
+        }
 
         sheetBinding.cancelButton.setOnClickListener {
             bottomSheet.dismiss()
         }
 
+        sheetBinding.deleteButton.text = "Usuń kartony"
         sheetBinding.deleteButton.setOnClickListener {
             bottomSheet.dismiss()
             deleteBulkBoxes(selectedIds)

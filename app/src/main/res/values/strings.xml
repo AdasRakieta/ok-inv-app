@@ -116,6 +116,7 @@
     <string name="description">Description</string>
     <!-- Polish localization for Boxes UI -->
     <string name="no_location">Brak lokalizacji</string>
+    <string name="assigned_to_location">Przypisane</string>
     <string name="no_products">Brak produktów</string>
     <string name="products_in_box">Produkty w kartonie</string>
     <string name="modify">Modyfikuj</string>
@@ -126,6 +127,7 @@
     <string name="qr_generate_failed">Nie udało się wygenerować QR</string>
     <string name="qr_saved">QR zapisano</string>
     <string name="qr_share">Udostępnij</string>
+    <string name="share_ean">Udostępnij EAN</string>
     <string name="qr_save_failed">Nie udało się zapisać obrazu</string>
     <string name="box_qr_title">QR kartonu</string>
     <string name="box_qr_close">Zamknij</string>
@@ -194,8 +196,8 @@
     <string name="contractor_point_edit_title">Edytuj punkt kontrahenta</string>
     <string name="contractor_point_save_changes">Zapisz zmiany</string>
     <string name="contractor_point_data_section">DANE PUNKTU</string>
-    <string name="contractor_point_code">Kod punktu</string>
-    <string name="contractor_point_code_hint">np. CP_WAW_01</string>
+    <string name="contractor_point_market_number">Numer marketu</string>
+    <string name="contractor_point_market_number_hint">np. 12345</string>
     <string name="contractor_point_name">Nazwa punktu</string>
     <string name="contractor_point_name_hint">Wpisz nazwę punktu</string>
     <string name="contractor_point_type">Typ punktu</string>
@@ -207,12 +209,12 @@
     <string name="contractor_point_deleted">Usunięto punkt kontrahenta</string>
     <string name="contractor_point_created_at_fmt">Utworzono: %1$s</string>
     <string name="contractor_point_updated_at_fmt">Zaktualizowano: %1$s</string>
-    <string name="error_invalid_point_code">Kod: 2-30 znaków, A-Z, 0-9, _, -</string>
-    <string name="error_point_code_exists">Ten kod punktu jest już w użyciu</string>
+    <string name="error_invalid_market_number">Numer marketu: 1-20 znaków</string>
+    <string name="error_market_number_exists">Ten numer marketu jest już w użyciu</string>
     <string name="error_invalid_postal_code">Kod pocztowy musi mieć format 00-000</string>
     <string name="contractor_points_title">Punkty kontrahenta</string>
     <string name="contractor_points_list_label">Lista punktów</string>
-    <string name="contractor_points_search_hint">Szukaj po kodzie, nazwie lub mieście...</string>
+    <string name="contractor_points_search_hint">Szukaj po numerze marketu, nazwie lub mieście...</string>
     <string name="contractor_points_filter_type_button">Typ punktu</string>
     <string name="contractor_points_filter_company_button">Firma</string>
     <string name="contractor_points_filter_type_title">Filtruj po typie punktu</string>

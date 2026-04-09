@@ -26,17 +26,18 @@ class SettingsHubFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Pokaż tylko kartę ustawień drukarki — pozostałe ukryj
         binding.cardPrinterSettings.setOnClickListener {
             findNavController().navigate(R.id.printerSettingsFragment)
         }
 
-        binding.cardCompanies.setOnClickListener {
-            findNavController().navigate(R.id.companiesFragment)
-        }
+        binding.cardCompanies.visibility = View.GONE
+        binding.cardCompanies.isClickable = false
+        binding.cardCompanies.isFocusable = false
 
-        binding.cardContractorPoints.setOnClickListener {
-            findNavController().navigate(R.id.contractorPointsFragment)
-        }
+        binding.cardContractorPoints.visibility = View.GONE
+        binding.cardContractorPoints.isClickable = false
+        binding.cardContractorPoints.isFocusable = false
     }
 
     override fun onDestroyView() {

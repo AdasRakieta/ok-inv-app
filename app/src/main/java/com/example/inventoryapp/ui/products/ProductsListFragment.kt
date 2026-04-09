@@ -8,6 +8,10 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.TooltipCompat
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ActionMode
+import android.view.Menu
+import android.view.MenuItem
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -43,6 +47,36 @@ class ProductsListFragment : Fragment() {
     }
     
     private lateinit var adapter: ProductsAdapter
+    private var actionMode: ActionMode? = null
+    private val selectionActionModeCallback = object : ActionMode.Callback {
+        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+            (requireActivity() as AppCompatActivity).menuInflater.inflate(com.example.inventoryapp.R.menu.selection_menu, menu)
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean = false
+
+        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            return when (item.itemId) {
+                com.example.inventoryapp.R.id.action_delete -> {
+                    confirmBulkDelete()
+                    mode.finish()
+                    true
+                }
+                com.example.inventoryapp.R.id.action_select_all -> {
+                    adapter.selectAll()
+                    updateSelectionPanel()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode) {
+            actionMode = null
+            hideSelectionPanel()
+        }
+    }
 
     private var allProducts: List<ProductEntity> = emptyList()
     private var categories: List<CategoryEntity> = emptyList()
@@ -110,6 +144,10 @@ class ProductsListFragment : Fragment() {
                     adapter.selectionMode = true
                     adapter.toggleSelection(product.id)
                     showSelectionPanel()
+                    if (actionMode == null) {
+                        actionMode = (requireActivity() as AppCompatActivity).startSupportActionMode(selectionActionModeCallback)
+                    }
+                    actionMode?.title = "Zaznaczono: ${adapter.getSelectedCount()}"
                 }
             },
             onOptionsClick = { anchor, product ->
@@ -641,8 +679,11 @@ class ProductsListFragment : Fragment() {
         val selectedCount = adapter.getSelectedCount()
         binding.selectionCountText.text = "Zaznaczono: $selectedCount"
         
+        actionMode?.title = "Zaznaczono: $selectedCount"
+
         if (selectedCount == 0) {
             hideSelectionPanel()
+            actionMode?.finish()
         }
     }
     
@@ -654,13 +695,21 @@ class ProductsListFragment : Fragment() {
         
         val bottomSheet = BottomSheetDialog(requireContext())
         val sheetBinding = com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
-        
+
+        sheetBinding.titleText.text = "Usuń produkty"
         sheetBinding.productNameText.text = "$count ${pluralForm(count, "produkt", "produkty", "produktów")}"
-        
+        sheetBinding.warningTitleText.text = "Czy na pewno chcesz usunąć wybrane produkty?"
+        sheetBinding.warningDetailsText.text = buildString {
+            append("• Produkt(ty) zostaną trwale usunięte\n")
+            append("• Historia ruchów zostanie utracona\n")
+            append("• Tej operacji nie można cofnąć")
+        }
+
         sheetBinding.cancelButton.setOnClickListener {
             bottomSheet.dismiss()
         }
         
+        sheetBinding.deleteButton.text = "Usuń produkty"
         sheetBinding.deleteButton.setOnClickListener {
             bottomSheet.dismiss()
             deleteBulkProducts(selectedIds)
@@ -695,7 +744,11 @@ class ProductsListFragment : Fragment() {
         val bottomSheet = BottomSheetDialog(requireContext())
         val sheetBinding = com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
 
+        sheetBinding.titleText.text = "Usuń produkt"
         sheetBinding.productNameText.text = product.name
+        sheetBinding.warningTitleText.text = "Czy na pewno chcesz usunąć ten produkt?"
+        sheetBinding.warningDetailsText.text = "• Produkt zostanie trwale usunięty\n• Historia ruchów zostanie utracona\n• Tej operacji nie można cofnąć"
+
         sheetBinding.cancelButton.setOnClickListener { bottomSheet.dismiss() }
         sheetBinding.deleteButton.text = "Usuń produkt"
         sheetBinding.deleteButton.setOnClickListener {

@@ -34,6 +34,7 @@ class AddEditCompanyFragment : Fragment() {
     }
 
     private var existingCompany: CompanyEntity? = null
+    private val transientDepartments = mutableListOf<String>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -56,6 +57,15 @@ class AddEditCompanyFragment : Fragment() {
         }
         binding.manageDepartmentsButton.isVisible = false
 
+        // Listen for department changes from bottom sheet (both persistent and transient)
+        parentFragmentManager.setFragmentResultListener("departments_changed", viewLifecycleOwner) { _, bundle ->
+            val list = bundle.getStringArrayList("departments")
+            if (list != null) {
+                transientDepartments.clear()
+                transientDepartments.addAll(list)
+            }
+        }
+
         loadCompanyIfEditing()
     }
 
@@ -67,7 +77,11 @@ class AddEditCompanyFragment : Fragment() {
 
         val company = existingCompany
         if (company == null || company.id <= 0L) {
-            Toast.makeText(requireContext(), getString(R.string.company_save_first_for_departments), Toast.LENGTH_SHORT).show()
+            // open transient (unsaved) departments manager
+            val name = binding.nameInput.text.toString().trim().ifBlank { "" }
+            val sheet = com.example.inventoryapp.ui.employees.DepartmentsBottomSheetFragment
+                .newInstance(-1L, name, true, ArrayList(transientDepartments))
+            sheet.show(parentFragmentManager, "company_departments_sheet")
             return
         }
 
@@ -184,7 +198,13 @@ class AddEditCompanyFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 if (current == null) {
-                    companyRepository.insertCompany(company)
+                    val newId = companyRepository.insertCompany(company)
+                    // persist any transient departments created prior to saving
+                    if (usesDepartments && transientDepartments.isNotEmpty()) {
+                        for (d in transientDepartments) {
+                            departmentRepository.insert(newId, d)
+                        }
+                    }
                     Toast.makeText(requireContext(), getString(R.string.company_created), Toast.LENGTH_SHORT).show()
                 } else {
                     companyRepository.updateCompany(company)

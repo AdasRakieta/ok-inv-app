@@ -156,7 +156,8 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
-                                android:layout_marginBottom="10dp">
+                                android:layout_marginBottom="10dp"
+                                android:visibility="gone">
 
                                 <TextView
                                     android:layout_width="0dp"
@@ -182,7 +183,8 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
-                                android:layout_marginBottom="10dp">
+                                android:layout_marginBottom="10dp"
+                                android:visibility="gone">
 
                                 <TextView
                                     android:layout_width="0dp"
@@ -207,7 +209,8 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="horizontal"
-                                android:layout_marginBottom="10dp">
+                                android:layout_marginBottom="10dp"
+                                android:visibility="gone">
 
                                 <TextView
                                     android:layout_width="0dp"
@@ -523,7 +526,7 @@
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
-                    android:text="Drukuj EAN"
+                    android:text="@string/share_ean"
                     android:textSize="13sp"
                     android:textAllCaps="false"
                     android:layout_marginBottom="12dp"
@@ -818,16 +821,6 @@
 
     </LinearLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabPrintLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="@dimen/fab_bottom_margin"
-        android:contentDescription="Drukuj etykietę"
-        app:srcCompat="@drawable/ic_print"
-        app:backgroundTint="@color/home_primary"
-        app:tint="@android:color/white" />
+    <!-- FAB z ikoną drukarki usunięty zgodnie z wymaganiem: drukowanie etykiet pozostaje dostępne, ale przycisk EAN pokazuje teraz dialog udostępniania -->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

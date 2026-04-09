@@ -72,6 +72,8 @@ class ProductRepository(private val productDao: ProductDao) {
             status = ProductStatus.ASSIGNED,
             shelf = null,
             bin = null,
+            warehouseLocationId = null,
+            boxId = null,
             movementHistory = MovementHistoryUtils.append(
                 product.movementHistory,
                 MovementHistoryUtils.entryForEmployee("ID $employeeId")
@@ -105,6 +107,8 @@ class ProductRepository(private val productDao: ProductDao) {
             status = ProductStatus.ASSIGNED,
             shelf = null,
             bin = null,
+            warehouseLocationId = null,
+            boxId = null,
             movementHistory = MovementHistoryUtils.append(
                 product.movementHistory,
                 MovementHistoryUtils.entryForContractorPoint(contractorPointName ?: "ID $contractorPointId")
@@ -135,5 +139,48 @@ class ProductRepository(private val productDao: ProductDao) {
         )
         productDao.updateProduct(updated)
         return updated
+    }
+
+    // Centralized helpers to assign multiple products to locations or boxes
+    suspend fun assignProductsToLocation(products: List<ProductEntity>, locationName: String, warehouseLocationId: Long?) {
+        val shelf = locationName.substringBefore("/").trim()
+        val bin = locationName.substringAfter("/", "").trim().takeIf { it.isNotEmpty() }
+        val now = System.currentTimeMillis()
+
+        products.forEach { product ->
+            val updated = product.copy(
+                shelf = shelf,
+                bin = bin,
+                warehouseLocationId = warehouseLocationId,
+                boxId = null,
+                assignedToEmployeeId = null,
+                assignedToContractorPointId = null,
+                assignmentDate = null,
+                status = ProductStatus.IN_STOCK,
+                movementHistory = MovementHistoryUtils.append(product.movementHistory, MovementHistoryUtils.entryForLocation(locationName)),
+                updatedAt = now
+            )
+            productDao.updateProduct(updated)
+        }
+    }
+
+    suspend fun assignProductsToBox(products: List<ProductEntity>, boxId: Long, warehouseLocationId: Long?, shelf: String?, bin: String?, boxName: String?) {
+        val now = System.currentTimeMillis()
+
+        products.forEach { product ->
+            val updated = product.copy(
+                boxId = boxId,
+                warehouseLocationId = warehouseLocationId,
+                shelf = shelf,
+                bin = bin,
+                assignedToEmployeeId = null,
+                assignedToContractorPointId = null,
+                assignmentDate = null,
+                status = ProductStatus.IN_STOCK,
+                movementHistory = MovementHistoryUtils.append(product.movementHistory, "Dodano do kartonu ${boxName ?: boxId}"),
+                updatedAt = now
+            )
+            productDao.updateProduct(updated)
+        }
     }
 }

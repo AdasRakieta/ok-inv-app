@@ -22,7 +22,6 @@ enum class PointType {
         )
     ],
     indices = [
-        Index(value = ["code"], unique = true),
         Index(value = ["pointType"]),
         Index(value = ["companyId"]),
         Index(value = ["name"])
@@ -30,17 +29,14 @@ enum class PointType {
 )
 data class ContractorPointEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val code: String,
     val name: String,
     val pointType: PointType,
     val companyId: Long,
+    val marketNumber: String? = null,
     val address: String? = null,
     val city: String? = null,
     val postalCode: String? = null,
-    val contactPerson: String? = null,
-    val email: String? = null,
     val phone: String? = null,
-    val notes: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

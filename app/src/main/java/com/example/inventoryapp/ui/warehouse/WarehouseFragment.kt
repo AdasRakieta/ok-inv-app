@@ -15,6 +15,10 @@ import android.widget.PopupMenu
 import androidx.core.graphics.ColorUtils
 import androidx.core.widget.doAfterTextChanged
 import androidx.core.view.isVisible
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ActionMode
+import android.view.Menu
+import android.view.MenuItem
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -49,6 +53,37 @@ class WarehouseFragment : Fragment() {
     private val locationStorage by lazy { LocationStorage(requireContext()) }
 
     private lateinit var locationsAdapter: WarehouseLocationsListAdapter
+    private var actionMode: ActionMode? = null
+    private val selectionActionModeCallback = object : ActionMode.Callback {
+        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+            (requireActivity() as AppCompatActivity).menuInflater.inflate(com.example.inventoryapp.R.menu.selection_menu, menu)
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean = false
+
+        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            return when (item.itemId) {
+                com.example.inventoryapp.R.id.action_delete -> {
+                    showDeleteSelectedConfirmation()
+                    mode.finish()
+                    true
+                }
+                com.example.inventoryapp.R.id.action_select_all -> {
+                    locationsAdapter.selectAll()
+                    updateSelectionPanel()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode) {
+            actionMode = null
+            locationsAdapter.clearSelection()
+            binding.selectionPanel.isVisible = false
+        }
+    }
     private var searchQuery: String = ""
     private var allLocationCards: List<WarehouseLocationCard> = emptyList()
 
@@ -88,6 +123,10 @@ class WarehouseFragment : Fragment() {
                     locationsAdapter.selectionMode = true
                     locationsAdapter.toggleSelection(location.name)
                     updateSelectionPanel()
+                    if (actionMode == null) {
+                        actionMode = (requireActivity() as AppCompatActivity).startSupportActionMode(selectionActionModeCallback)
+                    }
+                    actionMode?.title = "Zaznaczono: ${locationsAdapter.getSelectedCount()}"
                     true
                 } else {
                     false
@@ -405,9 +444,13 @@ class WarehouseFragment : Fragment() {
         binding.selectionPanel.isVisible = locationsAdapter.selectionMode
         binding.selectionCountText.text = "Zaznaczono: $selectedCount"
 
+        // keep ActionMode title in sync
+        actionMode?.title = "Zaznaczono: $selectedCount"
+
         if (selectedCount == 0 && locationsAdapter.selectionMode) {
             locationsAdapter.clearSelection()
             binding.selectionPanel.isVisible = false
+            actionMode?.finish()
         }
     }
 

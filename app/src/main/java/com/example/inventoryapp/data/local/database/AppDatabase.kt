@@ -45,7 +45,7 @@ import com.example.inventoryapp.data.local.entities.*
         // Tracking
         ScanHistoryEntity::class
     ],
-    version = 40,
+    version = 42,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -695,6 +695,65 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 41 -> 42: remove deprecated columns (code, contactPerson, email, notes)
+        // and add marketNumber column. Preserve existing data where possible.
+        private val MIGRATION_41_42 = object : Migration(41, 42) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("PRAGMA foreign_keys=OFF")
+
+                database.execSQL("ALTER TABLE contractor_points RENAME TO contractor_points_old")
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS contractor_points (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL,
+                        pointType TEXT NOT NULL,
+                        companyId INTEGER NOT NULL,
+                        marketNumber TEXT,
+                        address TEXT,
+                        city TEXT,
+                        postalCode TEXT,
+                        phone TEXT,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        FOREIGN KEY(companyId) REFERENCES companies(id) ON DELETE CASCADE
+                    )
+                    """
+                )
+
+                // Copy existing data where possible. marketNumber will be NULL for old rows.
+                database.execSQL(
+                    """
+                    INSERT INTO contractor_points (id, name, pointType, companyId, marketNumber, address, city, postalCode, phone, createdAt, updatedAt)
+                    SELECT id, name, pointType, companyId, NULL, address, city, postalCode, phone, createdAt, updatedAt
+                    FROM contractor_points_old
+                    """
+                )
+
+                database.execSQL("DROP TABLE IF EXISTS contractor_points_old")
+
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_contractor_points_pointType ON contractor_points(pointType)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_contractor_points_companyId ON contractor_points(companyId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_contractor_points_name ON contractor_points(name)")
+
+                database.execSQL("PRAGMA foreign_keys=ON")
+            }
+        }
+
+        // Migration 40 -> 41: Add fixedId column to products for scanner fixed IDs
+        private val MIGRATION_40_41 = object : Migration(40, 41) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                try {
+                    database.execSQL("ALTER TABLE products ADD COLUMN fixedId TEXT")
+                } catch (e: Exception) {
+                    // ignore if column already exists
+                }
+                // Create an index to speed up lookups on fixedId
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_products_fixedId ON products(fixedId)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -718,7 +777,9 @@ abstract class AppDatabase : RoomDatabase() {
                             MIGRATION_36_38,
                                 MIGRATION_37_38,
                                 MIGRATION_38_39
-                                        ,MIGRATION_39_40
+                                        ,MIGRATION_39_40,
+                                        MIGRATION_40_41,
+                                        MIGRATION_41_42
                     )
                     .fallbackToDestructiveMigration()
                     .build()

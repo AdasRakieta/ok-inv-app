@@ -122,7 +122,8 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.08" />
+                        android:letterSpacing="0.08"
+                        android:visibility="gone" />
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/productIdLayout"
@@ -132,7 +133,8 @@
                         android:layout_marginTop="4dp"
                         android:hint="ID produktu"
                         app:placeholderText="np. LAP0K10"
-                        app:endIconMode="clear_text">
+                        app:endIconMode="clear_text"
+                        android:visibility="gone">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/productIdInput"
@@ -255,6 +257,48 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- Fixed ID for scanners (ID Stałe) - shown only for category 'Skaner' -->
+                    <LinearLayout
+                        android:id="@+id/fixedIdContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ID Stałe"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08" />
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/fixedIdLayout"
+                            style="@style/Widget.App.FormInput.Outlined"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:hint="ID Stałe"
+                            app:placeholderText="Opcjonalnie"
+                            app:endIconMode="clear_text">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/fixedIdInput"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textCapCharacters"
+                                android:fontFamily="monospace"
+                                android:textColor="@color/text_primary"
+                                android:hint="np. FIXED123" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -264,7 +308,8 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.08" />
+                        android:letterSpacing="0.08"
+                        android:visibility="gone" />
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/manufacturerLayout"
@@ -273,7 +318,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:hint="Producent"
-                        app:placeholderText="np. Acme">
+                        app:placeholderText="np. Acme"
+                        android:visibility="gone">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/manufacturerInput"
@@ -286,6 +332,7 @@
                     </com.google.android.material.textfield.TextInputLayout>
 
 
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -294,7 +341,8 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.08" />
+                        android:letterSpacing="0.08"
+                        android:visibility="gone" />
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/modelLayout"
@@ -303,7 +351,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:hint="Model"
-                        app:placeholderText="np. X123">
+                        app:placeholderText="np. X123"
+                        android:visibility="gone">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/modelInput"

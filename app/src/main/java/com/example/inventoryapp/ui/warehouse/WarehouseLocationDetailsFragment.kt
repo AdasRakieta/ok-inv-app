@@ -23,6 +23,7 @@ import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.Intent
+import android.widget.PopupMenu
 import android.graphics.Bitmap
 import android.widget.ImageView
 import com.example.inventoryapp.utils.QRCodeGenerator
@@ -51,6 +52,7 @@ class WarehouseLocationDetailsFragment : Fragment() {
     private lateinit var assignedProductsAdapter: AssignedProductsAdapter
     private lateinit var boxesAdapter: BoxesAdapter
     private var showingPackedOnly: Boolean = false
+    private var currentLocationEntityId: Long? = null
     private var currentSearchQuery: String = ""
     private var latestProductsInLocation: List<ProductEntity> = emptyList()
     private var latestBoxesInLocation: List<BoxEntity> = emptyList()
@@ -83,10 +85,65 @@ class WarehouseLocationDetailsFragment : Fragment() {
             }
         )
 
-        boxesAdapter = BoxesAdapter(onBoxClick = { box ->
-            val bundle = android.os.Bundle().apply { putLong("boxId", box.id) }
-            findNavController().navigate(com.example.inventoryapp.R.id.boxDetailsFragment, bundle)
-        })
+        boxesAdapter = BoxesAdapter(
+            onBoxClick = { box ->
+                val bundle = android.os.Bundle().apply { putLong("boxId", box.id) }
+                findNavController().navigate(com.example.inventoryapp.R.id.boxDetailsFragment, bundle)
+            },
+            onBoxLongClick = { _ ->
+                // no-op by default in this view
+            },
+            onOptionsClick = { box, anchor ->
+                val popup = PopupMenu(requireContext(), anchor)
+                popup.menu.add("Edytuj")
+                popup.menu.add("Przypisz do tej lokalizacji")
+                popup.menu.add("Usuń przypisanie")
+                popup.menu.add("Usuń")
+                popup.setOnMenuItemClickListener { item ->
+                    when (item.title) {
+                        "Edytuj" -> {
+                            val bundle = android.os.Bundle().apply {
+                                putLong("boxId", box.id)
+                                putLong("warehouseLocationId", box.warehouseLocationId ?: 0L)
+                            }
+                            findNavController().navigate(com.example.inventoryapp.R.id.addEditBoxFragment, bundle)
+                        }
+                        "Przypisz do tej lokalizacji" -> {
+                            lifecycleScope.launch {
+                                val locId = currentLocationEntityId
+                                if (locId != null) {
+                                    val updated = box.copy(warehouseLocationId = locId)
+                                    boxRepository.updateBox(updated)
+                                    Toast.makeText(requireContext(), "Karton przypisano do lokalizacji", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(requireContext(), "Lokalizacja nie jest zapisana w bazie", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                        "Usuń przypisanie" -> {
+                            lifecycleScope.launch {
+                                val updated = box.copy(warehouseLocationId = null)
+                                boxRepository.updateBox(updated)
+                                Toast.makeText(requireContext(), "Usunięto przypisanie kartonu", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        "Usuń" -> {
+                            lifecycleScope.launch {
+                                val productsInBox = productRepository.getProductsByBoxId(box.id).firstOrNull().orEmpty()
+                                productsInBox.forEach { product ->
+                                    val updatedP = product.copy(boxId = null)
+                                    productRepository.updateWithHistory(updatedP, "Karton ${box.name} został usunięty")
+                                }
+                                boxRepository.deleteBox(box)
+                                Toast.makeText(requireContext(), "Karton usunięty", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                    true
+                }
+                popup.show()
+            }
+        )
 
         binding.assignedProductsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -160,8 +217,16 @@ class WarehouseLocationDetailsFragment : Fragment() {
 
             // Update header
             binding.locationName.text = displayName
-            binding.locationShelf.text = displayName.substringBefore("/").trim().ifBlank { "-" }
-            binding.locationBin.text = displayName.substringAfter("/", "").trim().ifBlank { "-" }
+            if (displayName.contains("/")) {
+                binding.locationShelf.visibility = View.VISIBLE
+                binding.locationBin.visibility = View.VISIBLE
+                binding.locationShelf.text = displayName.substringBefore("/").trim().ifBlank { "-" }
+                binding.locationBin.text = displayName.substringAfter("/", "").trim().ifBlank { "-" }
+            } else {
+                // don't duplicate the name if there's no shelf/bin separator
+                binding.locationShelf.visibility = View.GONE
+                binding.locationBin.visibility = View.GONE
+            }
             val locationDescription = locationStorage.getLocationDescription(displayName)
             binding.locationDescriptionText.text = locationDescription.takeIf { it.isNotEmpty() } ?: "Brak opisu"
 
@@ -184,8 +249,28 @@ class WarehouseLocationDetailsFragment : Fragment() {
                 }
 
                 if (locationEntity != null) {
-                    // When we have a persisted location entity, allow creating a box tied to it
+                    currentLocationEntityId = locationEntity.id
+                    // When we have a persisted location entity: allow assigning existing boxes
                     binding.addBoxButton.setOnClickListener {
+                        val dialog = AssignBoxesToLocationDialogFragment(currentLocationEntityId) { selectedBoxes ->
+                            lifecycleScope.launch {
+                                val locId = currentLocationEntityId
+                                if (locId != null) {
+                                    selectedBoxes.forEach { box ->
+                                        val updated = box.copy(warehouseLocationId = locId)
+                                        boxRepository.updateBox(updated)
+                                    }
+                                    Toast.makeText(requireContext(), "Przypisano ${selectedBoxes.size} kartonów do lokalizacji", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(requireContext(), "Lokalizacja nie jest zapisana w bazie", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                        dialog.show(childFragmentManager, "AssignBoxesDialog")
+                    }
+
+                    // Create + add new box
+                    binding.createAndAddBoxButton.setOnClickListener {
                         val bundle = android.os.Bundle().apply {
                             putLong("warehouseLocationId", locationEntity.id)
                             putString("locationName", displayName)
@@ -235,7 +320,27 @@ class WarehouseLocationDetailsFragment : Fragment() {
                     }
                 } else {
                     // Non-persisted location: create box but pass the display name to prefill
+                    // For non-persisted location: allow assigning existing boxes (will warn if location not saved)
                     binding.addBoxButton.setOnClickListener {
+                        val dialog = AssignBoxesToLocationDialogFragment(currentLocationEntityId) { selectedBoxes ->
+                            lifecycleScope.launch {
+                                val locId = currentLocationEntityId
+                                if (locId != null) {
+                                    selectedBoxes.forEach { box ->
+                                        val updated = box.copy(warehouseLocationId = locId)
+                                        boxRepository.updateBox(updated)
+                                    }
+                                    Toast.makeText(requireContext(), "Przypisano ${selectedBoxes.size} kartonów do lokalizacji", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(requireContext(), "Lokalizacja nie jest zapisana w bazie", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                        dialog.show(childFragmentManager, "AssignBoxesDialog")
+                    }
+
+                    // Create + add new box (prefill location name)
+                    binding.createAndAddBoxButton.setOnClickListener {
                         val bundle = android.os.Bundle().apply {
                             putLong("warehouseLocationId", 0L)
                             putString("locationName", displayName)
@@ -426,19 +531,14 @@ class WarehouseLocationDetailsFragment : Fragment() {
                 val locationName = resolvedLocationName()
                 val shelf = locationName.substringBefore("/").trim()
                 val bin = locationName.substringAfter("/", "").trim().takeIf { it.isNotEmpty() }
-                
-                products.forEach { product ->
-                    val updatedProduct = product.copy(
-                        shelf = shelf,
-                        bin = bin,
-                        status = ProductStatus.IN_STOCK,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    productRepository.updateWithHistory(
-                        updatedProduct,
-                        MovementHistoryUtils.entryForLocation(locationName)
-                    )
+                // If this displayName corresponds to a persisted location, set warehouseLocationId
+                val locationEntity = try {
+                    warehouseLocationRepository.getLocationByCode(locationName)
+                } catch (e: Exception) {
+                    null
                 }
+                val locationIdToSet = locationEntity?.id
+                productRepository.assignProductsToLocation(products, locationName, locationIdToSet)
                 
                 Toast.makeText(
                     requireContext(),
@@ -505,6 +605,10 @@ class WarehouseLocationDetailsFragment : Fragment() {
                     val updatedProduct = product.copy(
                         shelf = null,
                         bin = null,
+                        // also clear any employee/contractor assignment when removing location
+                        assignedToEmployeeId = null,
+                        assignedToContractorPointId = null,
+                        assignmentDate = null,
                         status = ProductStatus.UNASSIGNED,
                         updatedAt = System.currentTimeMillis()
                     )
@@ -545,6 +649,9 @@ class WarehouseLocationDetailsFragment : Fragment() {
                 val updatedProduct = product.copy(
                     shelf = null,
                     bin = null,
+                    assignedToEmployeeId = null,
+                    assignedToContractorPointId = null,
+                    assignmentDate = null,
                     status = ProductStatus.UNASSIGNED,
                     updatedAt = System.currentTimeMillis()
                 )

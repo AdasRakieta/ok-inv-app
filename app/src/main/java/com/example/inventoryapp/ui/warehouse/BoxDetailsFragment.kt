@@ -155,19 +155,7 @@ class BoxDetailsFragment : Fragment() {
                 val locationLabel = resolveLocationLabel(box.warehouseLocationId)
                 val shelf = locationLabel.substringBefore("/").trim()
                 val bin = locationLabel.substringAfter("/", "").trim().takeIf { it.isNotEmpty() }
-
-                products.forEach { product ->
-                    val updated = product.copy(
-                        boxId = box.id,
-                        warehouseLocationId = box.warehouseLocationId,
-                        shelf = shelf,
-                        bin = bin,
-                        status = com.example.inventoryapp.data.local.entities.ProductStatus.IN_STOCK,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    val historyEntry = "Dodano do kartonu ${box.name} — ${MovementHistoryUtils.entryForLocation(locationLabel)}"
-                    productRepository.updateWithHistory(updated, historyEntry)
-                }
+                productRepository.assignProductsToBox(products, box.id, box.warehouseLocationId, shelf, bin, box.name)
                 Toast.makeText(requireContext(), "Dodano ${products.size} produktów", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()

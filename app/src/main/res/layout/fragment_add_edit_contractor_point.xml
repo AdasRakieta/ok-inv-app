@@ -84,30 +84,31 @@
                             android:textStyle="bold"
                             android:layout_marginBottom="12dp" />
 
+
+                        <!-- Numer marketu: widoczny tylko gdy Typ punktu == CP -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:text="@string/contractor_point_code"
+                            android:layout_marginTop="8dp"
+                            android:text="Numer marketu"
                             android:textColor="@color/text_secondary"
                             android:textSize="11sp"
                             android:textStyle="bold"
                             android:letterSpacing="0.08" />
 
                         <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/codeLayout"
+                            android:id="@+id/marketNumberLayout"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             style="@style/Widget.App.FormInput.Outlined">
 
                             <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/codeInput"
+                                android:id="@+id/marketNumberInput"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:hint="@string/contractor_point_code_hint"
-                                android:inputType="textCapCharacters"
-                                android:maxLength="30"
+                                android:hint="Numer marketu (np. 12345)"
+                                android:inputType="text"
                                 android:textColor="@color/black"
                                 android:textColorHint="@color/text_secondary" />
 
@@ -302,61 +303,6 @@
 
                         </LinearLayout>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="@string/company_contact_person"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.08" />
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/contactPersonLayout"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            style="@style/Widget.App.FormInput.Outlined">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/contactPersonInput"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:hint="@string/company_contact_person_hint"
-                                android:inputType="textCapWords"
-                                android:textColor="@color/black"
-                                android:textColorHint="@color/text_secondary" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="@string/company_email"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.08" />
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/emailLayout"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            style="@style/Widget.App.FormInput.Outlined">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/emailInput"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:hint="@string/company_email_hint"
-                                android:inputType="textEmailAddress"
-                                android:textColor="@color/black"
-                                android:textColorHint="@color/text_secondary" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -386,35 +332,7 @@
 
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="@string/company_notes"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.08" />
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:id="@+id/notesLayout"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            style="@style/Widget.App.FormInput.Outlined">
-
-                            <com.google.android.material.textfield.TextInputEditText
-                                android:id="@+id/notesInput"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:hint="@string/company_notes_hint"
-                                android:inputType="textMultiLine"
-                                android:minLines="4"
-                                android:gravity="top|start"
-                                android:textColor="@color/black"
-                                android:textColorHint="@color/text_secondary" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
+                        <!-- Removed contact person, email and notes per product decision -->
 
                     </LinearLayout>
 

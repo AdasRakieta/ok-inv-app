@@ -144,7 +144,12 @@ class ContractorPointDetailsFragment : Fragment() {
 
     private fun displayContractorPoint(contractorPoint: ContractorPointEntity) {
         binding.nameText.text = contractorPoint.name
-        binding.codeTypeText.text = "${contractorPoint.code} • ${contractorPoint.pointType.name}"
+        // Show market number (if present) and type
+        binding.codeTypeText.text = if (!contractorPoint.marketNumber.isNullOrBlank()) {
+            "${contractorPoint.marketNumber} • ${contractorPoint.pointType.name}"
+        } else {
+            contractorPoint.pointType.name
+        }
 
         lifecycleScope.launch {
             val companyName = companyRepository.getCompanyById(contractorPoint.companyId)?.name ?: "Nieznana firma"
@@ -164,10 +169,9 @@ class ContractorPointDetailsFragment : Fragment() {
             "📍 ${addressParts.joinToString(", ")}"
         }
 
+        // Only phone is kept for contact
         val contactParts = listOfNotNull(
-            contractorPoint.contactPerson?.takeIf { it.isNotBlank() },
-            contractorPoint.phone?.takeIf { it.isNotBlank() },
-            contractorPoint.email?.takeIf { it.isNotBlank() }
+            contractorPoint.phone?.takeIf { it.isNotBlank() }
         )
         binding.contactText.text = if (contactParts.isEmpty()) {
             "📞 Brak danych kontaktowych"
@@ -175,8 +179,8 @@ class ContractorPointDetailsFragment : Fragment() {
             "📞 ${contactParts.joinToString(" • ")}"
         }
 
-        binding.notesCard.isVisible = !contractorPoint.notes.isNullOrBlank()
-        binding.notesText.text = contractorPoint.notes.orEmpty()
+        // Notes removed from model; hide notes card
+        binding.notesCard.isVisible = false
 
         val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
         binding.updatedAtText.text = "Zaktualizowano: ${formatter.format(Date(contractorPoint.updatedAt))}"
@@ -271,7 +275,7 @@ class ContractorPointDetailsFragment : Fragment() {
         val contractorPoint = currentContractorPoint ?: return
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Usuń punkt kontrahenta")
-            .setMessage("Czy na pewno chcesz usunąć punkt:\n\n${contractorPoint.name}\n(${contractorPoint.code})")
+            .setMessage("Czy na pewno chcesz usunąć punkt:\n\n${contractorPoint.name}\n(${contractorPoint.pointType.name})")
             .setPositiveButton("Usuń") { _, _ -> deleteContractorPoint(contractorPoint) }
             .setNegativeButton("Anuluj", null)
             .setIcon(android.R.drawable.ic_dialog_alert)

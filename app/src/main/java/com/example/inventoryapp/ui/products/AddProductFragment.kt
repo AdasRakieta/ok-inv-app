@@ -123,6 +123,12 @@ class AddProductFragment : Fragment() {
                     prefill != null -> binding.categoryInput.setText(prefill, false)
                     binding.categoryInput.text.isNullOrEmpty() && names.isNotEmpty() -> binding.categoryInput.setText(names.first(), false)
                 }
+                binding.categoryInput.setOnItemClickListener { _, _, _, _ ->
+                    toggleFixedIdField()
+                }
+
+                // Ensure fixedId visibility matches current category value
+                toggleFixedIdField()
             }
         }
     }
@@ -203,6 +209,15 @@ class AddProductFragment : Fragment() {
         }
     }
 
+    private fun toggleFixedIdField() {
+        val categoryName = binding.categoryInput.text.toString().trim()
+        val showFixed = categoryName.equals("Skaner", ignoreCase = true)
+        binding.fixedIdContainer.visibility = if (showFixed) View.VISIBLE else View.GONE
+        if (!showFixed) {
+            binding.fixedIdInput.setText("")
+        }
+    }
+
     private fun setupBoxesDropdown() {
         lifecycleScope.launch {
             boxRepository.getAllBoxes().collect { list ->
@@ -271,6 +286,7 @@ class AddProductFragment : Fragment() {
                 binding.manufacturerInput.setText(product.manufacturer ?: "")
                 binding.modelInput.setText(product.model ?: "")
                 binding.descriptionInput.setText(product.description ?: "")
+                binding.fixedIdInput.setText(product.fixedId ?: "")
 
                 selectedStatus = product.status
                 selectedEmployeeId = product.assignedToEmployeeId
@@ -296,6 +312,7 @@ class AddProductFragment : Fragment() {
         val manufacturer = binding.manufacturerInput.text.toString().trim().ifEmpty { null }
         val model = binding.modelInput.text.toString().trim().ifEmpty { null }
         val description = binding.descriptionInput.text.toString().trim().ifEmpty { null }
+        val fixedId = binding.fixedIdInput.text.toString().trim().ifEmpty { null }
         val warehouseLocation = binding.warehouseLocationInput.text.toString().trim().ifEmpty { null }
         // Parse shelf and bin from warehouse location (format: "Shelf / Bin")
         val shelf = warehouseLocation?.substringBefore("/")?.trim()
@@ -395,6 +412,7 @@ class AddProductFragment : Fragment() {
             ProductEntity(
                 name = name,
                 customId = customId,
+                fixedId = fixedId,
                 serialNumber = serialNumber,
                 categoryId = categoryId,
                 status = selectedStatus,
@@ -415,6 +433,7 @@ class AddProductFragment : Fragment() {
             existing.copy(
                 name = name,
                 customId = customId,
+                fixedId = fixedId,
                 serialNumber = serialNumber,
                 categoryId = categoryId,
                 status = selectedStatus,

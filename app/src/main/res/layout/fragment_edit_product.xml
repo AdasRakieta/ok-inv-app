@@ -43,9 +43,10 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Product ID Field -->
+        <!-- Product ID Field (legacy, hidden) -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/productIdLayout"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Product ID (e.g. LapOK10)"

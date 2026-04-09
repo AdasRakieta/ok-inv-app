@@ -13,6 +13,7 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.databinding.FragmentAddEditBoxBinding
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.firstOrNull
 import android.util.Log
 
 class AddEditBoxFragment : Fragment() {
@@ -21,6 +22,7 @@ class AddEditBoxFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val boxRepository by lazy { (requireActivity().application as InventoryApplication).boxRepository }
+    private val warehouseLocationRepository by lazy { (requireActivity().application as InventoryApplication).warehouseLocationRepository }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         _binding = FragmentAddEditBoxBinding.inflate(inflater, container, false)
@@ -37,6 +39,19 @@ class AddEditBoxFragment : Fragment() {
         if (!locationName.isNullOrBlank()) {
             binding.locationHint.visibility = View.VISIBLE
             binding.locationHint.text = "Lokalizacja: $locationName"
+        } else if (warehouseLocationId > 0L) {
+            // Resolve warehouse location code if only id was provided (show code like P1 instead of "Lokalizacja #1")
+            lifecycleScope.launch {
+                try {
+                    val loc = warehouseLocationRepository.getLocationById(warehouseLocationId).firstOrNull()
+                    val code = loc?.code ?: "Lokalizacja #$warehouseLocationId"
+                    binding.locationHint.visibility = View.VISIBLE
+                    binding.locationHint.text = "Lokalizacja: $code"
+                } catch (e: Exception) {
+                    binding.locationHint.visibility = View.VISIBLE
+                    binding.locationHint.text = "Lokalizacja: #$warehouseLocationId"
+                }
+            }
         }
 
         binding.cancelBoxButton.text = getString(R.string.cancel_pl)
@@ -48,15 +63,15 @@ class AddEditBoxFragment : Fragment() {
             lifecycleScope.launch {
                 val existing = boxRepository.getBoxByIdOnce(boxId)
                 existing?.let { box ->
-                    binding.nameEdit.setText(box.name)
-                    binding.descriptionEdit.setText(box.description)
+                    binding.templateNameInput.setText(box.name)
+                    binding.templateDescriptionInput.setText(box.description)
                 }
             }
         }
 
         binding.saveBoxButton.setOnClickListener {
-            val name = binding.nameEdit.text?.toString()?.trim() ?: ""
-            val desc = binding.descriptionEdit.text?.toString()?.trim()
+            val name = binding.templateNameInput.text?.toString()?.trim() ?: ""
+            val desc = binding.templateDescriptionInput.text?.toString()?.trim()
 
             if (name.isBlank()) {
                 Toast.makeText(requireContext(), "Nazwa kartonu jest wymagana", Toast.LENGTH_SHORT).show()

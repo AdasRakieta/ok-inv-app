@@ -21,8 +21,6 @@ interface ContractorPointDao {
     @Query("SELECT * FROM contractor_points WHERE id = :id")
     suspend fun getById(id: Long): ContractorPointEntity?
 
-    @Query("SELECT * FROM contractor_points WHERE code = :code LIMIT 1")
-    suspend fun getByCode(code: String): ContractorPointEntity?
 
     @Query("SELECT * FROM contractor_points WHERE pointType = :pointType ORDER BY name ASC")
     suspend fun getByPointType(pointType: PointType): List<ContractorPointEntity>
@@ -34,13 +32,11 @@ interface ContractorPointDao {
         """
         SELECT * FROM contractor_points
         WHERE :searchQuery IS NULL OR :searchQuery = '' OR
-              code LIKE '%' || :searchQuery || '%' OR
               name LIKE '%' || :searchQuery || '%' OR
               city LIKE '%' || :searchQuery || '%' OR
               address LIKE '%' || :searchQuery || '%' OR
-              contactPerson LIKE '%' || :searchQuery || '%' OR
-              email LIKE '%' || :searchQuery || '%' OR
-              phone LIKE '%' || :searchQuery || '%'
+              phone LIKE '%' || :searchQuery || '%' OR
+              marketNumber LIKE '%' || :searchQuery || '%'
         ORDER BY name ASC
     """
     )

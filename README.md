@@ -120,7 +120,7 @@ Internal use only.
 
 - Application ID: `com.ok.inv`
 - App name: `OK Inwentaryzacja Sprzętu`
-- Google Sheets integration is temporarily disabled via a feature flag in [GoogleSheetsApiService.kt](app/src/main/java/com/example/inventoryapp/data/remote/GoogleSheetsApiService.kt). To re-enable later, set `ENABLED = true` and ensure related UI buttons are visible.
+- Google Sheets integration has been removed from the codebase. The previous service and model files were deleted; re-adding this feature requires implementing a new integration.
 
 ---
 

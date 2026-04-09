@@ -17,6 +17,7 @@ class BoxesAdapter(
 ) : ListAdapter<BoxEntity, BoxesAdapter.BoxViewHolder>(BoxDiffCallback()) {
 
     private var countsMap: Map<Long, Int> = emptyMap()
+    private var locationMap: Map<Long, String> = emptyMap()
     private var fullList: List<BoxEntity> = emptyList()
     private var filteredList: List<BoxEntity> = emptyList()
 
@@ -65,6 +66,11 @@ class BoxesAdapter(
         submitList(list.toList())
     }
 
+    fun setLocationsMap(map: Map<Long, String>) {
+        locationMap = map
+        submitList(filteredList.toList())
+    }
+
     fun filterByQuery(query: String) {
         filteredList = if (query.isBlank()) {
             fullList
@@ -99,7 +105,12 @@ class BoxesAdapter(
             binding.boxCreatedDate.text = android.text.format.DateFormat.getDateFormat(binding.root.context)
                 .format(java.util.Date(box.createdAt))
             val ctx = binding.root.context
-            binding.boxLocation.text = box.warehouseLocationId?.toString() ?: ctx.getString(com.example.inventoryapp.R.string.no_location)
+            if (box.warehouseLocationId != null) {
+                val locLabel = locationMap[box.warehouseLocationId] ?: "Lokalizacja #${box.warehouseLocationId}"
+                binding.boxLocation.text = locLabel
+            } else {
+                binding.boxLocation.text = ctx.getString(com.example.inventoryapp.R.string.no_location)
+            }
             binding.boxDescription.text = box.description ?: ""
             val count = countsMap[box.id] ?: 0
             binding.boxProductCount.text = if (count == 0) {

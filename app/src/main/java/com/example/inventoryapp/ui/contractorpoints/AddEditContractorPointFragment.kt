@@ -7,6 +7,7 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -26,7 +27,6 @@ class AddEditContractorPointFragment : Fragment() {
     companion object {
         const val RESULT_KEY = "contractor_point_form_result"
         const val RESULT_ID = "contractorPointId"
-        private val CODE_REGEX = Regex("^[A-Z0-9_-]{2,30}$")
         private val POSTAL_CODE_REGEX = Regex("^\\d{2}-\\d{3}$")
     }
 
@@ -74,6 +74,7 @@ class AddEditContractorPointFragment : Fragment() {
         input.setAdapter(adapter)
         input.setOnItemClickListener { _, _, position, _ ->
             selectedPointType = PointType.valueOf(pointTypes[position])
+            binding.marketNumberLayout.isVisible = (selectedPointType == PointType.CP)
         }
     }
 
@@ -112,17 +113,15 @@ class AddEditContractorPointFragment : Fragment() {
         selectedCompanyId = contractorPoint.companyId
         selectedPointType = contractorPoint.pointType
 
-        binding.codeInput.setText(contractorPoint.code)
         binding.nameInput.setText(contractorPoint.name)
+        binding.marketNumberInput.setText(contractorPoint.marketNumber ?: "")
         binding.addressInput.setText(contractorPoint.address ?: "")
         binding.cityInput.setText(contractorPoint.city ?: "")
         binding.postalCodeInput.setText(contractorPoint.postalCode ?: "")
-        binding.contactPersonInput.setText(contractorPoint.contactPerson ?: "")
-        binding.emailInput.setText(contractorPoint.email ?: "")
         binding.phoneInput.setText(contractorPoint.phone ?: "")
-        binding.notesInput.setText(contractorPoint.notes ?: "")
 
         (binding.pointTypeInput as AutoCompleteTextView).setText(contractorPoint.pointType.name, false)
+        binding.marketNumberLayout.isVisible = (contractorPoint.pointType == PointType.CP)
         val companyName = companyOptions.firstOrNull { it.id == contractorPoint.companyId }?.name.orEmpty()
         (binding.companyInput as AutoCompleteTextView).setText(companyName, false)
     }
@@ -130,25 +129,14 @@ class AddEditContractorPointFragment : Fragment() {
     private fun saveContractorPoint() {
         clearErrors()
 
-        val code = binding.codeInput.text.toString().trim().uppercase()
         val name = binding.nameInput.text.toString().trim()
+        val marketNumber = binding.marketNumberInput.text.toString().trim().ifBlank { null }
         val address = binding.addressInput.text.toString().trim().ifBlank { null }
         val city = binding.cityInput.text.toString().trim().ifBlank { null }
         val postalCode = binding.postalCodeInput.text.toString().trim().ifBlank { null }
-        val contactPerson = binding.contactPersonInput.text.toString().trim().ifBlank { null }
-        val email = binding.emailInput.text.toString().trim().ifBlank { null }
         val phone = binding.phoneInput.text.toString().trim().ifBlank { null }
-        val notes = binding.notesInput.text.toString().trim().ifBlank { null }
 
         var hasError = false
-
-        if (code.isBlank()) {
-            binding.codeLayout.error = getString(R.string.error_field_required)
-            hasError = true
-        } else if (!CODE_REGEX.matches(code)) {
-            binding.codeLayout.error = getString(R.string.error_invalid_point_code)
-            hasError = true
-        }
 
         if (name.isBlank()) {
             binding.nameLayout.error = getString(R.string.error_field_required)
@@ -170,44 +158,33 @@ class AddEditContractorPointFragment : Fragment() {
             hasError = true
         }
 
-        if (email != null && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.emailLayout.error = getString(R.string.error_invalid_email)
-            hasError = true
-        }
-
         if (hasError) return
 
         val now = System.currentTimeMillis()
         val current = existingContractorPoint
         val contractorPoint = if (current == null) {
             ContractorPointEntity(
-                code = code,
                 name = name,
                 pointType = selectedPointType!!,
                 companyId = selectedCompanyId!!,
+                marketNumber = marketNumber,
                 address = address,
                 city = city,
                 postalCode = postalCode,
-                contactPerson = contactPerson,
-                email = email,
                 phone = phone,
-                notes = notes,
                 createdAt = now,
                 updatedAt = now
             )
         } else {
             current.copy(
-                code = code,
                 name = name,
                 pointType = selectedPointType!!,
                 companyId = selectedCompanyId!!,
+                marketNumber = marketNumber,
                 address = address,
                 city = city,
                 postalCode = postalCode,
-                contactPerson = contactPerson,
-                email = email,
                 phone = phone,
-                notes = notes,
                 updatedAt = now
             )
         }
@@ -229,11 +206,7 @@ class AddEditContractorPointFragment : Fragment() {
                 )
                 findNavController().navigateUp()
             } catch (e: SQLiteConstraintException) {
-                if (e.message?.contains("code", ignoreCase = true) == true) {
-                    binding.codeLayout.error = getString(R.string.error_point_code_exists)
-                } else {
-                    Toast.makeText(requireContext(), getString(R.string.error_prefix, e.message ?: ""), Toast.LENGTH_SHORT).show()
-                }
+                Toast.makeText(requireContext(), getString(R.string.error_prefix, e.message ?: ""), Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), getString(R.string.error_prefix, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
@@ -241,12 +214,10 @@ class AddEditContractorPointFragment : Fragment() {
     }
 
     private fun clearErrors() {
-        binding.codeLayout.error = null
         binding.nameLayout.error = null
         binding.pointTypeLayout.error = null
         binding.companyLayout.error = null
         binding.postalCodeLayout.error = null
-        binding.emailLayout.error = null
     }
 
     override fun onDestroyView() {

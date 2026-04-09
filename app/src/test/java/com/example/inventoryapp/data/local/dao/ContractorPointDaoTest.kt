@@ -49,7 +49,7 @@ class ContractorPointDaoTest {
     fun `insert and getById returns contractor point`() = runBlocking {
         val companyId = insertCompany("Company A", "1111111111")
         val point = ContractorPointEntity(
-            code = "CP-001",
+            marketNumber = "CP-001",
             name = "Point Alpha",
             pointType = PointType.CP,
             companyId = companyId,
@@ -60,7 +60,7 @@ class ContractorPointDaoTest {
         val saved = contractorPointDao.getById(id)
 
         assertNotNull(saved)
-        assertEquals("CP-001", saved?.code)
+        assertEquals("CP-001", saved?.marketNumber)
         assertEquals(PointType.CP, saved?.pointType)
         assertEquals(companyId, saved?.companyId)
         assertEquals("Warsaw", saved?.city)
@@ -71,7 +71,7 @@ class ContractorPointDaoTest {
         val companyId = insertCompany("Company A", "1111111111")
         contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CP-001",
+                marketNumber = "CP-001",
                 name = "CP Point",
                 pointType = PointType.CP,
                 companyId = companyId
@@ -79,7 +79,7 @@ class ContractorPointDaoTest {
         )
         contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CC-001",
+                marketNumber = "CC-001",
                 name = "CC Point",
                 pointType = PointType.CC,
                 companyId = companyId
@@ -88,7 +88,7 @@ class ContractorPointDaoTest {
 
         val cpPoints = contractorPointDao.getByPointType(PointType.CP)
         assertEquals(1, cpPoints.size)
-        assertEquals("CP-001", cpPoints.first().code)
+        assertEquals("CP-001", cpPoints.first().marketNumber)
     }
 
     @Test
@@ -98,7 +98,7 @@ class ContractorPointDaoTest {
 
         contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CP-A1",
+                marketNumber = "CP-A1",
                 name = "Point A1",
                 pointType = PointType.CP,
                 companyId = companyAId
@@ -106,7 +106,7 @@ class ContractorPointDaoTest {
         )
         contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CP-B1",
+                marketNumber = "CP-B1",
                 name = "Point B1",
                 pointType = PointType.CP,
                 companyId = companyBId
@@ -115,7 +115,7 @@ class ContractorPointDaoTest {
 
         val pointsForA = contractorPointDao.getByCompany(companyAId)
         assertEquals(1, pointsForA.size)
-        assertEquals("CP-A1", pointsForA.first().code)
+        assertEquals("CP-A1", pointsForA.first().marketNumber)
     }
 
     @Test
@@ -123,7 +123,7 @@ class ContractorPointDaoTest {
         val companyId = insertCompany("Company A", "1111111111")
         contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CP-010",
+                marketNumber = "CP-010",
                 name = "Point 10",
                 pointType = PointType.CP,
                 companyId = companyId
@@ -131,7 +131,7 @@ class ContractorPointDaoTest {
         )
         contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CC-020",
+                marketNumber = "CC-020",
                 name = "Point 20",
                 pointType = PointType.CC,
                 companyId = companyId
@@ -139,11 +139,11 @@ class ContractorPointDaoTest {
         )
 
         val all = contractorPointDao.getAll()
-        val byCode = contractorPointDao.getByCode("CC-020")
+        val byCode = contractorPointDao.search("CC-020")
 
         assertEquals(2, all.size)
-        assertNotNull(byCode)
-        assertEquals("Point 20", byCode?.name)
+        assertEquals(1, byCode.size)
+        assertEquals("Point 20", byCode.first().name)
     }
 
     @Test
@@ -151,7 +151,7 @@ class ContractorPointDaoTest {
         val companyId = insertCompany("Company A", "1111111111")
         contractorPointDao.insert(
             ContractorPointEntity(
-                code = "DC-700",
+                marketNumber = "DC-700",
                 name = "Distribution Center",
                 pointType = PointType.DC,
                 companyId = companyId,
@@ -160,7 +160,7 @@ class ContractorPointDaoTest {
         )
         contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CC-100",
+                marketNumber = "CC-100",
                 name = "Courier Center",
                 pointType = PointType.CC,
                 companyId = companyId,
@@ -173,11 +173,11 @@ class ContractorPointDaoTest {
         val byCity = contractorPointDao.search("Krakow")
 
         assertEquals(1, byCode.size)
-        assertEquals("DC-700", byCode.first().code)
+        assertEquals("DC-700", byCode.first().marketNumber)
         assertEquals(1, byName.size)
-        assertEquals("CC-100", byName.first().code)
+        assertEquals("CC-100", byName.first().marketNumber)
         assertEquals(1, byCity.size)
-        assertEquals("DC-700", byCity.first().code)
+        assertEquals("DC-700", byCity.first().marketNumber)
     }
 
     @Test
@@ -185,25 +185,24 @@ class ContractorPointDaoTest {
         val companyId = insertCompany("Company A", "1111111111")
         val id = contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CP-001",
+                marketNumber = "CP-001",
                 name = "Old Name",
                 pointType = PointType.CP,
-                companyId = companyId,
-                notes = "old"
+                companyId = companyId
             )
         )
 
         val existing = contractorPointDao.getById(id)!!
         contractorPointDao.update(
             existing.copy(
-                name = "New Name",
-                notes = "new"
+                name = "New Name"
             )
         )
 
         val updated = contractorPointDao.getById(id)
         assertEquals("New Name", updated?.name)
-        assertEquals("new", updated?.notes)
+        // notes field removed from schema; ensure name updated
+        assertEquals("New Name", updated?.name)
     }
 
     @Test
@@ -211,7 +210,7 @@ class ContractorPointDaoTest {
         val companyId = insertCompany("Company A", "1111111111")
         val id = contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CP-001",
+                marketNumber = "CP-001",
                 name = "To Delete",
                 pointType = PointType.CP,
                 companyId = companyId
@@ -230,7 +229,7 @@ class ContractorPointDaoTest {
         val companyId = insertCompany("Company A", "1111111111")
         val id1 = contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CP-101",
+                marketNumber = "CP-101",
                 name = "Point 101",
                 pointType = PointType.CP,
                 companyId = companyId
@@ -238,7 +237,7 @@ class ContractorPointDaoTest {
         )
         val id2 = contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CP-102",
+                marketNumber = "CP-102",
                 name = "Point 102",
                 pointType = PointType.CP,
                 companyId = companyId
@@ -246,7 +245,7 @@ class ContractorPointDaoTest {
         )
         val id3 = contractorPointDao.insert(
             ContractorPointEntity(
-                code = "CP-103",
+                marketNumber = "CP-103",
                 name = "Point 103",
                 pointType = PointType.CP,
                 companyId = companyId
@@ -258,34 +257,31 @@ class ContractorPointDaoTest {
 
         assertEquals(1, remaining.size)
         assertEquals(id2, remaining.first().id)
-        assertEquals("CP-102", remaining.first().code)
+        assertEquals("CP-102", remaining.first().marketNumber)
     }
 
     @Test
     fun `unique code constraint blocks duplicates`() {
+        // Unique code constraint removed; inserting duplicates should succeed
         val companyId = runBlocking { insertCompany("Company A", "1111111111") }
         runBlocking {
             contractorPointDao.insert(
                 ContractorPointEntity(
-                    code = "CP-001",
+                    marketNumber = "CP-001",
                     name = "Point One",
                     pointType = PointType.CP,
                     companyId = companyId
                 )
             )
-        }
 
-        assertThrows(android.database.sqlite.SQLiteConstraintException::class.java) {
-            runBlocking {
-                contractorPointDao.insert(
-                    ContractorPointEntity(
-                        code = "CP-001",
-                        name = "Point Two",
-                        pointType = PointType.CC,
-                        companyId = companyId
-                    )
+            contractorPointDao.insert(
+                ContractorPointEntity(
+                    marketNumber = "CP-001",
+                    name = "Point Two",
+                    pointType = PointType.CC,
+                    companyId = companyId
                 )
-            }
+            )
         }
     }
 
@@ -295,7 +291,7 @@ class ContractorPointDaoTest {
             runBlocking {
                 contractorPointDao.insert(
                     ContractorPointEntity(
-                        code = "CP-999",
+                        marketNumber = "CP-999",
                         name = "Orphan Point",
                         pointType = PointType.CP,
                         companyId = Long.MAX_VALUE

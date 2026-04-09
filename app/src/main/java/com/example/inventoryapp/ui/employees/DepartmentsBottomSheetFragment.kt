@@ -29,10 +29,15 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
         get() = requireArguments().getLong(ARG_COMPANY_ID, -1L)
     private val companyName: String
         get() = requireArguments().getString(ARG_COMPANY_NAME).orEmpty()
+    private val allowUnsaved: Boolean
+        get() = requireArguments().getBoolean(ARG_ALLOW_UNSAVED, false)
+    private val initialDepartments: ArrayList<String>?
+        get() = requireArguments().getStringArrayList(ARG_INITIAL_DEPARTMENTS)
 
     private lateinit var departmentRepository: DepartmentRepository
     private val departments = mutableListOf<DepartmentEntity>()
     private lateinit var deptAdapter: DepartmentsAdapter
+    private var transientMode: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,7 +53,8 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
         val app = requireActivity().application as InventoryApplication
         departmentRepository = app.departmentRepository
 
-        if (companyId <= 0L) {
+        transientMode = allowUnsaved || companyId <= 0L
+        if (companyId <= 0L && !allowUnsaved) {
             dismissAllowingStateLoss()
             return
         }
@@ -74,18 +80,42 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
         if (dividerDrawable != null) divider.setDrawable(dividerDrawable)
         recycler.addItemDecoration(divider)
 
-        lifecycleScope.launchWhenStarted {
-            loadDepartments(deptAdapter)
+        // if transient mode, populate from initialDepartments; otherwise load from DB
+        if (transientMode) {
+            val cid = if (companyId > 0L) companyId else 0L
+            initialDepartments?.forEach { name ->
+                departments.add(DepartmentEntity(companyId = cid, name = name))
+            }
+            deptAdapter.submitList(departments.toList())
+        } else {
+            lifecycleScope.launchWhenStarted {
+                loadDepartments(deptAdapter)
+            }
         }
 
         addButton.setOnClickListener {
             val name = addEdit.text.toString().trim()
             if (name.isNotEmpty()) {
-                lifecycleScope.launch {
-                    departmentRepository.insert(companyId, name)
-                    loadDepartments(deptAdapter)
-                    addEdit.text.clear()
-                    parentFragmentManager.setFragmentResult("departments_changed", bundleOf())
+                if (transientMode) {
+                    // local-only mode
+                    val exists = departments.any { it.name.equals(name, ignoreCase = true) }
+                    if (exists) {
+                        Toast.makeText(requireContext(), "Dział o takiej nazwie już istnieje", Toast.LENGTH_SHORT).show()
+                    } else {
+                        val cid = if (companyId > 0L) companyId else 0L
+                        val dept = DepartmentEntity(companyId = cid, name = name)
+                        departments.add(dept)
+                        deptAdapter.submitList(departments.toList())
+                        addEdit.text.clear()
+                        parentFragmentManager.setFragmentResult("departments_changed", bundleOf("departments" to ArrayList(departments.map { it.name })))
+                    }
+                } else {
+                    lifecycleScope.launch {
+                        departmentRepository.insert(companyId, name)
+                        loadDepartments(deptAdapter)
+                        addEdit.text.clear()
+                        parentFragmentManager.setFragmentResult("departments_changed", bundleOf("companyId" to companyId))
+                    }
                 }
             } else {
                 Toast.makeText(requireContext(), "Podaj nazwę działu", Toast.LENGTH_SHORT).show()
@@ -94,6 +124,13 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private suspend fun loadDepartments(deptAdapter: DepartmentsAdapter) {
+        if (transientMode) {
+            withContext(Dispatchers.Main) {
+                deptAdapter.submitList(departments.toList())
+            }
+            return
+        }
+
         val list = withContext(Dispatchers.IO) { departmentRepository.getByCompany(companyId) }
         departments.clear()
         departments.addAll(list)
@@ -125,11 +162,21 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
             .setPositiveButton("Zapisz") { dialog, _ ->
                 val name = input.text.toString().trim()
                 if (name.isNotBlank()) {
-                    lifecycleScope.launch {
-                        departmentRepository.update(dept.id, name)
-                        loadDepartments(deptAdapter)
-                        Toast.makeText(requireContext(), "Zapisano zmiany", Toast.LENGTH_SHORT).show()
-                        parentFragmentManager.setFragmentResult("departments_changed", bundleOf())
+                    if (transientMode) {
+                        val idx = departments.indexOfFirst { it.name == dept.name }
+                        if (idx >= 0) {
+                            departments[idx] = departments[idx].copy(name = name)
+                            deptAdapter.submitList(departments.toList())
+                            Toast.makeText(requireContext(), "Zapisano zmiany", Toast.LENGTH_SHORT).show()
+                            parentFragmentManager.setFragmentResult("departments_changed", bundleOf("departments" to ArrayList(departments.map { it.name })))
+                        }
+                    } else {
+                        lifecycleScope.launch {
+                            departmentRepository.update(dept.id, name)
+                            loadDepartments(deptAdapter)
+                            Toast.makeText(requireContext(), "Zapisano zmiany", Toast.LENGTH_SHORT).show()
+                            parentFragmentManager.setFragmentResult("departments_changed", bundleOf("companyId" to companyId))
+                        }
                     }
                 }
                 dialog.dismiss()
@@ -143,11 +190,21 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
             .setTitle("Usuń dział")
             .setMessage("Czy na pewno usunąć dział \"${dept.name}\"?")
             .setPositiveButton("Usuń") { dialog, _ ->
-                lifecycleScope.launch {
-                    departmentRepository.delete(dept.id)
-                    loadDepartments(deptAdapter)
-                    Toast.makeText(requireContext(), "Usunięto dział", Toast.LENGTH_SHORT).show()
-                    parentFragmentManager.setFragmentResult("departments_changed", bundleOf())
+                if (transientMode) {
+                    val idx = departments.indexOfFirst { it.name == dept.name }
+                    if (idx >= 0) {
+                        departments.removeAt(idx)
+                        deptAdapter.submitList(departments.toList())
+                        Toast.makeText(requireContext(), "Usunięto dział", Toast.LENGTH_SHORT).show()
+                        parentFragmentManager.setFragmentResult("departments_changed", bundleOf("departments" to ArrayList(departments.map { it.name })))
+                    }
+                } else {
+                    lifecycleScope.launch {
+                        departmentRepository.delete(dept.id)
+                        loadDepartments(deptAdapter)
+                        Toast.makeText(requireContext(), "Usunięto dział", Toast.LENGTH_SHORT).show()
+                        parentFragmentManager.setFragmentResult("departments_changed", bundleOf("companyId" to companyId))
+                    }
                 }
                 dialog.dismiss()
             }
@@ -158,12 +215,21 @@ class DepartmentsBottomSheetFragment : BottomSheetDialogFragment() {
     companion object {
         private const val ARG_COMPANY_ID = "companyId"
         private const val ARG_COMPANY_NAME = "companyName"
+        private const val ARG_ALLOW_UNSAVED = "allowUnsaved"
+        private const val ARG_INITIAL_DEPARTMENTS = "initialDepartments"
 
-        fun newInstance(companyId: Long, companyName: String): DepartmentsBottomSheetFragment {
+        fun newInstance(
+            companyId: Long,
+            companyName: String,
+            allowUnsaved: Boolean = false,
+            initialDepartments: ArrayList<String>? = null
+        ): DepartmentsBottomSheetFragment {
             return DepartmentsBottomSheetFragment().apply {
                 arguments = Bundle().apply {
                     putLong(ARG_COMPANY_ID, companyId)
                     putString(ARG_COMPANY_NAME, companyName)
+                    putBoolean(ARG_ALLOW_UNSAVED, allowUnsaved)
+                    if (initialDepartments != null) putStringArrayList(ARG_INITIAL_DEPARTMENTS, initialDepartments)
                 }
             }
         }

@@ -81,56 +81,7 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Google Sheets Sync Section -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="8dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Google Sheets Sync"
-                    android:textStyle="bold"
-                    android:textSize="16sp"
-                    android:layout_marginBottom="4dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Synchronize inventory data with Google Sheets backend. Download updates from sheets (Skanery, Drukarki, Stacje) or upload local changes to cloud."
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="12dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/syncFromGoogleSheetsButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Sync from Google Sheets"
-                    app:icon="@android:drawable/ic_menu_upload" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/uploadToGoogleSheetsButton"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Upload to Google Sheets"
-                    app:icon="@android:drawable/ic_menu_save" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
+        <!-- Google Sheets Sync removed: sync moved out / deprecated -->
 
         <!-- Status Text -->
         <com.google.android.material.textview.MaterialTextView

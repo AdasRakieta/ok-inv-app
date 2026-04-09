@@ -166,7 +166,7 @@ class AssignmentFlowIntegrationTest {
         )
         val contractorPointId = contractorPointRepository.insertContractorPoint(
             ContractorPointEntity(
-                code = "CP-INT-001",
+                marketNumber = "CP-INT-001",
                 name = "CP Integration",
                 pointType = PointType.CP,
                 companyId = companyId
@@ -224,7 +224,7 @@ class AssignmentFlowIntegrationTest {
         )
         contractorPointRepository.insertContractorPoint(
             ContractorPointEntity(
-                code = "CP-INT-002",
+                marketNumber = "CP-INT-002",
                 name = "CP Office",
                 pointType = PointType.CP,
                 companyId = companyId
