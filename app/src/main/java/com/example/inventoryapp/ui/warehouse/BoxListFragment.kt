@@ -4,15 +4,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.databinding.FragmentBoxListBinding
 import com.example.inventoryapp.ui.components.FilterBottomSheet
 import com.example.inventoryapp.ui.components.FilterOption
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
@@ -44,13 +49,46 @@ class BoxListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        boxesAdapter = BoxesAdapter(onBoxClick = { box ->
-            val bundle = android.os.Bundle().apply {
-                putLong("boxId", box.id)
-                putString("qrUid", box.qrUid)
+        boxesAdapter = BoxesAdapter(
+            onBoxClick = { box ->
+                if (boxesAdapter.selectionMode) {
+                    boxesAdapter.toggleSelection(box.id)
+                    updateSelectionPanel()
+                } else {
+                    val bundle = android.os.Bundle().apply {
+                        putLong("boxId", box.id)
+                        putString("qrUid", box.qrUid)
+                    }
+                    findNavController().navigate(com.example.inventoryapp.R.id.boxDetailsFragment, bundle)
+                }
+            },
+            onBoxLongClick = { box ->
+                if (!boxesAdapter.selectionMode) {
+                    boxesAdapter.selectionMode = true
+                    boxesAdapter.toggleSelection(box.id)
+                    showSelectionPanel()
+                }
+            },
+            onOptionsClick = { box, anchor ->
+                val popup = PopupMenu(requireContext(), anchor)
+                popup.menu.add("Edytuj")
+                popup.menu.add("Usuń")
+                popup.setOnMenuItemClickListener { item ->
+                    when (item.title) {
+                        "Edytuj" -> {
+                            val bundle = android.os.Bundle().apply {
+                                putLong("boxId", box.id)
+                                putLong("warehouseLocationId", box.warehouseLocationId ?: 0L)
+                            }
+                            findNavController().navigate(com.example.inventoryapp.R.id.addEditBoxFragment, bundle)
+                        }
+                        "Usuń" -> showDeleteConfirm(box)
+                    }
+                    true
+                }
+                popup.show()
             }
-            findNavController().navigate(com.example.inventoryapp.R.id.boxDetailsFragment, bundle)
-        })
+        )
 
         binding.boxesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -75,7 +113,7 @@ class BoxListFragment : Fragment() {
         // Debounced search text -> filter list (300ms)
         binding.searchEditText.addTextChangedListener { editable ->
             searchJob?.cancel()
-            searchJob = lifecycleScope.launch {
+            searchJob = viewLifecycleOwner.lifecycleScope.launch {
                 delay(300)
                 currentQuery = editable?.toString() ?: ""
                 applyFilterAndSort()
@@ -102,26 +140,38 @@ class BoxListFragment : Fragment() {
             }
         }
 
-        lifecycleScope.launch {
-            boxRepository.getAllBoxes().collectLatest { boxes ->
-                allBoxes = boxes
-                if (boxes.isEmpty()) {
-                    binding.emptyStateLayout.visibility = View.VISIBLE
-                    binding.boxesRecyclerView.visibility = View.GONE
-                } else {
-                    binding.emptyStateLayout.visibility = View.GONE
-                    binding.boxesRecyclerView.visibility = View.VISIBLE
-                    applyFilterAndSort()
-                }
+        // Selection panel actions
+        binding.selectAllButton.setOnClickListener {
+            boxesAdapter.selectAll()
+            updateSelectionPanel()
+        }
 
-                countsJob?.cancel()
-                countsJob = lifecycleScope.launch {
-                    val counts = mutableMapOf<Long, Int>()
-                    for (box in boxes) {
-                        val products = productRepository.getProductsByBoxId(box.id).firstOrNull().orEmpty()
-                        counts[box.id] = products.size
+        binding.deleteSelectedButton.setOnClickListener {
+            confirmBulkDelete()
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                boxRepository.getAllBoxes().collectLatest { boxes ->
+                    allBoxes = boxes
+                    if (boxes.isEmpty()) {
+                        binding.emptyStateLayout.visibility = View.VISIBLE
+                        binding.boxesRecyclerView.visibility = View.GONE
+                    } else {
+                        binding.emptyStateLayout.visibility = View.GONE
+                        binding.boxesRecyclerView.visibility = View.VISIBLE
+                        applyFilterAndSort()
                     }
-                    boxesAdapter.setCountsMap(counts)
+
+                    countsJob?.cancel()
+                    countsJob = viewLifecycleOwner.lifecycleScope.launch {
+                        val counts = mutableMapOf<Long, Int>()
+                        for (box in boxes) {
+                            val products = productRepository.getProductsByBoxId(box.id).firstOrNull().orEmpty()
+                            counts[box.id] = products.size
+                        }
+                        boxesAdapter.setCountsMap(counts)
+                    }
                 }
             }
         }
@@ -141,7 +191,125 @@ class BoxListFragment : Fragment() {
             SortOption.NAME_DESC -> list.sortedByDescending { it.name.lowercase() }
         }
 
-        boxesAdapter.submitList(list)
+        // Keep adapter's internal full/filtered lists in sync so counts updates
+        // (which call setCountsMap) won't accidentally submit an empty list.
+        boxesAdapter.setFullList(list)
+        boxesAdapter.filterByQuery(currentQuery)
+    }
+
+    private fun showSelectionPanel() {
+        binding.selectionPanel.visibility = View.VISIBLE
+        binding.selectionPanel.alpha = 0f
+        binding.selectionPanel.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+        updateSelectionPanel()
+    }
+
+    private fun hideSelectionPanel() {
+        binding.selectionPanel.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction {
+                binding.selectionPanel.visibility = View.GONE
+            }
+            .start()
+        boxesAdapter.selectionMode = false
+        boxesAdapter.clearSelection()
+    }
+
+    private fun updateSelectionPanel() {
+        val selectedCount = boxesAdapter.getSelectedCount()
+        binding.selectionCountText.text = "Zaznaczono: $selectedCount"
+
+        if (selectedCount == 0) {
+            hideSelectionPanel()
+        }
+    }
+
+    private fun confirmBulkDelete() {
+        val selectedIds = boxesAdapter.getSelectedItems()
+        val count = selectedIds.size
+
+        if (count == 0) return
+
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
+
+        sheetBinding.productNameText.text = "$count ${pluralForm(count, "karton", "kartony", "kartonów")}"
+
+        sheetBinding.cancelButton.setOnClickListener {
+            bottomSheet.dismiss()
+        }
+
+        sheetBinding.deleteButton.setOnClickListener {
+            bottomSheet.dismiss()
+            deleteBulkBoxes(selectedIds)
+        }
+
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+
+    private fun pluralForm(count: Int, singular: String, few: String, many: String): String {
+        return when {
+            count == 1 -> singular
+            count % 10 in 2..4 && count % 100 !in 12..14 -> few
+            else -> many
+        }
+    }
+
+    private fun deleteBulkBoxes(boxIds: Set<Long>) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                boxIds.forEach { id ->
+                    val box = allBoxes.find { it.id == id } ?: boxRepository.getBoxByIdOnce(id)
+                    if (box != null) {
+                        val products = productRepository.getProductsByBoxId(box.id).firstOrNull().orEmpty()
+                        products.forEach { product ->
+                            val updated = product.copy(boxId = null)
+                            productRepository.updateWithHistory(updated, "Karton ${box.name} został usunięty")
+                        }
+                        boxRepository.deleteBox(box)
+                    }
+                }
+                hideSelectionPanel()
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    private fun showDeleteConfirm(box: com.example.inventoryapp.data.local.entities.BoxEntity) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val productsInBox = productRepository.getProductsByBoxId(box.id).firstOrNull().orEmpty()
+
+            val message = if (productsInBox.isEmpty()) {
+                "Czy na pewno chcesz usunąć karton ${box.name}?"
+            } else {
+                "Karton ${box.name} zawiera ${productsInBox.size} produktów. Produkty zostaną odpięte od kartonu. Kontynuować?"
+            }
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Usuń karton")
+                .setMessage(message)
+                .setNegativeButton(getString(com.example.inventoryapp.R.string.cancel_pl), null)
+                .setPositiveButton("Usuń") { _, _ ->
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        try {
+                            productsInBox.forEach { product ->
+                                val updated = product.copy(boxId = null)
+                                productRepository.updateWithHistory(updated, "Karton ${box.name} został usunięty")
+                            }
+                            boxRepository.deleteBox(box)
+                        } catch (e: Exception) {
+                            // ignore
+                        }
+                    }
+                }
+                .show()
+        }
     }
 
     override fun onDestroyView() {

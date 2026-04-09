@@ -120,6 +120,16 @@
 
             </LinearLayout>
 
+            <ImageView
+                android:id="@+id/productOptions"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Opcje"
+                android:src="@drawable/ic_more_vertical"
+                android:tint="@color/text_secondary"
+                android:visibility="visible" />
+
         </LinearLayout>
 
         <LinearLayout

@@ -226,6 +226,10 @@ class WarehouseLocationDetailsFragment : Fragment() {
                             .distinct()
                             .joinToString(" ")
                         binding.locationCategories.text = categoryEmojis.takeIf { it.isNotEmpty() } ?: "-"
+
+                        // Provide category map (icon or name) to the adapter for visual label
+                        val categoryMapForAdapter = categories.associate { it.id to (it.icon ?: it.name) }
+                        assignedProductsAdapter.setCategoriesMap(categoryMapForAdapter)
                         updateOverviewCounters()
                         applyFiltersAndRender()
                     }

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.core.widget.doAfterTextChanged
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -37,6 +38,7 @@ class TemplatesListFragment : Fragment() {
     private var allTemplates: List<ProductTemplateEntity> = emptyList()
     private var searchQuery: String = ""
     private var selectedCategoryId: Long? = null
+    private var isFabMenuOpen = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -78,7 +80,7 @@ class TemplatesListFragment : Fragment() {
 
     private fun setupActions() {
         binding.addTemplateFab.setOnClickListener {
-            openTemplateDetails(0L)
+            toggleFabMenu()
         }
         binding.emptyAddButton.setOnClickListener {
             openTemplateDetails(0L)
@@ -93,6 +95,80 @@ class TemplatesListFragment : Fragment() {
         binding.filterButton.setOnClickListener {
             openCategoryFilter()
         }
+    }
+
+    private fun toggleFabMenu() {
+        if (isFabMenuOpen) closeFabMenu() else openFabMenu()
+    }
+
+    private fun openFabMenu() {
+        isFabMenuOpen = true
+        // No global FAB to hide — using fragment-local FAB only
+
+        binding.templatesFabMenuOverlay.visibility = View.VISIBLE
+        binding.templatesFabMenuOverlay.alpha = 0f
+        binding.templatesFabMenuOverlay.animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
+
+        showCard(binding.templatesSingleAddCard, 0)
+        showCard(binding.templatesBulkAddCard, 50)
+
+        binding.templatesFabMenuOverlay.setOnClickListener { closeFabMenu() }
+
+        binding.templatesSingleAddCard.setOnClickListener {
+            closeFabMenu()
+            openTemplateDetails(0L)
+        }
+
+        binding.templatesBulkAddCard.setOnClickListener {
+            closeFabMenu()
+            Toast.makeText(requireContext(), "Import szablonów: funkcja w przygotowaniu", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun closeFabMenu() {
+        isFabMenuOpen = false
+        binding.templatesFabMenuOverlay.animate()
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction { binding.templatesFabMenuOverlay.visibility = View.GONE }
+            .start()
+
+        hideCard(binding.templatesSingleAddCard)
+        hideCard(binding.templatesBulkAddCard)
+
+        // Show global FAB again
+        // No global FAB to show
+    }
+
+    private fun showCard(card: View, delay: Long) {
+        card.visibility = View.VISIBLE
+        card.alpha = 0f
+        card.translationY = 20f
+        card.scaleX = 0.8f
+        card.scaleY = 0.8f
+
+        card.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(200)
+            .setStartDelay(delay)
+            .start()
+    }
+
+    private fun hideCard(card: View) {
+        card.animate()
+            .alpha(0f)
+            .translationY(20f)
+            .scaleX(0.8f)
+            .scaleY(0.8f)
+            .setDuration(150)
+            .withEndAction { card.visibility = View.GONE }
+            .start()
     }
 
     private fun loadTemplates() {

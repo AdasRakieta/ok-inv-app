@@ -95,8 +95,12 @@ class WarehouseFragment : Fragment() {
             },
             onSelectionChanged = {
                 updateSelectionPanel()
+            },
+            onOptionsClick = { anchorView, location ->
+                showLocationOptions(anchorView, location)
             }
         )
+
 
         binding.locationsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -442,6 +446,64 @@ class WarehouseFragment : Fragment() {
             sheetBinding.deleteButton.setOnClickListener {
                 bottomSheet.dismiss()
                 deleteSelectedLocations(selectedNames)
+            }
+
+            bottomSheet.setContentView(sheetBinding.root)
+            bottomSheet.show()
+        }
+    }
+
+    private fun showLocationOptions(anchorView: View, location: WarehouseLocationCard) {
+        val popup = PopupMenu(requireContext(), anchorView)
+        popup.menu.add("Edytuj")
+        popup.menu.add("Usuń")
+        popup.setOnMenuItemClickListener { item ->
+            when (item.title.toString()) {
+                "Edytuj" -> {
+                    val action = WarehouseFragmentDirections.actionWarehouseToAddLocation(location.name)
+                    findNavController().navigate(action)
+                    true
+                }
+                "Usuń" -> {
+                    showDeleteLocationConfirmation(location.name)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    private fun showDeleteLocationConfirmation(locationName: String) {
+        lifecycleScope.launch {
+            val allProducts = productRepository.getAllProducts().firstOrNull() ?: emptyList()
+            val productsToUnassign = allProducts.filter { product ->
+                val shelf = product.shelf ?: "Magazyn"
+                val bin = product.bin ?: ""
+                val productLocation = shelf + (if (bin.isNotBlank()) " / $bin" else "")
+                productLocation == locationName
+            }
+
+            val bottomSheet = BottomSheetDialog(requireContext())
+            val sheetBinding = BottomSheetDeleteLocationConfirmBinding.inflate(layoutInflater)
+
+            sheetBinding.titleText.text = "Usuń lokalizację"
+            sheetBinding.locationNameText.text = locationName
+
+            sheetBinding.warningTitleText.text = "Czy na pewno chcesz usunąć tę lokalizację?"
+            sheetBinding.warningDetailsText.text = buildString {
+                append("• Usunięta lokalizacja: $locationName\n")
+                if (productsToUnassign.isNotEmpty()) {
+                    append("• Odpiętych produktów: ${productsToUnassign.size}\n")
+                }
+                append("• Tej operacji nie można cofnąć")
+            }
+
+            sheetBinding.deleteButton.text = "Usuń lokalizację"
+            sheetBinding.cancelButton.setOnClickListener { bottomSheet.dismiss() }
+            sheetBinding.deleteButton.setOnClickListener {
+                bottomSheet.dismiss()
+                deleteSelectedLocations(listOf(locationName))
             }
 
             bottomSheet.setContentView(sheetBinding.root)

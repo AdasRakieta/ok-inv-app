@@ -98,6 +98,10 @@ class SelectableProductsAdapter(
                 root.setOnClickListener {
                     onProductClick(item.product)
                 }
+                // Make checkbox clicks behave the same as clicking the whole row
+                productCheckbox.setOnClickListener {
+                    onProductClick(item.product)
+                }
             }
         }
     }

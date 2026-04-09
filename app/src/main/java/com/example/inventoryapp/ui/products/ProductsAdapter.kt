@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -16,6 +17,7 @@ import java.util.*
 class ProductsAdapter(
     private val onItemClick: (ProductEntity) -> Unit,
     private val onItemLongClick: (ProductEntity) -> Unit = {},
+    private val onOptionsClick: (android.view.View, ProductEntity) -> Unit = { _, _ -> },
     private val getCategoryName: (Long?) -> String = { _ -> "-" },
     private val getCategoryIcon: (Long?) -> String = { _ -> "📦" }
 ) : ListAdapter<ProductEntity, ProductsAdapter.ViewHolder>(DiffCallback()) {
@@ -44,6 +46,26 @@ class ProductsAdapter(
         selectionMode = false
         notifyDataSetChanged()
     }
+
+    // Auxiliary mappings to display box / location names in the list
+    private var boxesMap: Map<Long, String> = emptyMap()
+    private var boxLocationMap: Map<Long, String> = emptyMap()
+    private var locationsMap: Map<Long, String> = emptyMap()
+
+    fun setBoxesMap(map: Map<Long, String>) {
+        boxesMap = map
+        notifyDataSetChanged()
+    }
+
+    fun setBoxLocationMap(map: Map<Long, String>) {
+        boxLocationMap = map
+        notifyDataSetChanged()
+    }
+
+    fun setLocationsMap(map: Map<Long, String>) {
+        locationsMap = map
+        notifyDataSetChanged()
+    }
     
     fun toggleSelection(productId: Long) {
         if (selectedItems.contains(productId)) {
@@ -64,7 +86,7 @@ class ProductsAdapter(
             parent,
             false
         )
-        return ViewHolder(binding, onItemClick, onItemLongClick, getCategoryName, getCategoryIcon)
+        return ViewHolder(binding, onItemClick, onItemLongClick, onOptionsClick, getCategoryName, getCategoryIcon)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -73,10 +95,11 @@ class ProductsAdapter(
         holder.bind(product, selectionMode, isSelected)
     }
 
-    class ViewHolder(
+    inner class ViewHolder(
         private val binding: ItemProductBinding,
         private val onItemClick: (ProductEntity) -> Unit,
         private val onItemLongClick: (ProductEntity) -> Unit,
+        private val onOptionsClick: (android.view.View, ProductEntity) -> Unit,
         private val getCategoryName: (Long?) -> String,
         private val getCategoryIcon: (Long?) -> String
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -125,6 +148,38 @@ class ProductsAdapter(
                 } else {
                     productCreatedDate.visibility = android.view.View.GONE
                 }
+
+                // Show location / box info only when item is in stock
+                if (product.status == ProductStatus.IN_STOCK) {
+                    var infoText = ""
+                    if (product.boxId != null) {
+                        val boxName = boxesMap[product.boxId] ?: ""
+                        val boxLocation = boxLocationMap[product.boxId] ?: ""
+                        if (boxLocation.isNotBlank()) {
+                            infoText = "Magazyn - $boxLocation → $boxName"
+                        } else {
+                            val shelfLoc = (product.shelf ?: "").trim()
+                            val binLoc = (product.bin ?: "").trim()
+                            val shelfText = if (shelfLoc.isNotBlank()) shelfLoc + if (binLoc.isNotBlank()) " / $binLoc" else "" else ""
+                            infoText = if (shelfText.isNotBlank()) "Magazyn - $shelfText → $boxName" else "Karton: $boxName"
+                        }
+                    } else {
+                        val shelfLoc = (product.shelf ?: "").trim()
+                        val binLoc = (product.bin ?: "").trim()
+                        val shelfText = if (shelfLoc.isNotBlank()) shelfLoc + if (binLoc.isNotBlank()) " / $binLoc" else "" else ""
+                        val locFromMap = product.warehouseLocationId?.let { locationsMap[it] } ?: ""
+                        val finalLoc = if (shelfText.isNotBlank()) shelfText else locFromMap
+                        if (finalLoc.isNotBlank()) infoText = "Magazyn - $finalLoc" else infoText = ""
+                    }
+                    if (infoText.isNotBlank()) {
+                        packageInfo.visibility = android.view.View.VISIBLE
+                        packageInfo.text = infoText
+                    } else {
+                        packageInfo.visibility = android.view.View.GONE
+                    }
+                } else {
+                    packageInfo.visibility = android.view.View.GONE
+                }
                 
                 // Handle clicks
                 root.setOnClickListener {
@@ -133,10 +188,18 @@ class ProductsAdapter(
                     }
                     onItemClick(product)
                 }
+                // Ensure direct clicks on the checkbox trigger the same selection logic
+                selectionCheckbox.setOnClickListener {
+                    onItemClick(product)
+                }
                 
                 root.setOnLongClickListener {
                     onItemLongClick(product)
                     true
+                }
+                productOptions?.isVisible = !selectionMode
+                productOptions?.setOnClickListener {
+                    onOptionsClick(it, product)
                 }
             }
         }

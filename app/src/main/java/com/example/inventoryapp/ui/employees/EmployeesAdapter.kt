@@ -12,7 +12,8 @@ import com.example.inventoryapp.R
 
 class EmployeesAdapter(
     private val onEmployeeClick: (EmployeeEntity) -> Unit,
-    private val onEmployeeLongClick: (EmployeeEntity) -> Boolean = { false }
+    private val onEmployeeLongClick: (EmployeeEntity) -> Boolean = { false },
+    private val onOptionsClick: (android.view.View, EmployeeEntity) -> Unit = { _, _ -> }
 ) : ListAdapter<EmployeeWithStats, EmployeesAdapter.EmployeeViewHolder>(EmployeeDiffCallback()) {
 
     var selectionMode = false
@@ -120,13 +121,18 @@ class EmployeesAdapter(
                         onEmployeeClick(employee)
                     }
                 }
-                
+
                 root.setOnLongClickListener {
                     if (!selectionMode) {
                         onEmployeeLongClick(employee)
                     } else {
                         false
                     }
+                }
+
+                employeeOptions?.isVisible = !selectionMode
+                employeeOptions?.setOnClickListener {
+                    onOptionsClick(it, employee)
                 }
             }
         }

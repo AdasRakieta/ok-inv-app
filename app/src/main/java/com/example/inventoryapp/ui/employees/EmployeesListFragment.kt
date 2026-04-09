@@ -19,6 +19,7 @@ import com.example.inventoryapp.ui.components.FilterBottomSheet
 import com.example.inventoryapp.ui.components.FilterOption
 import com.example.inventoryapp.ui.components.FilterOptionsAdapter
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import android.widget.PopupMenu
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -77,8 +78,12 @@ class EmployeesListFragment : Fragment() {
                 adapter.toggleSelection(employee.id)
                 updateSelectionPanel()
                 true
+            },
+            onOptionsClick = { anchor, employee ->
+                showEmployeeOptions(anchor, employee)
             }
         )
+
 
         binding.employeesRecyclerView.apply {
             this.adapter = this@EmployeesListFragment.adapter
@@ -232,6 +237,59 @@ class EmployeesListFragment : Fragment() {
         
         bottomSheet.setContentView(sheetBinding.root)
         bottomSheet.show()
+    }
+
+    private fun showEmployeeOptions(anchorView: View, employee: com.example.inventoryapp.data.local.entities.EmployeeEntity) {
+        val popup = PopupMenu(requireContext(), anchorView)
+        popup.menu.add("Edytuj")
+        popup.menu.add("Usuń")
+        popup.setOnMenuItemClickListener { item ->
+            when (item.title.toString()) {
+                "Edytuj" -> {
+                    val action = EmployeesListFragmentDirections.actionEmployeesListToAddEmployee(employee.id)
+                    findNavController().navigate(action)
+                    true
+                }
+                "Usuń" -> {
+                    showDeleteEmployeeConfirmation(employee)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    private fun showDeleteEmployeeConfirmation(employee: com.example.inventoryapp.data.local.entities.EmployeeEntity) {
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
+
+        val name = "${employee.firstName} ${employee.lastName}"
+        sheetBinding.productNameText.text = name
+        sheetBinding.cancelButton.setOnClickListener { bottomSheet.dismiss() }
+        sheetBinding.deleteButton.text = "Usuń pracownika"
+        sheetBinding.deleteButton.setOnClickListener {
+            bottomSheet.dismiss()
+            deleteSingleEmployee(employee.id)
+        }
+
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+
+    private fun deleteSingleEmployee(employeeId: Long) {
+        lifecycleScope.launch {
+            try {
+                val assignedProducts = productRepository.getProductsAssignedToEmployee(employeeId).first()
+                assignedProducts.forEach { product ->
+                    productRepository.unassignFromEmployee(product.id)
+                }
+                employeeRepository.deleteEmployees(listOf(employeeId))
+                Toast.makeText(requireContext(), "Usunięto pracownika", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
     
     private fun pluralForm(count: Int, singular: String, few: String, many: String): String {

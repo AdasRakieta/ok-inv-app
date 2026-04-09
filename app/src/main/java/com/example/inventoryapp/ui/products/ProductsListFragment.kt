@@ -19,11 +19,14 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.CategoryEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.databinding.FragmentProductsListBinding
 import com.example.inventoryapp.databinding.BottomSheetStatsBinding
 import com.example.inventoryapp.ui.components.FilterBottomSheet
 import com.example.inventoryapp.ui.components.FilterOption
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import android.widget.PopupMenu
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -43,6 +46,8 @@ class ProductsListFragment : Fragment() {
 
     private var allProducts: List<ProductEntity> = emptyList()
     private var categories: List<CategoryEntity> = emptyList()
+    private var boxesList: List<BoxEntity> = emptyList()
+    private var locationMap: Map<Long, String> = emptyMap()
     private var selectedCategoryId: Long? = null
     private var selectedStatus: ProductStatus? = null
     private var sortOption: SortOption = SortOption.NEWEST
@@ -79,6 +84,7 @@ class ProductsListFragment : Fragment() {
         }
         
         setupRecyclerView()
+        loadBoxesAndLocations()
         setupSearch()
         setupActions()
         setupFilters()
@@ -106,6 +112,9 @@ class ProductsListFragment : Fragment() {
                     showSelectionPanel()
                 }
             },
+            onOptionsClick = { anchor, product ->
+                showProductOptions(anchor, product)
+            },
             getCategoryName = { categoryId -> categoryNameFor(categoryId) },
             getCategoryIcon = { categoryId -> categoryIconFor(categoryId) }
         )
@@ -121,6 +130,7 @@ class ProductsListFragment : Fragment() {
         binding.emptyAddButton.setOnClickListener { 
             openAddProduct()
         }
+        // Fragment-level FAB handles toggle; no global FAB override needed
         
         // Overlay closes menu
         binding.fabMenuOverlay.setOnClickListener {
@@ -159,7 +169,9 @@ class ProductsListFragment : Fragment() {
     
     private fun openFabMenu() {
         isFabMenuOpen = true
-        
+
+        // No global FAB to hide — using fragment-local FAB only
+
         // Show overlay
         binding.fabMenuOverlay.visibility = View.VISIBLE
         binding.fabMenuOverlay.alpha = 0f
@@ -167,13 +179,13 @@ class ProductsListFragment : Fragment() {
             .alpha(1f)
             .setDuration(200)
             .start()
-        
+
         // Rotate main FAB
         binding.addProductFab.animate()
             .rotation(45f)
             .setDuration(200)
             .start()
-        
+
         // Show cards with animation
         showCard(binding.singleAddCard, 0)
         showCard(binding.bulkAddCard, 50)
@@ -202,6 +214,8 @@ class ProductsListFragment : Fragment() {
             hideCard(it.singleAddCard)
             hideCard(it.bulkAddCard)
         }
+
+        // No global FAB to show
     }
     
     private fun showCard(card: View, delay: Long) {
@@ -259,6 +273,35 @@ class ProductsListFragment : Fragment() {
         }
         binding.sortButton.setOnClickListener {
             openSortDialog()
+        }
+    }
+
+    private val boxRepository by lazy { (requireActivity().application as InventoryApplication).boxRepository }
+    private val warehouseLocationRepository by lazy { (requireActivity().application as InventoryApplication).warehouseLocationRepository }
+
+    private fun loadBoxesAndLocations() {
+        // collect locations and boxes and pass maps to adapter for display
+        viewLifecycleOwner.lifecycleScope.launch {
+            // locations
+            warehouseLocationRepository.getAllLocations().collect { locations ->
+                locationMap = locations.associate { it.id to (it.code ?: "") }
+                adapter.setLocationsMap(locationMap)
+
+                // recompute box-location map using latest boxesList
+                val boxLoc = boxesList.associate { box -> box.id to (box.warehouseLocationId?.let { locationMap[it] } ?: "") }
+                adapter.setBoxLocationMap(boxLoc)
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            boxRepository.getAllBoxes().collect { boxes ->
+                boxesList = boxes
+                val boxesMap = boxes.associate { it.id to it.name }
+                adapter.setBoxesMap(boxesMap)
+
+                val boxLoc = boxes.associate { box -> box.id to (box.warehouseLocationId?.let { locationMap[it] } ?: "") }
+                adapter.setBoxLocationMap(boxLoc)
+            }
         }
     }
     
@@ -625,6 +668,53 @@ class ProductsListFragment : Fragment() {
         
         bottomSheet.setContentView(sheetBinding.root)
         bottomSheet.show()
+    }
+
+    private fun showProductOptions(anchorView: View, product: ProductEntity) {
+        val popup = PopupMenu(requireContext(), anchorView)
+        popup.menu.add("Edytuj")
+        popup.menu.add("Usuń")
+        popup.setOnMenuItemClickListener { item ->
+            when (item.title.toString()) {
+                "Edytuj" -> {
+                    val action = ProductsListFragmentDirections.actionProductsToAdd(product.id)
+                    findNavController().navigate(action)
+                    true
+                }
+                "Usuń" -> {
+                    showDeleteProductConfirmation(product)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    private fun showDeleteProductConfirmation(product: ProductEntity) {
+        val bottomSheet = BottomSheetDialog(requireContext())
+        val sheetBinding = com.example.inventoryapp.databinding.BottomSheetDeleteConfirmBinding.inflate(layoutInflater)
+
+        sheetBinding.productNameText.text = product.name
+        sheetBinding.cancelButton.setOnClickListener { bottomSheet.dismiss() }
+        sheetBinding.deleteButton.text = "Usuń produkt"
+        sheetBinding.deleteButton.setOnClickListener {
+            bottomSheet.dismiss()
+            deleteSingleProduct(product.id)
+        }
+
+        bottomSheet.setContentView(sheetBinding.root)
+        bottomSheet.show()
+    }
+
+    private fun deleteSingleProduct(productId: Long) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                productRepository.deleteProductById(productId)
+            } catch (e: Exception) {
+                // ignore
+            }
+        }
     }
     
     private fun pluralForm(count: Int, singular: String, few: String, many: String): String {

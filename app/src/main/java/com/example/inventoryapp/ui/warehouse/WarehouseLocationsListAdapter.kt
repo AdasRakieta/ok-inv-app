@@ -21,7 +21,8 @@ data class WarehouseLocationCard(
 class WarehouseLocationsListAdapter(
     private val onLocationClick: (WarehouseLocationCard) -> Unit,
     private val onLocationLongClick: (WarehouseLocationCard) -> Boolean = { false },
-    private val onSelectionChanged: () -> Unit = {}
+    private val onSelectionChanged: () -> Unit = {},
+    private val onOptionsClick: (android.view.View, WarehouseLocationCard) -> Unit = { _, _ -> }
 ) : ListAdapter<WarehouseLocationCard, WarehouseLocationsListAdapter.LocationViewHolder>(
     object : DiffUtil.ItemCallback<WarehouseLocationCard>() {
         override fun areItemsTheSame(oldItem: WarehouseLocationCard, newItem: WarehouseLocationCard) =
@@ -93,6 +94,11 @@ class WarehouseLocationsListAdapter(
 
             binding.locationCheckbox.isVisible = selectionMode
             binding.locationCheckbox.isChecked = selectedItems.contains(location.name)
+
+            binding.locationOptions.isVisible = !selectionMode
+            binding.locationOptions.setOnClickListener {
+                onOptionsClick(binding.locationOptions, location)
+            }
 
             // Set product count color and background
             val color = android.graphics.Color.parseColor(location.colorHex)

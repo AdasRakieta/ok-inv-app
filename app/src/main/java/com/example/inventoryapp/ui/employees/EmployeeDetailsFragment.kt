@@ -24,6 +24,7 @@ import com.example.inventoryapp.databinding.BottomSheetDeleteEmployeeConfirmBind
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class EmployeeDetailsFragment : Fragment() {
@@ -162,6 +163,10 @@ class EmployeeDetailsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
                 productRepository.getProductsAssignedToEmployee(employeeId).collect { products ->
+                    // Ensure adapter has category labels available
+                    val categories = categoryRepository.getAllCategories().firstOrNull() ?: emptyList()
+                    val categoryMapForAdapter = categories.associate { it.id to (it.icon ?: it.name) }
+                    assignedProductsAdapter.setCategoriesMap(categoryMapForAdapter)
                     val safeBinding = _binding ?: return@collect
                     assignedProductsAdapter.submitList(products)
 

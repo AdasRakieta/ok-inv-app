@@ -1,6 +1,7 @@
 package com.example.inventoryapp.ui.employees
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -16,6 +17,7 @@ class AssignedProductsAdapter(
     private var fullList: List<ProductEntity> = emptyList()
     private var filteredList: List<ProductEntity> = emptyList()
     private var boxesMap: Map<Long, String> = emptyMap()
+    private var categoriesMap: Map<Long, String> = emptyMap()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val binding = ItemAssignedProductBinding.inflate(
@@ -44,6 +46,11 @@ class AssignedProductsAdapter(
         submitList(filteredList.toList())
     }
 
+    fun setCategoriesMap(map: Map<Long, String>) {
+        categoriesMap = map
+        submitList(filteredList.toList())
+    }
+
     fun filterByQuery(query: String) {
         filteredList = if (query.isBlank()) {
             fullList
@@ -63,11 +70,16 @@ class AssignedProductsAdapter(
         fun bind(product: ProductEntity) {
             binding.apply {
                 productName.text = product.name
-                // Append box name when available
+                // Append box name when available (no fallback)
                 val boxSuffix = product.boxId?.let { id ->
-                    boxesMap[id]?.let { name -> " • ${name}" } ?: " • Box#${id}"
+                    boxesMap[id]?.let { name -> " • ${name}" } ?: ""
                 } ?: ""
                 productSerial.text = "S/N: ${product.serialNumber}${boxSuffix}"
+
+                // Category label (icon or name) when available
+                val categoryText = product.categoryId?.let { categoriesMap[it] } ?: ""
+                productCategory.text = categoryText
+                productCategory.visibility = if (categoryText.isNotBlank()) View.VISIBLE else View.GONE
                 
                 root.setOnClickListener {
                     onProductClick(product)

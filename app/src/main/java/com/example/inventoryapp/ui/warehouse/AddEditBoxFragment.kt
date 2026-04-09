@@ -13,6 +13,7 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.databinding.FragmentAddEditBoxBinding
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class AddEditBoxFragment : Fragment() {
 
@@ -74,6 +75,7 @@ class AddEditBoxFragment : Fragment() {
 
                     findNavController().navigateUp()
                 } catch (e: Exception) {
+                    Log.e("AddEditBoxFragment", "Error saving box", e)
                     Toast.makeText(requireContext(), "Błąd zapisu: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }

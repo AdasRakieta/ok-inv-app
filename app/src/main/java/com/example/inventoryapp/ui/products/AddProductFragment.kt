@@ -17,6 +17,7 @@ import com.example.inventoryapp.data.local.entities.ProductEntity
 import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.data.local.entities.ProductStatus
 import com.example.inventoryapp.domain.validators.AssignmentValidator
+import com.example.inventoryapp.domain.validators.StorageTargetValidator
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.databinding.FragmentAddProductBinding
 import com.example.inventoryapp.ui.warehouse.LocationStorage
@@ -53,6 +54,7 @@ class AddProductFragment : Fragment() {
     private var storageTypeIsBox: Boolean = false
     private var selectedBoxId: Long? = null
     private val assignmentValidator = AssignmentValidator()
+    private val storageTargetValidator = StorageTargetValidator()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -87,6 +89,8 @@ class AddProductFragment : Fragment() {
 
         binding.storageTypeGroup.setOnCheckedChangeListener { _, checkedId ->
             storageTypeIsBox = checkedId == com.example.inventoryapp.R.id.storageTypeBox
+            binding.warehouseLocationLayout.error = null
+            binding.boxLayout.error = null
             toggleEmployeeField()
         }
 
@@ -94,6 +98,7 @@ class AddProductFragment : Fragment() {
         binding.serialNumberInput.addTextChangedListener { _ -> binding.serialNumberLayout.error = null }
         binding.productIdInput.addTextChangedListener { _ -> binding.productIdLayout.error = null }
         binding.warehouseLocationInput.addTextChangedListener { _ -> binding.warehouseLocationLayout.error = null }
+        binding.boxInput.addTextChangedListener { _ -> binding.boxLayout.error = null }
     }
 
     private fun setupCategories() {
@@ -295,7 +300,6 @@ class AddProductFragment : Fragment() {
         // Parse shelf and bin from warehouse location (format: "Shelf / Bin")
         val shelf = warehouseLocation?.substringBefore("/")?.trim()
         val bin = warehouseLocation?.substringAfter("/", "")?.trim()?.takeIf { it.isNotEmpty() }
-        val boxName = binding.boxInput.text.toString().trim().ifEmpty { null }
         
         // Get selected status
         val statusLabel = binding.statusInput.text.toString().trim()
@@ -338,10 +342,27 @@ class AddProductFragment : Fragment() {
             }
         }
 
-        if (selectedStatus == ProductStatus.IN_STOCK && warehouseLocation.isNullOrBlank()) {
-            Toast.makeText(requireContext(), "Wybierz lokalizację dla statusu Magazyn", Toast.LENGTH_SHORT).show()
-            binding.warehouseLocationLayout.error = "Wymagana lokalizacja"
-            return
+        when (val storageValidation = storageTargetValidator.validate(
+            status = selectedStatus,
+            storageTypeIsBox = storageTypeIsBox,
+            warehouseLocation = warehouseLocation,
+            selectedBoxId = selectedBoxId
+        )) {
+            is StorageTargetValidator.ValidationResult.Success -> {
+                binding.warehouseLocationLayout.error = null
+                binding.boxLayout.error = null
+            }
+            is StorageTargetValidator.ValidationResult.Error -> {
+                if (selectedStatus == ProductStatus.IN_STOCK) {
+                    if (storageTypeIsBox) {
+                        binding.boxLayout.error = "Wymagany karton"
+                    } else {
+                        binding.warehouseLocationLayout.error = "Wymagana lokalizacja"
+                    }
+                }
+                Toast.makeText(requireContext(), storageValidation.message, Toast.LENGTH_SHORT).show()
+                return
+            }
         }
         
         if (name.isEmpty()) {

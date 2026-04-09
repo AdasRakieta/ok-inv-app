@@ -30,11 +30,22 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.example.inventoryapp.data.local.entities.ProductEntity
 import androidx.appcompat.app.AlertDialog
+import android.content.Intent
+import android.widget.ImageView
+import android.widget.TextView
+import android.net.Uri
+import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.example.inventoryapp.utils.BarcodeGenerator
+import com.example.inventoryapp.utils.MediaStoreHelper
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.utils.BrotherPrinterHelper
 import com.example.inventoryapp.utils.PrinterPreferences
 import com.google.android.material.snackbar.Snackbar
 import com.example.inventoryapp.data.local.entities.ProductStatus
+import kotlinx.coroutines.flow.firstOrNull
+import com.example.inventoryapp.data.local.entities.BoxEntity
 
 class ProductDetailsFragment : Fragment() {
 
@@ -101,18 +112,10 @@ class ProductDetailsFragment : Fragment() {
                             modelValue.text = it.model ?: "-"
                             descriptionValue.text = it.description ?: "-"
                             
-                            // Warehouse location
-                            val warehouseLocation = if (it.shelf != null) {
-                                it.shelf + (if (!it.bin.isNullOrBlank()) " / ${it.bin}" else "")
-                            } else {
-                                "Nie przypisano"
-                            }
-                            warehouseLocationValue.text = warehouseLocation
-
                             createdAtText.text = formatDate(it.createdAt)
                             updatedAtText.text = formatDate(it.updatedAt)
 
-                            // Assignment info
+                            // Assignment info (legacy section)
                             if (it.assignedToEmployeeId != null) {
                                 assignedEmployeeLayout.visibility = View.VISIBLE
                                 loadEmployeeInfo(it.assignedToEmployeeId)
@@ -124,14 +127,60 @@ class ProductDetailsFragment : Fragment() {
 
                             updateStatusBadge(it.status)
 
+                            // Status-level extra info (location / box / employee)
+                            // Show location and box only when item is in stock; show employee when assigned
+                            val status = it.status
+                            if (status == ProductStatus.IN_STOCK) {
+                                statusExtraContainer.visibility = View.VISIBLE
+                                statusLocationContainer.visibility = View.VISIBLE
+                                // compute location display
+                                val locText = if (!it.shelf.isNullOrBlank()) {
+                                    it.shelf + (if (!it.bin.isNullOrBlank()) " / ${it.bin}" else "")
+                                } else if (it.warehouseLocationId != null) {
+                                    val loc = (requireActivity().application as InventoryApplication)
+                                        .warehouseLocationRepository.getLocationById(it.warehouseLocationId).firstOrNull()
+                                    loc?.code ?: "Nie przypisano"
+                                } else {
+                                    "Nie przypisano"
+                                }
+                                statusLocationValue.text = locText
+
+                                // box info
+                                if (it.boxId != null) {
+                                    val box = (requireActivity().application as InventoryApplication)
+                                        .boxRepository.getBoxById(it.boxId).firstOrNull()
+                                    statusBoxValue.text = box?.name ?: "-"
+                                    statusBoxContainer.visibility = View.VISIBLE
+                                } else {
+                                    statusBoxContainer.visibility = View.GONE
+                                }
+
+                                statusEmployeeContainer.visibility = View.GONE
+                            } else if (status == ProductStatus.ASSIGNED) {
+                                statusExtraContainer.visibility = View.VISIBLE
+                                statusLocationContainer.visibility = View.GONE
+                                statusBoxContainer.visibility = View.GONE
+                                statusEmployeeContainer.visibility = View.VISIBLE
+                                if (it.assignedToEmployeeId != null) {
+                                    val emp = employeeRepository.getEmployeeById(it.assignedToEmployeeId)
+                                    statusEmployeeValue.text = emp?.fullName ?: "Nieznany"
+                                } else {
+                                    statusEmployeeValue.text = "-"
+                                }
+                            } else {
+                                statusExtraContainer.visibility = View.GONE
+                            }
+
                             // Serial number visibility
                             if (it.serialNumber.isNotBlank()) {
                                 serialNumberAssignedLayout.visibility = View.VISIBLE
                                 serialNumberNotAssignedLayout.visibility = View.GONE
                                 serialNumberText.text = it.serialNumber
+                                printEanButton.visibility = View.VISIBLE
                             } else {
                                 serialNumberAssignedLayout.visibility = View.GONE
                                 serialNumberNotAssignedLayout.visibility = View.VISIBLE
+                                printEanButton.visibility = View.GONE
                             }
                         }
                     }
@@ -153,7 +202,7 @@ class ProductDetailsFragment : Fragment() {
         }
         binding.moreButton.setOnClickListener { showOptionsMenu(it) }
         binding.editSerialButton.setOnClickListener { promptEditSerial() }
-        binding.fabPrintLabel.setOnClickListener { printBarcodeLabel() }
+        binding.printEanButton.setOnClickListener { printBarcodeLabel() }
     }
 
     private fun showOptionsMenu(anchor: View) {
@@ -364,6 +413,76 @@ class ProductDetailsFragment : Fragment() {
             }
             binding.movementHistoryText.text = statusFallback
         }
+    }
+
+    private fun showEanDialog() {
+        val product = currentProduct ?: return
+        val serial = product.serialNumber
+        if (serial.isBlank()) {
+            Snackbar.make(binding.root, "Numer seryjny jest pusty", Snackbar.LENGTH_LONG).show()
+            return
+        }
+
+        // Choose barcode type: prefer EAN-13 when valid, otherwise Code128
+        val bitmap = when {
+            BarcodeGenerator.isValidEAN13Content(serial) -> BarcodeGenerator.generateEAN13(serial, 700, 200)
+            else -> BarcodeGenerator.generateCode128(serial, 700, 200)
+        }
+
+        if (bitmap == null) {
+            Snackbar.make(binding.root, "Nie udało się wygenerować kodu", Snackbar.LENGTH_LONG).show()
+            return
+        }
+
+        val bottomSheet = com.google.android.material.bottomsheet.BottomSheetDialog(requireContext())
+        val view = layoutInflater.inflate(R.layout.dialog_barcode_preview, null)
+        val previewImage = view.findViewById<ImageView>(R.id.previewImage)
+        val previewText = view.findViewById<TextView>(R.id.previewText)
+        val saveButton = view.findViewById<MaterialButton>(R.id.saveButton)
+        val shareButton = view.findViewById<MaterialButton>(R.id.shareButton)
+
+        previewImage.setImageBitmap(bitmap)
+        previewText.text = serial
+
+        var savedUri: Uri? = null
+
+        saveButton.setOnClickListener {
+            lifecycleScope.launch {
+                val name = "kod_${serial}_${System.currentTimeMillis()}"
+                val uri = withContext(Dispatchers.IO) { MediaStoreHelper.saveBitmap(requireContext(), bitmap, name) }
+                if (uri != null) {
+                    savedUri = uri
+                    toast("Zapisano do galerii")
+                } else {
+                    toast("Błąd zapisu")
+                }
+            }
+        }
+
+        shareButton.setOnClickListener {
+            lifecycleScope.launch {
+                val uri = savedUri ?: withContext(Dispatchers.IO) {
+                    MediaStoreHelper.saveBitmap(requireContext(), bitmap, "kod_${serial}_${System.currentTimeMillis()}")
+                }
+
+                if (uri == null) {
+                    toast("Nie udało się przygotować pliku do udostępnienia")
+                    return@launch
+                }
+
+                val share = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    type = "image/png"
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+
+                startActivity(Intent.createChooser(share, "Udostępnij kod"))
+            }
+        }
+
+        bottomSheet.setContentView(view)
+        bottomSheet.show()
     }
 
     /**

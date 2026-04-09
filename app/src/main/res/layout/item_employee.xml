@@ -118,6 +118,16 @@
                 android:src="@drawable/ic_chevron_right"
                 android:tint="@color/text_tertiary" />
 
+            <ImageView
+                android:id="@+id/employeeOptions"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Opcje"
+                android:src="@drawable/ic_more_vertical"
+                android:tint="@color/text_secondary"
+                android:visibility="visible" />
+
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

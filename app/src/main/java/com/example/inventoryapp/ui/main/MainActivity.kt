@@ -109,50 +109,11 @@ class MainActivity : AppCompatActivity() {
             navigateTo(R.id.settingsHubFragment)
         }
 
-        // start hidden; will be shown on specific top-level destinations
-        binding.bottomNav.fabGlobalAdd.hide()
-
+        // Global FAB removed — fragments provide their own FABs now.
         navController.addOnDestinationChangedListener { _, destination, _ ->
             closeFabMenuIfOpen()
             updateBottomNavSelection(destination.id)
             updateAppBarVisibility(destination.id)
-
-            when (destination.id) {
-                R.id.productsListFragment -> {
-                    binding.bottomNav.fabGlobalAdd.show()
-                    binding.bottomNav.fabGlobalAdd.setOnClickListener {
-                        closeFabMenuIfOpen()
-                        val dest = R.id.addProductFragment
-                        if (navController.currentDestination?.id != dest) {
-                            navController.navigate(dest)
-                        }
-                    }
-                }
-                R.id.employeesListFragment -> {
-                    binding.bottomNav.fabGlobalAdd.show()
-                    binding.bottomNav.fabGlobalAdd.setOnClickListener {
-                        closeFabMenuIfOpen()
-                        navController.navigate(R.id.addEmployeeFragment)
-                    }
-                }
-                R.id.warehouseFragment -> {
-                    binding.bottomNav.fabGlobalAdd.show()
-                    binding.bottomNav.fabGlobalAdd.setOnClickListener {
-                        closeFabMenuIfOpen()
-                        navController.navigate(R.id.addLocationFragment)
-                    }
-                }
-                R.id.templatesListFragment -> {
-                    binding.bottomNav.fabGlobalAdd.show()
-                    binding.bottomNav.fabGlobalAdd.setOnClickListener {
-                        closeFabMenuIfOpen()
-                        navController.navigate(R.id.bulkAddFragment)
-                    }
-                }
-                else -> {
-                    binding.bottomNav.fabGlobalAdd.hide()
-                }
-            }
         }
     }
 

@@ -25,6 +25,7 @@ import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
 import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -186,6 +187,10 @@ class ContractorPointDetailsFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 productRepository.getProductsAssignedToContractorPoint(contractorPointId).collect { products ->
                     val safeBinding = _binding ?: return@collect
+                    // Provide category labels to adapter
+                    val categories = categoryRepository.getAllCategories().firstOrNull() ?: emptyList()
+                    val categoryMapForAdapter = categories.associate { it.id to (it.icon ?: it.name) }
+                    assignedProductsAdapter.setCategoriesMap(categoryMapForAdapter)
                     assignedProductsAdapter.setFullList(products)
 
                     safeBinding.assignedCountText.text = when (products.size) {

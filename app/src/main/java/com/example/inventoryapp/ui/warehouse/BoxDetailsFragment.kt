@@ -19,6 +19,7 @@ import com.example.inventoryapp.InventoryApplication
 import com.example.inventoryapp.R
 import com.example.inventoryapp.data.local.entities.BoxEntity
 import com.example.inventoryapp.data.local.entities.ProductEntity
+import com.example.inventoryapp.utils.MovementHistoryUtils
 import com.example.inventoryapp.databinding.FragmentBoxDetailsBinding
 import com.example.inventoryapp.ui.employees.AssignedProductsAdapter
 import com.example.inventoryapp.utils.MediaStoreHelper
@@ -37,6 +38,7 @@ class BoxDetailsFragment : Fragment() {
 
     private val boxRepository by lazy { (requireActivity().application as InventoryApplication).boxRepository }
     private val productRepository by lazy { (requireActivity().application as InventoryApplication).productRepository }
+    private val categoryRepository by lazy { (requireActivity().application as InventoryApplication).categoryRepository }
     private val warehouseLocationRepository by lazy { (requireActivity().application as InventoryApplication).warehouseLocationRepository }
 
     private lateinit var assignedProductsAdapter: AssignedProductsAdapter
@@ -109,6 +111,10 @@ class BoxDetailsFragment : Fragment() {
                 productRepository.getProductsByBoxId(boxId).collect { products ->
                     currentProductsInBox = products
                     assignedProductsAdapter.setFullList(products)
+                    // Provide category map to adapter so items show category labels
+                    val categories = categoryRepository.getAllCategories().firstOrNull() ?: emptyList()
+                    val categoryMapForAdapter = categories.associate { it.id to (it.icon ?: it.name) }
+                    assignedProductsAdapter.setCategoriesMap(categoryMapForAdapter)
                     val isEmpty = products.isEmpty()
                     binding.noProductsText.visibility = if (isEmpty) View.VISIBLE else View.GONE
                     binding.productsRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
@@ -145,9 +151,22 @@ class BoxDetailsFragment : Fragment() {
     private fun assignProductsToBox(products: List<ProductEntity>, box: BoxEntity) {
         lifecycleScope.launch {
             try {
+                // Resolve location label for the box (if any) to store shelf/bin and for history
+                val locationLabel = resolveLocationLabel(box.warehouseLocationId)
+                val shelf = locationLabel.substringBefore("/").trim()
+                val bin = locationLabel.substringAfter("/", "").trim().takeIf { it.isNotEmpty() }
+
                 products.forEach { product ->
-                    val updated = product.copy(boxId = box.id)
-                    productRepository.updateWithHistory(updated, "Dodano do kartonu ${box.name}")
+                    val updated = product.copy(
+                        boxId = box.id,
+                        warehouseLocationId = box.warehouseLocationId,
+                        shelf = shelf,
+                        bin = bin,
+                        status = com.example.inventoryapp.data.local.entities.ProductStatus.IN_STOCK,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    val historyEntry = "Dodano do kartonu ${box.name} — ${MovementHistoryUtils.entryForLocation(locationLabel)}"
+                    productRepository.updateWithHistory(updated, historyEntry)
                 }
                 Toast.makeText(requireContext(), "Dodano ${products.size} produktów", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
