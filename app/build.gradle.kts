@@ -23,8 +23,8 @@ android {
         applicationId = "com.ok.inv"
         minSdkVersion(26)
         targetSdkVersion(31)
-            versionCode = 8
-            versionName = "1.4.1"
+            versionCode = 9
+            versionName = "1.4.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
