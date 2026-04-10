@@ -78,10 +78,10 @@ jobs:
             echo "No KEYSTORE_BASE64 secret set; skipping keystore creation"
           fi
 
-      - name: Build release APK
+      - name: Build full release APK
         run: |
           set -o pipefail
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace | tee build.log
+          ./gradlew :app:assembleFullRelease --no-daemon --stacktrace | tee build.log
 
       - name: Get versionName
         id: get_version
@@ -103,8 +103,9 @@ jobs:
         run: |
           set -e
           mkdir -p release-apks
-          # Prefer the release APK location; otherwise try common fallback paths
-          cp app/build/outputs/apk/release/*.apk release-apks/ok-inv-app-v${{ steps.get_version.outputs.version }}.apk 2>/dev/null || \
+          # Prefer the full-flavor release APK location; otherwise try common fallback paths
+          cp app/build/outputs/apk/full/release/*.apk release-apks/ok-inv-app-v${{ steps.get_version.outputs.version }}.apk 2>/dev/null || \
+            cp app/build/outputs/apk/release/*.apk release-apks/ok-inv-app-v${{ steps.get_version.outputs.version }}.apk 2>/dev/null || \
             cp app/build/outputs/apk/*/*/*.apk release-apks/ok-inv-app-v${{ steps.get_version.outputs.version }}.apk 2>/dev/null || true
           ls -la release-apks || true
 
