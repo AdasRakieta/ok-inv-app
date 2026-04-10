@@ -51,9 +51,13 @@ android {
         }
     }
 
-    // Demo flavor for pre-seeded demo builds
+    // Product flavors: full (default) and demo (pre-seeded demo builds)
     flavorDimensions("mode")
     productFlavors {
+        create("full") {
+            dimension = "mode"
+            // full uses the default applicationId and versionName
+        }
         create("demo") {
             dimension = "mode"
             applicationIdSuffix = ".demo"
